@@ -279,26 +279,53 @@ content.audio = (() => {
     drain()
   }
 
-  // ----------------------------- aim crosshair tone -----------------------------
-  // A continuous quiet sine at 130 Hz panned at the current aim. Sits below
-  // the class-voice frequency range (scout square @ 880 Hz, civilian dyad
-  // @ 330 Hz, battleship saw @ 82 Hz) so it doesn't mask. Started by the
-  // game module on startRun, stopped on endRun / silenceAll.
+  // ----------------------------- player ship engine -----------------------------
+  // The player's ship — a soft idling engine that pans with their aim. Two
+  // detuned sawtooths at 110 Hz with a sub-octave sine for body, lowpassed
+  // hard so only the warm fundamental + a hint of buzz survives, with a
+  // slow tremolo LFO so it sounds like an engine breathing rather than a
+  // held tone. Sits below the class-voice frequency range (scout square @
+  // 880 Hz, civilian dyad @ 330 Hz, battleship saw @ 82 Hz) so it doesn't
+  // mask. Started by the game module on startRun, stopped on endRun /
+  // silenceAll. Also used by the help tutorial to demo aim panning.
   function startAimVoice() {
     if (_state.aimVoice) return
     ensureStarted()
     const c = ctx()
-    const o = c.createOscillator()
-    o.type = 'sine'
-    o.frequency.value = 130
+    const o1 = c.createOscillator()
+    o1.type = 'sawtooth'
+    o1.frequency.value = 110
+    const o2 = c.createOscillator()
+    o2.type = 'sawtooth'
+    o2.frequency.value = 110 * 1.013   // slight detune for engine "beat"
+    const sub = c.createOscillator()
+    sub.type = 'sine'
+    sub.frequency.value = 55
+    const lp = c.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = 520
+    lp.Q.value = 0.6
+    // Tremolo: gentle ±8% amplitude wobble at ~5.5 Hz on top of the static
+    // gain target. The carrier carries via trem.gain (which the LFO offsets
+    // around 1.0).
+    const trem = c.createGain()
+    trem.gain.value = 1
+    const lfo = c.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 5.5
+    const lfoGain = c.createGain()
+    lfoGain.gain.value = 0.08
+    lfo.connect(lfoGain).connect(trem.gain)
+    o1.connect(lp); o2.connect(lp); sub.connect(lp)
+    lp.connect(trem)
     const g = c.createGain()
     g.gain.value = 0.0001
     const pan = c.createStereoPanner()
     pan.pan.value = 0
-    o.connect(g).connect(pan).connect(_state.masterBus)
-    o.start()
-    g.gain.setTargetAtTime(0.06, now(), 0.20)
-    _state.aimVoice = {osc: o, gain: g, pan}
+    trem.connect(g).connect(pan).connect(_state.masterBus)
+    o1.start(); o2.start(); sub.start(); lfo.start()
+    g.gain.setTargetAtTime(0.035, now(), 0.20)
+    _state.aimVoice = {osc: o1, osc2: o2, sub, lfo, lfoGain, lp, trem, gain: g, pan}
   }
   // Park or sweep the aim crosshair tone to a specific pan, bypassing the
   // state-driven update in frame(). Used by the help-screen tutorial to
@@ -324,7 +351,16 @@ content.audio = (() => {
     try { v.gain.gain.setTargetAtTime(0.0001, now(), 0.10) } catch (e) {}
     setTimeout(() => {
       try { v.osc.stop() } catch (e) {}
+      try { v.osc2 && v.osc2.stop() } catch (e) {}
+      try { v.sub && v.sub.stop() } catch (e) {}
+      try { v.lfo && v.lfo.stop() } catch (e) {}
       try { v.osc.disconnect() } catch (e) {}
+      try { v.osc2 && v.osc2.disconnect() } catch (e) {}
+      try { v.sub && v.sub.disconnect() } catch (e) {}
+      try { v.lfo && v.lfo.disconnect() } catch (e) {}
+      try { v.lfoGain && v.lfoGain.disconnect() } catch (e) {}
+      try { v.lp && v.lp.disconnect() } catch (e) {}
+      try { v.trem && v.trem.disconnect() } catch (e) {}
       try { v.gain.disconnect() } catch (e) {}
       try { v.pan.disconnect() } catch (e) {}
     }, 250)

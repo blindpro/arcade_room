@@ -4,7 +4,8 @@
  * Owns:
  *  - aim integration from arrows / A,D / left-stick X
  *  - rising-edge fire (Space / RT / gamepad A)
- *  - weapon switch via 1/2/3 + shoulder buttons
+ *  - weapon-fire via 1/2/3 (auto-switches and fires in one press)
+ *  - weapon cycle via Q/E + shoulder buttons
  *  - F1..F4 status hotkeys (capture-phase preventDefault on F1/F3)
  *  - HUD render every frame
  *  - try/catch around onFrame body
@@ -107,11 +108,19 @@ app.screen.game = app.screenManager.invent({
           this.state.keys.fire = true
           break
         case 'Digit1':
-          content.game.setWeapon('pulse'); break
         case 'Digit2':
-          content.game.setWeapon('beam'); break
-        case 'Digit3':
-          content.game.setWeapon('missile'); break
+        case 'Digit3': {
+          const w = e.code === 'Digit1' ? 'pulse'
+                  : e.code === 'Digit2' ? 'beam'
+                  : 'missile'
+          // Switch + fire on the same press. setWeapon is a no-op if locked
+          // (and plays the bounce SFX itself), so we only fire when the
+          // weapon is actually available — otherwise pressing 3 in wave 1
+          // would let off a sneaky pulse shot.
+          content.game.setWeapon(w)
+          if (content.weapons.unlocked(w)) content.game.setFireRequested()
+          break
+        }
         case 'KeyQ':
           content.game.cycleWeapon(-1); break
         case 'KeyE':
