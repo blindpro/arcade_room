@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title data-i18n="doc.title">Mathstar</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <div class="a-app--announce">
+        <div class="a-app--announce-polite" aria-live="polite" aria-atomic="true"></div>
+        <div class="a-app--announce-assertive" aria-live="assertive" aria-atomic="true"></div>
+      </div>
+
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="menu.title">Mathstar</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">Solve the operation before the music ends.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="start" data-i18n="menu.start">Start</button></li>
+            <li><button class="c-menu--button" data-action="levelSelect" data-i18n="menu.levelSelect">Start at Level…</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="menu.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="language.button">Language</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--levelSelect">
+        <section class="c-screen c-menu a-levelSelect" tabindex="-1" data-i18n-attr="aria-label:levelSelect.aria">
+          <h1 class="c-menu--title" data-i18n="levelSelect.title">Start at Level</h1>
+          <p class="c-menu--subtitle" data-i18n="levelSelect.subtitle">Up/Down arrows to choose. Enter to start.</p>
+          <div class="a-levelSelect--display" aria-live="polite">
+            <span class="a-levelSelect--label" data-i18n="levelSelect.levelLabel">Level</span>
+            <span class="a-levelSelect--selected">1</span>
+            <span class="a-levelSelect--maxNote">
+              <span data-i18n="levelSelect.maxLabel">Highest unlocked:</span>
+              <span class="a-levelSelect--max">1</span>
+            </span>
+          </div>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-adjust="-1" data-i18n="levelSelect.decrease">Lower (Down arrow)</button></li>
+            <li><button class="c-menu--button" data-adjust="1" data-i18n="levelSelect.increase">Higher (Up arrow)</button></li>
+            <li><button class="c-menu--button" data-action="start">Start at Level 1</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="levelSelect.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <header class="a-game--hud">
+            <span class="a-game--level"></span>
+            <span class="a-game--lives"></span>
+            <span class="a-game--score"></span>
+          </header>
+          <div class="a-game--stage">
+            <div class="a-game--expression"></div>
+            <div class="a-game--digits"></div>
+            <div class="a-game--timebar">
+              <div class="a-game--timebar-fill"></div>
+            </div>
+          </div>
+          <p class="a-game--tip" data-i18n="game.tip">Type the answer with the number keys.</p>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--gameover">
+        <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
+          <h1 class="c-menu--title" data-i18n="gameover.title">Game over</h1>
+          <p class="a-gameover--score c-menu--subtitle"></p>
+          <p class="a-gameover--level c-menu--subtitle"></p>
+          <p class="a-gameover--newRecord c-menu--subtitle" hidden data-i18n="gameover.newRecord">New high score!</p>
+          <form class="a-gameover--nameForm" hidden>
+            <label data-i18n="gameover.namePrompt">Your name:</label>
+            <input class="a-gameover--nameInput" type="text" maxlength="16" value="Player" />
+            <button type="submit" class="c-menu--button" data-action="save" data-i18n="gameover.save">Save</button>
+          </form>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="playAgain" data-i18n="gameover.playAgain">Play again</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="gameover.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="gameover.menu">Menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--highscores">
+        <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
+          <h1 class="c-menu--title" data-i18n="highscores.title">High scores</h1>
+          <ul class="c-menu--list a-highscores--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>
