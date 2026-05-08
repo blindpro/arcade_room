@@ -1,0 +1,60 @@
+app.screen.highscores = app.screenManager.invent({
+  id: 'highscores',
+  parentSelector: '.a-app--highscores',
+  rootSelector: '.a-highscores',
+  transitions: {
+    back: function () { this.change('menu') },
+  },
+  state: { entryFrames: 0 },
+  onReady: function () {
+    const root = this.rootElement
+    root.addEventListener('click', (e) => {
+      const btn = e.target.closest('button[data-action]')
+      if (btn) app.screenManager.dispatch(btn.dataset.action)
+    })
+  },
+  renderList: function () {
+    const list = this.rootElement.querySelector('.a-highscores--list')
+    if (!list) return
+    list.innerHTML = ''
+    const t = app.i18n.t.bind(app.i18n)
+    const rows = (app.highscores && app.highscores.list()) || []
+    if (rows.length === 0) {
+      const li = document.createElement('li')
+      li.textContent = t('highscores.empty')
+      list.appendChild(li)
+      return
+    }
+    rows.forEach((row, i) => {
+      const li = document.createElement('li')
+      li.textContent = t('highscores.row', {
+        rank: i + 1,
+        name: row.name || 'Player',
+        score: row.score | 0,
+        floor: row.floor | 0,
+        building: row.building | 0,
+      })
+      list.appendChild(li)
+    })
+  },
+  onEnter: function () {
+    this.state.entryFrames = 6
+    this.renderList()
+    app.utility.focus.setWithin(this.rootElement)
+  },
+  onFrame: function () {
+    if (this.state.entryFrames > 0) {
+      this.state.entryFrames--
+      app.controls.ui()
+      return
+    }
+    const ui = app.controls.ui()
+    if (ui.up) app.utility.focus.setPreviousFocusable(this.rootElement)
+    if (ui.down) app.utility.focus.setNextFocusable(this.rootElement)
+    if (ui.back) app.screenManager.dispatch('back')
+    if (ui.enter || ui.space || ui.confirm) {
+      const f = app.utility.focus.get(this.rootElement)
+      if (f && f.dataset.action) app.screenManager.dispatch(f.dataset.action)
+    }
+  },
+})

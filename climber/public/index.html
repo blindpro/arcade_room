@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title data-i18n="doc.title">ESCALADOR</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <div class="a-live a-live--polite" aria-live="polite" aria-atomic="true"></div>
+      <div class="a-live a-live--assertive" aria-live="assertive" aria-atomic="true"></div>
+
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <div class="a-game--hud">
+            <p class="a-game--statusLine"><span class="a-game--floor"></span> <span class="a-game--score"></span> <span class="a-game--lives"></span></p>
+            <p class="a-game--hint c-menu--prose" data-i18n-html="game.hudHint">Left hand: <kbd>A</kbd> up, <kbd>Z</kbd> down. Right hand: <kbd>K</kbd> up, <kbd>M</kbd> down. Press <kbd>F1</kbd>–<kbd>F4</kbd> for status.</p>
+          </div>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="doc.title">CLIMBER</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">Two-handed climber. Use your ears.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="start" data-i18n="menu.start">Climb</button></li>
+            <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the Sounds</button></li>
+            <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">How to Play</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="menu.highscores">High Scores</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="language.button">Language</button></li>
+          </ul>
+          <p class="c-menu--footer">v<span class="a-menu--version"></span></p>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--help">
+        <section class="c-screen c-menu a-help" tabindex="-1" data-i18n-attr="aria-label:help.aria">
+          <h1 class="c-menu--title" data-i18n="help.title">How to Play</h1>
+          <div class="c-menu--prose">
+            <h2 data-i18n="help.controlsTitle">Controls</h2>
+            <ul>
+              <li data-i18n-html="help.controlA"><kbd>A</kbd> — left hand reaches up.</li>
+              <li data-i18n-html="help.controlZ"><kbd>Z</kbd> — left hand drops down (also dodges left-side pots).</li>
+              <li data-i18n-html="help.controlK"><kbd>K</kbd> — right hand reaches up.</li>
+              <li data-i18n-html="help.controlM"><kbd>M</kbd> — right hand drops down (also dodges right-side pots).</li>
+              <li data-i18n-html="help.controlPause"><kbd>Esc</kbd> — pause / quit.</li>
+              <li data-i18n-html="help.controlStatus"><kbd>F1</kbd> floor, <kbd>F2</kbd> score, <kbd>F3</kbd> lives, <kbd>F4</kbd> hand status.</li>
+            </ul>
+            <h2 data-i18n="help.howTitle">Climbing</h2>
+            <ul>
+              <li data-i18n="help.howRule1">Both hands grip windows. Alternate hands to climb: A, then K, then A again, and so on.</li>
+              <li data-i18n="help.howRule2">Hands cannot be more than one floor apart. The lower hand must catch up before the higher one can move further.</li>
+              <li data-i18n="help.howRule3">Each ear plays the corresponding hand's grip tone. Pitch rises with altitude.</li>
+            </ul>
+            <h2 data-i18n="help.hazTitle">Hazards</h2>
+            <ul>
+              <li data-i18n="help.hazPot">Falling pots whistle from above on the left or the right. Press the matching DOWN key (Z or M) to dodge.</li>
+              <li data-i18n="help.hazWindow">Windows can close on you. A creak warns you a second before. Move that hand quickly or you fall.</li>
+              <li data-i18n="help.hazGorilla">High floors hold a gorilla. Its roar throbs in the centre. When it swipes (whoosh), drop both hands at once.</li>
+            </ul>
+          </div>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="help.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--learn">
+        <section class="c-screen c-menu a-learn" tabindex="-1" data-i18n-attr="aria-label:learn.aria">
+          <h1 class="c-menu--title" data-i18n="learn.title">Learn the Sounds</h1>
+          <p class="c-menu--subtitle" data-i18n="learn.subtitle">Audition each cue. Use arrow keys to focus, Enter to play.</p>
+          <ul class="c-menu--list a-learn--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="learn.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--gameover">
+        <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
+          <h1 class="c-menu--title" data-i18n="gameover.title">You Fell</h1>
+          <p class="c-menu--subtitle a-gameover--summary"></p>
+          <div class="a-gameover--newhighscore" hidden>
+            <p data-i18n="gameover.newHighScore">New high score! Enter your name:</p>
+            <input class="a-gameover--name" type="text" maxlength="16" />
+          </div>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="restart" data-i18n="gameover.restart">Climb Again</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="gameover.menu">Back to Menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--highscores">
+        <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
+          <h1 class="c-menu--title" data-i18n="highscores.title">High Scores</h1>
+          <ol class="a-highscores--list"></ol>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--test">
+        <section class="c-screen c-menu a-test" tabindex="-1" data-i18n-attr="aria-label:test.aria">
+          <h1 class="c-menu--title" data-i18n="test.title">Stereo Test</h1>
+          <p class="c-menu--subtitle" data-i18n="test.subtitle">Plays four ticks: left ear, centre, right ear, centre. Verify your output.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="play" data-i18n="test.play">Play</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="test.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>
