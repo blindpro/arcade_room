@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title data-i18n="doc.title">BERZERK!</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <div class="a-app--announce" aria-live="polite" aria-atomic="true"></div>
+      <div class="a-app--announce-assertive" aria-live="assertive" aria-atomic="true"></div>
+
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <div class="a-game--hud" aria-hidden="true">
+            <div class="a-game--hud-row">
+              <span class="a-game--hud-label" data-i18n="hud.score">Score</span>
+              <span class="a-game--score-value">0</span>
+            </div>
+            <div class="a-game--hud-row">
+              <span class="a-game--hud-label" data-i18n="hud.lives">Lives</span>
+              <span class="a-game--lives-value">3</span>
+            </div>
+            <div class="a-game--hud-row">
+              <span class="a-game--hud-label" data-i18n="hud.room">Room</span>
+              <span class="a-game--room-value">1</span>
+            </div>
+            <div class="a-game--hud-row">
+              <span class="a-game--hud-label" data-i18n="hud.robots">Robots</span>
+              <span class="a-game--robots-value">0</span>
+            </div>
+          </div>
+          <div class="a-game--banner" aria-hidden="true"></div>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--ready">
+        <section class="c-screen c-menu a-ready" tabindex="-1" data-i18n-attr="aria-label:ready.aria">
+          <h1 class="c-menu--title" data-i18n="ready.title">GET READY</h1>
+          <p class="c-menu--subtitle a-ready--subtitle"></p>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--pause">
+        <section class="c-screen c-menu a-pause" tabindex="-1" data-i18n-attr="aria-label:pause.aria">
+          <h1 class="c-menu--title" data-i18n="pause.title">Paused</h1>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="resume" data-i18n="pause.resume">Resume</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="pause.menu">Quit to menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--gameover">
+        <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
+          <h1 class="c-menu--title" data-i18n="gameover.title">Game Over</h1>
+          <p class="c-menu--subtitle"><span data-i18n="gameover.finalScore">Final score</span>: <span class="a-gameover--score">0</span> &mdash; <span data-i18n="gameover.room">Room</span> <span class="a-gameover--room">1</span></p>
+          <div class="a-gameover--initials" hidden>
+            <p class="c-menu--subtitle" data-i18n="gameover.enterInitials">Enter your initials:</p>
+            <input class="a-gameover--initials-input" type="text" maxlength="3" autocapitalize="characters" pattern="[A-Za-z0-9]{1,3}" />
+            <button class="c-menu--button" data-action="submit" data-i18n="gameover.submit">Submit</button>
+          </div>
+          <ul class="c-menu--list a-gameover--actions">
+            <li><button class="c-menu--button" data-action="playAgain" data-i18n="gameover.playAgain">Play again</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="gameover.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="gameover.menu">Main menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--highscores">
+        <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
+          <h1 class="c-menu--title" data-i18n="highscores.title">High Scores</h1>
+          <ol class="a-highscores--list" aria-live="polite"></ol>
+          <p class="a-highscores--empty" data-i18n="highscores.empty" hidden>No scores yet.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--help">
+        <section class="c-screen c-menu a-help" tabindex="-1" data-i18n-attr="aria-label:help.aria">
+          <h1 class="c-menu--title" data-i18n="help.title">How to play</h1>
+          <div class="c-menu--prose">
+            <p data-i18n-html="help.intro">Survive the robot rooms. Walls electrocute on touch &mdash; you and the robots both.</p>
+            <h2 data-i18n="help.controlsHeader">Controls</h2>
+            <ul>
+              <li data-i18n-html="help.controlsMove"><kbd>Arrows</kbd> &mdash; move (8 directions)</li>
+              <li data-i18n-html="help.controlsFire"><kbd>WASD</kbd> &mdash; fire. Single keys shoot the four cardinals; hold two keys at once for diagonals (e.g. <kbd>W</kbd>+<kbd>D</kbd> shoots northeast). You stand still while firing.</li>
+              <li data-i18n-html="help.controlsFireNumpad">Or pick the <em>numpad</em> control scheme in Settings: <kbd>4</kbd> <kbd>6</kbd> <kbd>8</kbd> <kbd>2</kbd> for cardinals, <kbd>7</kbd> <kbd>9</kbd> <kbd>1</kbd> <kbd>3</kbd> for diagonals — one key per direction.</li>
+              <li data-i18n-html="help.controlsExample">To chase a robot to the northeast while strafing west: hold <kbd>&larr;</kbd> + <kbd>W</kbd> + <kbd>D</kbd>. Movement reads only the arrow keys; firing reads only WASD/numpad — they do not interfere.</li>
+              <li data-i18n-html="help.controlsPause"><kbd>Esc</kbd> &mdash; pause</li>
+              <li data-i18n-html="help.controlsF1"><kbd>F1</kbd> &mdash; announce score</li>
+              <li data-i18n-html="help.controlsF2"><kbd>F2</kbd> &mdash; announce lives</li>
+              <li data-i18n-html="help.controlsF3"><kbd>F3</kbd> &mdash; announce room</li>
+              <li data-i18n-html="help.controlsF4"><kbd>F4</kbd> &mdash; announce robots remaining</li>
+            </ul>
+            <h2 data-i18n="help.tipsHeader">Tips</h2>
+            <ul>
+              <li data-i18n-html="help.tipsWalls">Touching any wall is fatal. Robots are dumb &mdash; nudge them into walls.</li>
+              <li data-i18n-html="help.tipsClearAndExit">Killing every robot does <strong>not</strong> auto-advance. You still have to walk out through one of the four exits in the perimeter wall. Clear the room first and you collect a bonus (10 points per robot) plus a fanfare on the way out; bail early and Evil Otto enters the next room with you. <kbd>F4</kbd> confirms how many robots remain.</li>
+              <li data-i18n-html="help.tipsOtto">Linger too long and Evil Otto arrives, bouncing on a tritone. He cannot be killed. He passes through walls. Run.</li>
+              <li data-i18n-html="help.tipsExits">Once the room is cleared, each of the four exits sings its own chord pad. <strong>North</strong> is bright and high; <strong>east</strong> is mid and stable; <strong>south</strong> is warm and low; <strong>west</strong> is deep and dim. Walk toward the chord you want — louder and more central means you're closer.</li>
+            </ul>
+          </div>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="help.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--settings">
+        <section class="c-screen c-menu a-settings" tabindex="-1" data-i18n-attr="aria-label:settings.aria">
+          <h1 class="c-menu--title" data-i18n="settings.title">Settings</h1>
+          <ul class="c-menu--list a-settings--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="settings.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--test">
+        <section class="c-screen c-menu a-test" tabindex="-1" data-i18n-attr="aria-label:test.aria">
+          <h1 class="c-menu--title" data-i18n="test.title">Audio orientation test</h1>
+          <p class="c-menu--subtitle" data-i18n="test.subtitle">Listen for ticks at front, right, behind, and left.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="replay" data-i18n="test.replay">Replay</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="test.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--learn">
+        <section class="c-screen c-menu a-learn" tabindex="-1" data-i18n-attr="aria-label:learn.aria">
+          <h1 class="c-menu--title" data-i18n="learn.title">Learn the sounds</h1>
+          <p class="c-menu--subtitle" data-i18n="learn.subtitle">Click any sound to audition it.</p>
+          <ul class="c-menu--list a-learn--nav"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="learn.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="menu.title">BERZERK!</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">Audio-first arcade horror.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="start" data-i18n="menu.start">Start</button></li>
+            <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">How to play</button></li>
+            <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the sounds</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="menu.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="settings" data-i18n="menu.settings">Settings</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="language.button">Language</button></li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>

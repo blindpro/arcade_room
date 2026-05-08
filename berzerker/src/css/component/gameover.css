@@ -1,0 +1,31 @@
+.a-gameover--initials {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.a-gameover--initials-input {
+  background: rgba(255, 255, 255, 0.05);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 0.4rem;
+  color: #FFFFFF;
+  font-family: monospace;
+  font-size: 1.5em;
+  letter-spacing: 0.5em;
+  padding: 0.5em 1em;
+  text-align: center;
+  text-transform: uppercase;
+  width: 6em;
+}
+
+.a-gameover--initials-input:focus {
+  border-color: #FFFFFF;
+  outline: none;
+}
+
+.a-gameover--score,
+.a-gameover--room {
+  font-family: monospace;
+  font-weight: bold;
+}

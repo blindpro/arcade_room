@@ -1,0 +1,21 @@
+.a-highscores--list {
+  display: flex;
+  flex-direction: column;
+  font-family: monospace;
+  gap: 0.3rem;
+  list-style: decimal inside;
+  margin: 1rem 0;
+  padding: 0;
+  width: min(36em, 90vw);
+}
+  .a-highscores--list li {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 0.3rem;
+    padding: 0.4rem 0.8rem;
+  }
+.a-highscores--empty {
+  font-style: italic;
+  margin: 1rem 0;
+  opacity: 0.7;
+}

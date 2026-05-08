@@ -1,0 +1,16 @@
+/* Visually-hidden screen-reader regions. We don't render the text on
+   screen because BERZERK is audio-first; the regions exist so screen
+   readers + the SpeechSynthesis fallback have something to read. */
+.a-app--announce,
+.a-app--announce-assertive {
+  border: 0;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  height: 1px;
+  margin: -1px;
+  overflow: hidden;
+  padding: 0;
+  position: absolute;
+  white-space: nowrap;
+  width: 1px;
+}

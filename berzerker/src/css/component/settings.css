@@ -1,0 +1,30 @@
+.a-settings--list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  list-style: none;
+  margin: 1rem 0;
+  padding: 0;
+  width: min(32em, 90vw);
+}
+.a-settings--row {
+  align-items: center;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0.3rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr auto;
+  padding: 0.4rem 0.8rem;
+}
+.a-settings--label {
+  text-align: left;
+}
+.a-settings--row input[type="range"] {
+  width: 14em;
+}
+.a-settings--row .c-menu--button {
+  margin: 0;
+  width: auto;
+  min-width: 8em;
+}

@@ -540,34 +540,6 @@ If both paths call the same action, you'll dispatch twice. Usually the second di
 
 Browser autoplay policy means the WebAudio context starts in `suspended` state. `main.js` registers `pointerdown`/`keydown`/`touchstart` listeners that call `ctx.resume()`. The menu is the entry screen, so any SFX scheduled in `menu.onEnter` (before the user's first click on a menu button) will be silent. The `aria-live` announce still works (it's not WebAudio). Don't chase silent SFX as a bug before the first user gesture has happened.
 
-### "Reverb" on a one-shot is usually a re-fired SFX, not real reverb
-
-If a player reports the gameOver dirge (or any one-shot SFX) sounds reverb-y / smeared, **check first whether an FSM phase is re-enqueueing the cue every frame** before suspecting the audio chain. A phase that does "wait N seconds, then fire X" but never advances will fire X ~60×/sec for the rest of the wait. ~200 stacked copies of a 1.5s dirge sound exactly like a big reverb wash.
-
-The general shape — guard the one-shot with a flag, or transition out immediately after firing:
-
-```js
-if (_state.phase === PHASE_DYING) {
-  if (_state.t >= _state.pendingDeathAt && !_state._handledDeath) {
-    _state._handledDeath = true
-    content.audio.enqueue({type: 'gameOver'})
-    // ... callback into screen, etc.
-  }
-  return
-}
-```
-
-Reset the flag in `game.reset()` (and any path that re-enters the phase). Reference: `../_cl/src/js/content/game.js` PHASE_DYING.
-
-**Belt-and-braces:** `engine.mixer.reverb` is also active-by-default in syngen — its wet output is permanently wired into the master mix once active, even if no game code explicitly calls `mixer.reverb.createBus()`. For games that author their own per-cue tails (essentially all of them in this collection — ADSR + lowpass shaping cover what reverb would do), kill the global send in `main.js`:
-
-```js
-// after engine.loop.start().pause():
-engine.mixer.reverb.setActive(false)
-```
-
-ESCALADOR (`../_cl/src/js/main.js`) does this. If a specific cue genuinely needs a room sound, build a per-cue convolver on that signal chain instead of leaning on the global send.
-
 ### Hash routing in screenManager
 
 The `none → activate` transition is the place to honor `window.location.hash` for diagnostic routes (e.g. `#test`, `#music`). Don't try to dispatch from `main.js` after `app.screenManager.dispatch('activate')` — at that point the FSM is already in the destination state and the hash is too late.

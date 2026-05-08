@@ -1,0 +1,58 @@
+.a-game {
+  align-items: stretch;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  justify-content: flex-start;
+  padding: 1rem;
+  position: relative;
+}
+
+.a-game--hud {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 0.4rem;
+  display: flex;
+  font-family: monospace;
+  gap: 1.5rem;
+  justify-content: space-between;
+  padding: 0.6rem 1rem;
+  position: absolute;
+  right: 1rem;
+  top: 1rem;
+}
+
+.a-game--hud-row {
+  align-items: baseline;
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  text-align: right;
+}
+
+.a-game--hud-label {
+  font-size: 0.7em;
+  letter-spacing: 0.06em;
+  opacity: 0.6;
+  text-transform: uppercase;
+}
+
+.a-game--score-value,
+.a-game--lives-value,
+.a-game--room-value,
+.a-game--robots-value {
+  font-size: 1.3em;
+  font-weight: bold;
+}
+
+.a-game--banner {
+  font-family: monospace;
+  font-size: 1.2em;
+  left: 0;
+  pointer-events: none;
+  position: absolute;
+  right: 0;
+  text-align: center;
+  top: 50%;
+  transform: translateY(-50%);
+}
