@@ -24,7 +24,7 @@ const AI = (() => {
   }
 
   function createAll() {
-    return [create(0), create(1), create(2)]
+    return [create(0), create(1), create(2),create(3),create(4)]
   }
 
   function update(ai, dt, playerZ) {

@@ -13,5 +13,8 @@
   "devDependencies": {
     "@electron/packager": "^20.0.0",
     "electron": "^41.3.0"
+  },
+  "dependencies": {
+    "gulp": "^5.0.1"
   }
 }
