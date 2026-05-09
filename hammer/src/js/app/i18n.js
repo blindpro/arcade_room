@@ -117,6 +117,15 @@ app.i18n = (() => {
       'ann.savedScore': 'Score saved.',
       'ann.fxScore': 'Score',
       'ann.fxLevel': 'Level',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
+
+      // Online leaderboard
+      'gameover.nameRequired': 'Type a name to save your score.',
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
 
       // Score band labels
       'band.wow': 'WOW!',
@@ -246,6 +255,15 @@ app.i18n = (() => {
       'ann.savedScore': 'Puntuación guardada.',
       'ann.fxScore': 'Puntos',
       'ann.fxLevel': 'Nivel',
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+
+      // Online leaderboard
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Puesto en línea: número {rank}',
+      'online.error': 'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       // Score band labels
       'band.wow': '¡INCREÍBLE!',

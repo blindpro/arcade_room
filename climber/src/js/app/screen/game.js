@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — game screen.
+ * CRAZY CLIMBER — game screen.
  *
  * Wires window-level keydown for the four climber keys (A/Z/K/M), since
  * those don't fit the app.controls game-mapping shape (which is built around
@@ -45,6 +45,7 @@ app.screen.game = app.screenManager.invent({
       onGameOver: (info) => this.handleGameOver(info),
       onBuildingClear: (info) => this.handleBuildingClear(info),
     })
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
 
     // Window-level keydown for A/Z/K/M and F1–F4 / Escape. Capture phase
     // so we can preventDefault on F1/F3 (Help/Find).

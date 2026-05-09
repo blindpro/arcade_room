@@ -42,6 +42,7 @@ app.screen.game = app.screenManager.invent({
     if (engine.loop.isPaused()) engine.loop.resume()
     if (content.audio) content.audio.start()
     if (content.game) content.game.startDriving()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
   },
   onExit: function () {
     this.unbindKeys()

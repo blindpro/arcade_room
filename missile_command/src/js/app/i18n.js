@@ -203,6 +203,15 @@ app.i18n = (() => {
       'ann.waveStat': 'Wave {wave}. {remaining} threats remaining.',
       'ann.playing': 'Playing {label}.',
       'ann.learnHello': 'Sound learning. Pick a sound to preview.',
+
+      // Online leaderboard
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
+      'gameover.nameRequired': 'Type a name to save your score.',
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
     },
 
     es: {
@@ -390,6 +399,15 @@ app.i18n = (() => {
       'ann.waveStat': 'Oleada {wave}. {remaining} amenazas restantes.',
       'ann.playing': 'Reproduciendo {label}.',
       'ann.learnHello': 'Aprender sonidos. Elige uno para escucharlo.',
+
+      // Online leaderboard
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Puesto en línea: número {rank}',
+      'online.error': 'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
     },
   }
 

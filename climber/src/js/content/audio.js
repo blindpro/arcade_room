@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — stereo audio engine.
+ * CRAZY CLIMBER — stereo audio engine.
  *
  * Listener mode: STEREO / non-spatial. Each cue is panned via a
  * StereoPannerNode whose pan ∈ [-1, 1]. We never touch engine.position,

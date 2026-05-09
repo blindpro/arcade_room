@@ -20,7 +20,10 @@ app.screen.gameover = app.screenManager.invent({
     roomEl: null,
     initialsBlockEl: null,
     initialsInputEl: null,
+    statusEl: null,
+    linkEl: null,
     submitted: false,
+    posting: false,
   },
   _lastPayload: null,
   onReady: function () {
@@ -29,6 +32,8 @@ app.screen.gameover = app.screenManager.invent({
     this.state.roomEl = root.querySelector('.a-gameover--room')
     this.state.initialsBlockEl = root.querySelector('.a-gameover--initials')
     this.state.initialsInputEl = root.querySelector('.a-gameover--initials-input')
+    this.state.statusEl = root.querySelector('.a-gameover--online-status')
+    this.state.linkEl = root.querySelector('.a-gameover--online-link')
 
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
@@ -52,32 +57,49 @@ app.screen.gameover = app.screenManager.invent({
     if (this.state.roomEl) this.state.roomEl.textContent = String(payload.room)
     this.state.entryFrames = 6
     this.state.submitted = false
+    this.state.posting = false
 
-    const qualifies = app.highscores.qualifies(payload.score)
+    // Always show the initials block — even sub-leaderboard scores can be
+    // submitted to the online ranking.
     if (this.state.initialsBlockEl) {
-      if (qualifies) {
-        this.state.initialsBlockEl.removeAttribute('hidden')
-        if (this.state.initialsInputEl) {
-          this.state.initialsInputEl.value = ''
-          setTimeout(() => this.state.initialsInputEl && this.state.initialsInputEl.focus(), 50)
-        }
-      } else {
-        this.state.initialsBlockEl.setAttribute('hidden', '')
+      this.state.initialsBlockEl.removeAttribute('hidden')
+      if (this.state.initialsInputEl) {
+        this.state.initialsInputEl.value = ''
+        setTimeout(() => this.state.initialsInputEl && this.state.initialsInputEl.focus(), 50)
       }
     }
+    if (this.state.statusEl) { this.state.statusEl.hidden = true; this.state.statusEl.textContent = '' }
+    if (this.state.linkEl) { this.state.linkEl.hidden = true }
 
     app.announce.assertive(app.i18n.t('ann.gameOverShort'))
     app.announce.polite(app.i18n.t('ann.score', {score: payload.score}))
   },
   submitInitials: function () {
-    if (this.state.submitted) return
+    if (this.state.submitted || this.state.posting) return
     const payload = this._lastPayload || {score: 0, room: 1}
-    let name = (this.state.initialsInputEl && this.state.initialsInputEl.value) || ''
-    name = String(name).replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 3) || 'PLR'
-    app.highscores.add(name, payload.score, payload.room)
+    let raw = (this.state.initialsInputEl && this.state.initialsInputEl.value) || ''
+    raw = String(raw).trim()
+    if (!raw) {
+      app.announce.assertive(app.i18n.t('gameover.nameRequired'))
+      if (this.state.initialsInputEl) {
+        try { this.state.initialsInputEl.focus() } catch (e) {}
+      }
+      return
+    }
+    const name = raw
+    if (app.highscores.qualifies(payload.score)) {
+      app.highscores.add(name, payload.score, payload.room)
+    }
     this.state.submitted = true
-    if (this.state.initialsBlockEl) this.state.initialsBlockEl.setAttribute('hidden', '')
-    app.screenManager.dispatch('highscores')
+    this.state.posting = true
+    Promise.resolve(app.onlineSubmit.run({
+      name: name,
+      score: payload.score,
+      meta: {level: payload.room, kills: payload.kills | 0},
+      statusEl: this.state.statusEl,
+      linkEl: this.state.linkEl,
+    })).then(() => { this.state.posting = false })
+      .catch(() => { this.state.posting = false })
   },
   onFrame: function () {
     try {

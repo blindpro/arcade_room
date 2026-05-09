@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — main menu.
+ * CRAZY CLIMBER — main menu.
  *
  * Entry point. The first click here also satisfies the WebAudio
  * user-gesture requirement. No splash screen.

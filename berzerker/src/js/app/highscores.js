@@ -58,7 +58,7 @@ app.highscores = (() => {
     add: function (name, score, room) {
       const list = load()
       list.push({
-        name: String(name || 'PLR').slice(0, 3).toUpperCase(),
+        name: String(name || 'PLR'),
         score: score | 0,
         room: room | 0,
         date: new Date().toISOString(),

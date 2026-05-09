@@ -194,6 +194,15 @@ app.i18n = (() => {
       'ann.exits.open': 'Open: {open}.',
       'ann.exits.allOpen': 'All directions clear.',
 
+      // Online leaderboard
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
+      'gameover.nameRequired': 'Type a name to save your score.',
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
+
       // Robot barks (English pool — author independently per locale)
       'robotbarks.pools.spotted': ['robotbarks.alert', 'robotbarks.killTheIntruder', 'robotbarks.getHumanoid'],
       'robotbarks.pools.killAlly': ['robotbarks.avenge', 'robotbarks.youWillPay'],
@@ -399,6 +408,15 @@ app.i18n = (() => {
       'ann.dir.west': 'oeste',
       'ann.exits.open': 'Libre: {open}.',
       'ann.exits.allOpen': 'Todas las salidas despejadas.',
+
+      // Online leaderboard
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Puesto en línea: número {rank}',
+      'online.error': 'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       // Robot barks — Spanish pool authored independently, NOT translated
       'robotbarks.pools.spotted': ['robotbarks.alert', 'robotbarks.exterminar', 'robotbarks.atrapad'],

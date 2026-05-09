@@ -3,7 +3,7 @@ app.screen.game = app.screenManager.invent({
   parentSelector: '.a-app--game',
   rootSelector: '.a-game',
   transitions: {
-    end: function (e, summary) { this.change('gameover', summary) },
+    end: function (_e, summary) { this.change('gameover', summary) },
     menu: function () { this.change('menu') },
   },
   state: {
@@ -50,6 +50,8 @@ app.screen.game = app.screenManager.invent({
     }
     this.state.statusHandler = handleStatus
     window.addEventListener('keydown', handleStatus, true)
+
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
 
     // Start the run. The game module will call back when game-over fires.
     content.game.start((summary) => {

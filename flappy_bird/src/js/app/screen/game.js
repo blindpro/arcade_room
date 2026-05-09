@@ -54,6 +54,7 @@ app.screen.game = app.screenManager.invent({
     this.refreshHud()
     app.announce.polite(app.i18n.t('ann.gameStart'))
     content.sfx.ready()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
   },
   onExit: function () {
     if (content.audio && content.audio.silenceAll) content.audio.silenceAll()

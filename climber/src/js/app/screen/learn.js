@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — learn screen.
+ * CRAZY CLIMBER — learn screen.
  *
  * Lets the player audition each cue at their own pace. Each entry is a
  * button; clicking plays the cue (and stops any continuous voice on

@@ -77,6 +77,7 @@ app.screen.game = app.screenManager.invent({
     if (this.state.el.expr)   this.state.el.expr.textContent = ''
     if (this.state.el.digits) this.state.el.digits.innerHTML = ''
     content.game.start()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
   },
   onExit: function () {
     if (this.state.keyHandler) {

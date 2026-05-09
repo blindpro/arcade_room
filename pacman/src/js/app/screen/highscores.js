@@ -13,9 +13,13 @@ app.screen.highscores = app.screenManager.invent({
         app.screenManager.dispatch('back')
       }
     })
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
   },
   onEnter: function () {
     this.refresh()
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     this.state.entryFrames = 6 // ignore input briefly so the entering keypress doesn't bounce us back
     const entries = app.highscores.list()
     if (!entries.length) {

@@ -64,7 +64,7 @@ app.highscores = (() => {
     add: function (name, score, wave, kills) {
       const list = load()
       list.push({
-        name: String(name || 'Player').slice(0, 16),
+        name: String(name || 'Player'),
         score: score | 0,
         wave: wave | 0,
         kills: kills | 0,

@@ -181,6 +181,7 @@ app.screen.game = app.screenManager.invent({
     const ctx = engine.context()
     if (ctx && ctx.state === 'suspended') ctx.resume()
     content.game.start()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     this.state.pendingGameOver = false
     this.state.lastTime = engine.time()
     this.state.gearAnnounceCooldown = 0

@@ -74,6 +74,14 @@ app.i18n = (() => {
       'ann.levelClear':       'Level {level} cleared. Bonus {bonus}.',
       'ann.levelClearBonus':  'Level {level} cleared, perfect run, extra life. Bonus {bonus}.',
       'ann.gameover':         'Game over. Final score {score}.',
+      'ann.onlineRank':       'Online rank: number {rank}.',
+      'ann.onlineError':      'Could not reach the online leaderboard. Score saved locally.',
+
+      // Online leaderboard
+      'online.posting':   'Posting your score…',
+      'online.rank':      'Online rank: #{rank}',
+      'online.error':     'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
 
       // Game over screen
       'gameover.aria':       'Game over',
@@ -82,6 +90,7 @@ app.i18n = (() => {
       'gameover.level':      'Reached level {n}',
       'gameover.newRecord':  'New high score!',
       'gameover.namePrompt': 'Your name:',
+      'gameover.nameRequired': 'Type a name to save your score.',
       'gameover.save':       'Save',
       'gameover.saved':      'Score saved.',
       'gameover.playAgain':  'Play again',
@@ -151,6 +160,14 @@ app.i18n = (() => {
       'ann.levelClear':       'Nivel {level} superado. Bonus {bonus}.',
       'ann.levelClearBonus':  '¡Nivel {level} perfecto! Vida extra. Bonus {bonus}.',
       'ann.gameover':         'Fin del juego. Puntos finales: {score}.',
+      'ann.onlineRank':       'Puesto en línea: número {rank}.',
+      'ann.onlineError':      'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+
+      // Ránking online
+      'online.posting':   'Enviando tu puntuación…',
+      'online.rank':      'Puesto en línea: número {rank}',
+      'online.error':     'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       'gameover.aria':       'Fin del juego',
       'gameover.title':      'Fin del juego',
@@ -158,6 +175,7 @@ app.i18n = (() => {
       'gameover.level':      'Llegaste al nivel {n}',
       'gameover.newRecord':  '¡Nuevo récord!',
       'gameover.namePrompt': 'Tu nombre:',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
       'gameover.save':       'Guardar',
       'gameover.saved':      'Récord guardado.',
       'gameover.playAgain':  'Otra partida',

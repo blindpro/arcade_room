@@ -1003,7 +1003,7 @@
         // Update the stored name for this peer
         const p = online.players.get(from)
         if (p && msg.name) {
-          p.name = String(msg.name).slice(0, 16)
+          p.name = String(msg.name)
           Net.broadcast({ t: 'lobby', players: buildLobbyList() })
           refreshLobbyUI()
         }
@@ -1376,7 +1376,7 @@
     }
 
     async function submitName() {
-      const name = (nameInput.value || '').trim().slice(0, 16) || 'Racer'
+      const name = (nameInput.value || '').trim() || 'Racer'
       try { localStorage.setItem('woc-name', name) } catch (_) {}
       try { Audio.init(); Audio.resume() } catch (_) {}
       if (pendingNameMode === 'host') {
@@ -1410,7 +1410,7 @@
         joinStatus.textContent = I18n.t('join.codeLength')
         return
       }
-      const name = (nameInput.value || '').trim().slice(0, 16) || 'Racer'
+      const name = (nameInput.value || '').trim() || 'Racer'
       joinStatus.textContent = I18n.t('join.connecting')
       try { Audio.init(); Audio.resume() } catch (_) {}
       try {

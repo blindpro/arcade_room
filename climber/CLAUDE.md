@@ -1,6 +1,6 @@
-# CLAUDE.md — ESCALADOR
+# CLAUDE.md — CRAZY CLIMBER
 
-ESCALADOR (`/home/games/_cl`) — audio-first Crazy Climber port. Two-handed
+CRAZY CLIMBER (`/home/games/_cl`) — audio-first Crazy Climber port. Two-handed
 independent grip input. Stereo-only audio (left ear ↔ left hand, right
 ear ↔ right hand). Spanish name and feria flavor in the `es` locale.
 
@@ -103,7 +103,7 @@ Stereo only — `StereoPannerNode` per source. We never touch
 left/right ear split, and changing that breaks the input ↔ audio
 contract that makes the controls legible.
 
-`engine.mixer.reverb.setActive(false)` is called in `main.js`. ESCALADOR
+`engine.mixer.reverb.setActive(false)` is called in `main.js`. CRAZY CLIMBER
 runs fully dry — every cue authors its own tail (release time, lowpass
 shape). Re-enabling the global reverb send will smear the gameOver dirge
 and pot impacts. **Don't.**
@@ -177,9 +177,9 @@ doesn't double-pay.
 ## Persistence
 
 - **High scores**: `app.highscores` (dual backend — Electron file via
-  preload bridge, web via `localStorage['escalador-highscores-v1']`).
+  preload bridge, web via `localStorage['crazyclimber-highscores-v1']`).
   Top 10 by score; entry stores `{name, score, floor, building, date}`.
-- **Locale**: `localStorage['escalador.lang']` (read in `app.i18n`
+- **Locale**: `localStorage['crazyclimber.lang']` (read in `app.i18n`
   before `app.storage.ready()` finishes).
 - `app.autosave.disable()` is called in `main.js` — no `engine.state`
   serialization. Run state is rebuilt every climb.

@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — wall (the building).
+ * CRAZY CLIMBER — wall (the building).
  *
  * The "wall" is one column wide with two grip-holds at each integer floor:
  * a left grip and a right grip. Each grip has a state:

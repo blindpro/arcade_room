@@ -8,6 +8,8 @@ app.screen.highscores = app.screenManager.invent({
   state: { listEl: null, entryFrames: 0 },
   onReady: function () {
     this.state.listEl = this.rootElement.querySelector('.a-highscores--list')
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     this.rootElement.addEventListener('click', (e) => {
       if (e.target.closest('button[data-action="back"]')) {
         app.screenManager.dispatch('back')

@@ -126,6 +126,7 @@ app.screen.game = app.screenManager.invent({
       })
     } else {
       content.game.start()
+      try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     }
     this.renderHud()
   },

@@ -31,6 +31,8 @@ app.screen.highscores = app.screenManager.invent({
     if (ui.back) app.screenManager.dispatch('back')
   },
   render: function () {
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     const list = this.rootElement.querySelector('.a-highscores--list')
     if (!list) return
     list.innerHTML = ''

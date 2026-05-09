@@ -18,6 +18,7 @@ app.screen.game = app.screenManager.invent({
     if (!this.state.started || content.lander.state.dead) {
       content.game.startNewRun()
       this.state.started = true
+      try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     }
     app.utility.focus.set(this.rootElement)
   },

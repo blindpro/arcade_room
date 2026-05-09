@@ -21,6 +21,7 @@ app.screen.ready = app.screenManager.invent({
     // Start a fresh game session if we're entering room 1 cold.
     if (!content.game.isStarted()) {
       content.game.start()
+      try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     }
     if (content.audio && content.audio.silenceAll) content.audio.silenceAll()
     if (content.sfx && content.sfx.getReadyTone) content.sfx.getReadyTone()

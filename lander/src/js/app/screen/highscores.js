@@ -31,6 +31,8 @@ app.screen.highscores = app.screenManager.invent({
     app.announce.polite(app.i18n.t('ann.highscoresList', {top: top.join('. ')}))
   },
   refresh: function () {
+    const onlineLink = this.rootElement.querySelector('.a-highScores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     const list = this.state.listEl
     if (!list) return
     list.innerHTML = ''

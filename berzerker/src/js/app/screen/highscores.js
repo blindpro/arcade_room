@@ -18,6 +18,8 @@ app.screen.highscores = app.screenManager.invent({
   onReady: function () {
     this.state.listEl = this.rootElement.querySelector('.a-highscores--list')
     this.state.emptyEl = this.rootElement.querySelector('.a-highscores--empty')
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     this.rootElement.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
       if (btn) app.screenManager.dispatch(btn.dataset.action)

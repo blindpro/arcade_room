@@ -136,6 +136,11 @@ app.i18n = (() => {
       'gameover.reasonFloor': 'You hit the ground.',
       'gameover.reasonCeiling': 'You hit the ceiling.',
       'gameover.reasonPipe': 'You hit a pipe.',
+      'gameover.nameRequired': 'Type a name to save your score.',
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
 
       // Language picker
       'language.aria': 'Choose language',
@@ -162,6 +167,8 @@ app.i18n = (() => {
       'ann.gameOver': 'Game over. Score {score}.',
       'ann.gameOverHigh': 'Game over. New record! Score {score}.',
       'ann.scoreSaved': 'Score saved.',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
     },
 
     es: {
@@ -285,6 +292,11 @@ app.i18n = (() => {
       'gameover.reasonFloor': 'Te has estrellado contra el suelo.',
       'gameover.reasonCeiling': 'Te has dado contra el techo.',
       'gameover.reasonPipe': 'Has chocado con una tubería.',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Puesto en línea: número {rank}',
+      'online.error': 'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       // Language picker
       'language.aria': 'Elegir idioma',
@@ -311,6 +323,8 @@ app.i18n = (() => {
       'ann.gameOver': 'Fin de la partida. Puntuación {score}.',
       'ann.gameOverHigh': 'Fin de la partida. ¡Nuevo récord! Puntuación {score}.',
       'ann.scoreSaved': 'Puntuación guardada.',
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
     },
   }
 

@@ -43,11 +43,13 @@
           <p class="a-gameover--score"></p>
           <p class="a-gameover--best"></p>
           <p class="a-gameover--rank-msg" hidden data-i18n="gameover.newRecord">New high score!</p>
-          <form class="a-gameover--form" hidden>
+          <form class="a-gameover--form">
             <label class="a-gameover--label" data-i18n="gameover.namePrompt" for="a-gameover--name-input">Enter your name to record this run:</label>
-            <input id="a-gameover--name-input" class="a-gameover--name" type="text" maxlength="16" data-i18n-attr="placeholder:gameover.namePlaceholder" />
+            <input id="a-gameover--name-input" class="a-gameover--name" type="text" data-i18n-attr="placeholder:gameover.namePlaceholder" />
             <button type="submit" class="c-menu--button a-gameover--submit" data-i18n="gameover.save">Save</button>
           </form>
+          <p class="a-gameover--online-status" role="status" aria-live="polite" hidden></p>
+          <p class="a-gameover--online-link-wrap"><a class="a-gameover--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" hidden></a></p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="continue" data-i18n="gameover.continue">Continue</button></li>
           </ul>
@@ -137,6 +139,7 @@
           <h1 class="c-menu--title" data-i18n="highscores.title">High scores</h1>
           <p class="c-menu--subtitle" data-i18n="highscores.subtitle">Top 10 scores on this device.</p>
           <ol class="c-menu--list a-highscores--list"></ol>
+          <p class="a-highscores--online-link-wrap"><a class="a-highscores--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" data-i18n="online.viewBoard">View the world leaderboard</a></p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
           </ul>

@@ -72,6 +72,7 @@ app.screen.game = app.screenManager.invent({
     content.crosshair.attach()
     content.crosshair.reset()
     this.refreshHud()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     app.announce.polite(app.i18n.t('ann.score', {
       score: content.state.score,
       wave: content.state.wave,

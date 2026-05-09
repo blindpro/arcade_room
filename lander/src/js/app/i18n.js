@@ -83,6 +83,14 @@ app.i18n = (() => {
       'ann.highscoresEmpty': 'No scores yet.',
       'ann.highscoresList': 'Top pilots. {top}.',
       'ann.highscoresEntry': '{n}: {name}, {score}, world {mission}',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
+
+      // Online leaderboard
+      'online.posting':   'Posting your score…',
+      'online.rank':      'Online rank: #{rank}',
+      'online.error':     'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
 
       // Verdicts (i18n keys stored on lander state)
       'verdict.soft':    'Touchdown. Vertical {vy} metres per second.',
@@ -157,6 +165,9 @@ app.i18n = (() => {
       'gameover.tiers': 'Landings: {perfect} perfect, {clean} clean, {sloppy} sloppy',
       'gameover.restart': 'New tour',
       'gameover.enterScore': 'Submit score',
+      'gameover.save': 'Save score',
+      'gameover.nameLabel': 'Your callsign',
+      'gameover.nameRequired': 'Type a name to save your score.',
       'gameover.menu': 'Main menu',
       'gameover.highscores': 'High scores',
 
@@ -233,6 +244,14 @@ app.i18n = (() => {
       'ann.highscoresEmpty': 'Aún no hay puntuaciones.',
       'ann.highscoresList': 'Pilotos destacados. {top}.',
       'ann.highscoresEntry': '{n}: {name}, {score}, mundo {mission}',
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+
+      // Ránking online
+      'online.posting':   'Enviando tu puntuación…',
+      'online.rank':      'Puesto en línea: número {rank}',
+      'online.error':     'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       'verdict.soft':    'Aterrizaje. Velocidad vertical {vy} metros por segundo.',
       'verdict.crashVy': 'Impacto demasiado fuerte — {vy} metros por segundo.',
@@ -300,6 +319,9 @@ app.i18n = (() => {
       'gameover.tiers': 'Aterrizajes: {perfect} perfectos, {clean} limpios, {sloppy} chapuceros',
       'gameover.restart': 'Nueva gira',
       'gameover.enterScore': 'Guardar puntuación',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.nameLabel': 'Tu indicativo',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
       'gameover.menu': 'Menú principal',
       'gameover.highscores': 'Mejores',
 
