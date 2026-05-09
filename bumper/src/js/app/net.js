@@ -304,7 +304,7 @@ app.net = (() => {
     }
     if (peer) disconnect('reconnect')
 
-    myName = String(name || 'Host').slice(0, 16) || 'Host'
+    myName = String(name || 'Host')
     myCode = code ? normalizeCode(code) : generateCode()
     if (!VALID_CODE.test(myCode)) myCode = generateCode()
 
@@ -385,7 +385,7 @@ app.net = (() => {
       if (!msg || typeof msg !== 'object') return
       record.lastSeen = Date.now()
       if (msg.type === 'hello') {
-        record.name = String(msg.name || 'Player').slice(0, 16) || 'Player'
+        record.name = String(msg.name || 'Player')
         if (!record.helloed) {
           record.helloed = true
           fire('peerJoin', {peerId, name: record.name})
@@ -463,7 +463,7 @@ app.net = (() => {
     }
     if (peer) disconnect('reconnect')
 
-    myName = String(name || 'Player').slice(0, 16) || 'Player'
+    myName = String(name || 'Player')
     myCode = norm
 
     return new Promise((resolve, reject) => {

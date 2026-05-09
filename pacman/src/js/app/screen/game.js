@@ -66,6 +66,7 @@ app.screen.game = app.screenManager.invent({
   onEnter: function () {
     content.audio.start()
     content.sfx.introJingle()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     app.announce.polite(app.i18n.t('ann.score', {
       score: content.game.state.score,
       lives: content.game.state.lives,

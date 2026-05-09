@@ -11,7 +11,11 @@ app.screen.gameover = app.screenManager.invent({
     rankMsg: null,
     scoreEl: null,
     form: null,
+    statusEl: null,
+    linkEl: null,
     qualifies: false,
+    saved: false,
+    posting: false,
   },
   onReady: function () {
     const root = this.rootElement
@@ -20,14 +24,12 @@ app.screen.gameover = app.screenManager.invent({
     this.state.rankMsg = root.querySelector('.a-gameover--rank-msg')
     this.state.scoreEl = root.querySelector('.a-gameover--score')
     this.state.form = root.querySelector('.a-gameover--form')
+    this.state.statusEl = root.querySelector('.a-gameover--online-status')
+    this.state.linkEl = root.querySelector('.a-gameover--online-link')
 
     this.state.form.addEventListener('submit', (e) => {
       e.preventDefault()
-      const name = this.state.nameInput.value.trim() || 'Player'
-      app.highscores.add(name, content.game.state.score, content.game.state.level)
-      content.sfx.menuSelect()
-      app.announce.polite(app.i18n.t('ann.scoreSaved'))
-      app.screenManager.dispatch('continue')
+      this.handleSave()
     })
 
     root.addEventListener('click', (e) => {
@@ -40,16 +42,23 @@ app.screen.gameover = app.screenManager.invent({
     const score = content.game.state.score
     this.state.scoreEl.textContent = String(score)
     this.state.qualifies = app.highscores.qualifies(score)
+    // The rank message shows only when qualifying for local top 10. The form
+    // stays visible regardless so online submission is always available.
     this.state.rankMsg.hidden = !this.state.qualifies
-    this.state.form.hidden = !this.state.qualifies
+    this.state.form.hidden = false
+    this.state.saved = false
+    this.state.posting = false
+    if (this.state.statusEl) { this.state.statusEl.hidden = true; this.state.statusEl.textContent = '' }
+    if (this.state.linkEl) { this.state.linkEl.hidden = true }
+    if (this.state.nameInput) this.state.nameInput.value = ''
     if (this.state.qualifies) {
       app.announce.assertive(app.i18n.t('ann.gameOverHigh', {score}))
-      setTimeout(() => {
-        if (this.state.nameInput) this.state.nameInput.focus()
-      }, 250)
     } else {
       app.announce.assertive(app.i18n.t('ann.gameOver', {score}))
     }
+    setTimeout(() => {
+      if (this.state.nameInput) this.state.nameInput.focus()
+    }, 250)
   },
   onFrame: function () {
     // If user has form focus, let them type — only handle Esc to skip
@@ -64,5 +73,34 @@ app.screen.gameover = app.screenManager.invent({
       const target = f && f.dataset && f.dataset.action ? f : null
       if (target) target.click()
     }
+  },
+  handleSave: function () {
+    if (this.state.saved || this.state.posting) return
+    const score = content.game.state.score
+    const level = content.game.state.level
+    const raw = (this.state.nameInput && this.state.nameInput.value || '').trim()
+    if (!raw) {
+      app.announce.assertive(app.i18n.t('gameover.nameRequired'))
+      if (this.state.nameInput) {
+        try { this.state.nameInput.focus() } catch (e) {}
+      }
+      return
+    }
+    const name = raw
+    if (this.state.qualifies) {
+      app.highscores.add(name, score, level)
+    }
+    this.state.saved = true
+    content.sfx.menuSelect()
+    app.announce.polite(app.i18n.t('ann.scoreSaved'))
+    this.state.posting = true
+    Promise.resolve(app.onlineSubmit.run({
+      name: name,
+      score: score,
+      meta: {level: level},
+      statusEl: this.state.statusEl,
+      linkEl: this.state.linkEl,
+    })).then(() => { this.state.posting = false })
+      .catch(() => { this.state.posting = false })
   },
 })

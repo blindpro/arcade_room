@@ -24,6 +24,7 @@ app.screen.game = app.screenManager.invent({
       app.announce.polite(app.i18n.t('ann.resumed'))
     } else {
       content.game.newGame()
+      try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     }
     if (typeof content.render === 'object' && content.render.draw) {
       content.render.draw()

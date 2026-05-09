@@ -11,12 +11,17 @@ app.screen.gameover = app.screenManager.invent({
   state: {
     entryFrames: 0,
     nameInput: null,
+    statusEl: null,
+    linkEl: null,
     saved: false,
+    posting: false,
     snapshot: null,
   },
   onReady: function () {
     const root = this.rootElement
     this.state.nameInput = root.querySelector('.a-gameover--name-input')
+    this.state.statusEl = root.querySelector('.a-gameover--online-status')
+    this.state.linkEl = root.querySelector('.a-gameover--online-link')
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
       if (!btn) return
@@ -28,6 +33,7 @@ app.screen.gameover = app.screenManager.invent({
   onEnter: function () {
     this.state.entryFrames = 6
     this.state.saved = false
+    this.state.posting = false
     const s = content.game.get()
     this.state.snapshot = s ? {
       score: s.totalScore | 0,
@@ -36,6 +42,8 @@ app.screen.gameover = app.screenManager.invent({
     } : {score: 0, level: 0, lastScore: 0}
     this.renderStats()
     if (this.state.nameInput) this.state.nameInput.value = ''
+    if (this.state.statusEl) { this.state.statusEl.hidden = true; this.state.statusEl.textContent = '' }
+    if (this.state.linkEl) { this.state.linkEl.hidden = true }
     app.announce.assertive(app.i18n.t('ann.gameOver', {score: this.state.snapshot.score}))
     content.game.endRun()
   },
@@ -69,18 +77,30 @@ app.screen.gameover = app.screenManager.invent({
     root.querySelector('.a-gameover--lastscore').textContent = fmt('gameover.lastscore', {score: s.lastScore})
   },
   handleSave: function () {
-    if (this.state.saved) return
+    if (this.state.saved || this.state.posting) return
     const s = this.state.snapshot
-    const name = (this.state.nameInput && this.state.nameInput.value || '').trim() || 'Player'
-    if (!app.highscores.qualifies(s.score)) {
-      this.state.saved = true
-      app.announce.polite(app.i18n.t('ann.savedScore'))
-      app.screenManager.dispatch('menu')
+    const raw = (this.state.nameInput && this.state.nameInput.value || '').trim()
+    if (!raw) {
+      app.announce.assertive(app.i18n.t('gameover.nameRequired'))
+      if (this.state.nameInput) {
+        try { this.state.nameInput.focus() } catch (e) {}
+      }
       return
     }
-    app.highscores.add(name, s.score, s.level)
+    const name = raw
+    if (app.highscores.qualifies(s.score)) {
+      app.highscores.add(name, s.score, s.level)
+    }
     this.state.saved = true
+    this.state.posting = true
     app.announce.polite(app.i18n.t('ann.savedScore'))
-    app.screenManager.dispatch('highscores')
+    Promise.resolve(app.onlineSubmit.run({
+      name: name,
+      score: s.score,
+      meta: {level: s.level},
+      statusEl: this.state.statusEl,
+      linkEl: this.state.linkEl,
+    })).then(() => { this.state.posting = false })
+      .catch(() => { this.state.posting = false })
   },
 })

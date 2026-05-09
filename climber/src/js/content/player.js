@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — player (the climber).
+ * CRAZY CLIMBER — player (the climber).
  *
  * The climber has two hands, each independently driven. Each hand has:
  *   floor      — integer floor of the grip currently held (or destination
@@ -25,10 +25,14 @@
 content.player = (() => {
   const REACH_DUR = 0.20      // seconds for a hand to swing to the next grip
   const DUCK_DUR  = 0.55      // seconds a "duck" lasts (Z/M dodge stance)
+  const FALL_DUR  = 1.40      // matches the 'fall' SFX descending tri duration
 
   const _state = {
     alive: true,
     falling: false,
+    fallT: 0,                 // seconds elapsed since die() — drives audio drop
+    fallStartLeft: 0,         // hand floors at the moment of death
+    fallStartRight: 0,
     deathReason: null,        // i18n key for death reason
     deathSide: null,          // 'left' / 'right' for side-flavored deaths
     left:  {floor: 0, prevFloor: 0, reachT: 0, duckT: 0},
@@ -40,6 +44,9 @@ content.player = (() => {
   function reset() {
     _state.alive = true
     _state.falling = false
+    _state.fallT = 0
+    _state.fallStartLeft = 0
+    _state.fallStartRight = 0
     _state.deathReason = null
     _state.deathSide = null
     _state.left  = {floor: 0, prevFloor: 0, reachT: 0, duckT: 0}
@@ -161,15 +168,21 @@ content.player = (() => {
     if (!_state.alive) return
     _state.alive = false
     _state.falling = true
+    _state.fallT = 0
+    _state.fallStartLeft  = _state.left.floor
+    _state.fallStartRight = _state.right.floor
     _state.deathReason = reasonKey || 'game.deathFell'
     _state.deathSide = side || null
-    content.audio.enqueue({type: 'fall', dur: 1.4})
-    setTimeout(() => content.audio.enqueue({type: 'thud'}), 1400)
+    content.audio.enqueue({type: 'fall', dur: FALL_DUR})
+    setTimeout(() => content.audio.enqueue({type: 'thud'}), FALL_DUR * 1000)
   }
 
   // ---------- per-frame tick ----------
   function tick(dt) {
-    if (_state.falling) return
+    if (_state.falling) {
+      _state.fallT = Math.min(FALL_DUR, _state.fallT + dt)
+      return
+    }
     let landedSide = null
     let landedFloor = null
     for (const side of ['left', 'right']) {
@@ -199,10 +212,18 @@ content.player = (() => {
     }
   }
 
+  // 0..1 progress of the post-death drop animation (0 while alive).
+  function fallProgress() {
+    return _state.falling ? Math.min(1, _state.fallT / FALL_DUR) : 0
+  }
+
   function snapshot() {
     return {
       alive: _state.alive,
       falling: _state.falling,
+      fallProgress: fallProgress(),
+      fallStartLeft: _state.fallStartLeft,
+      fallStartRight: _state.fallStartRight,
       bodyFloor: bodyFloor(),
       bodyAltitude: bodyAltitude(),
       left:  {...(_state.left)},

@@ -70,6 +70,7 @@ app.screen.game = app.screenManager.invent({
     } catch (e) {
       console.error('FIRE!: failed to start game', e)
     }
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     this.refreshHud(true)
   },
   onExit: function () {

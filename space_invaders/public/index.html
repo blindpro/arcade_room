@@ -122,6 +122,7 @@
         <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
           <h1 class="c-menu--title" data-i18n="highscores.title">High Scores</h1>
           <ol class="c-menu--list a-highscores--list"></ol>
+          <p class="a-highscores--online-link-wrap"><a class="a-highscores--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" data-i18n="online.viewBoard">View the world leaderboard</a></p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
           </ul>
@@ -137,8 +138,10 @@
           <p class="a-gameover--bestChain" data-i18n="gameover.bestChain">Best chain: x1</p>
           <div class="a-gameover--name">
             <label class="c-menu--subtitle" for="a-gameover--name-input" data-i18n="gameover.namePrompt">Enter your name (3 letters works great):</label>
-            <input id="a-gameover--name-input" class="a-gameover--name-input" type="text" maxlength="16" autocomplete="off" />
+            <input id="a-gameover--name-input" class="a-gameover--name-input" type="text" autocomplete="off" />
           </div>
+          <p class="a-gameover--online-status" role="status" aria-live="polite" hidden></p>
+          <p class="a-gameover--online-link-wrap"><a class="a-gameover--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" hidden></a></p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="save" data-i18n="gameover.save">Save</button></li>
             <li><button class="c-menu--button" data-action="restart" data-i18n="gameover.restart">Try Again</button></li>

@@ -59,7 +59,7 @@ app.highscores = (() => {
     add: function (name, score, mission) {
       const list = load()
       list.push({
-        name: String(name || 'Pilot').slice(0, 16),
+        name: String(name || 'Pilot'),
         score: score | 0,
         mission: mission | 0,
         date: new Date().toISOString(),

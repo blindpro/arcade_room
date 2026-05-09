@@ -119,6 +119,18 @@ app.i18n = (() => {
       'gameover.title': 'Game Over',
       'gameover.summary': 'Final score: {score}. Final rank: {rank}.',
       'gameover.body': 'Press Space or Enter to play again. Press Escape to return to the title screen.',
+      'gameover.nameLabel': 'Name for the leaderboard',
+      'gameover.save': 'Save Score',
+      'gameover.nameRequired': 'Please enter a name to save your score.',
+
+      // Online leaderboard
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard.',
+      'online.viewBoard': 'View the world leaderboard',
+      'ann.savedScore': 'Score saved.',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Couldn’t reach the leaderboard.',
 
       // Runtime announcements
       'ann.pauseEnter': 'Paused. Press Escape or P to resume. Press Q to quit to title.',
@@ -292,6 +304,17 @@ app.i18n = (() => {
       'gameover.title': 'Fin del juego',
       'gameover.summary': 'Puntuación final: {score}. Rango final: {rank}.',
       'gameover.body': 'Pulsa Espacio o Enter para volver a jugar. Pulsa Escape para volver al menú.',
+      'gameover.nameLabel': 'Nombre para la clasificación',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Posición mundial: nº {rank}',
+      'online.error': 'No se pudo contactar con la clasificación.',
+      'online.viewBoard': 'Ver la clasificación mundial',
+      'ann.savedScore': 'Puntuación guardada.',
+      'ann.onlineRank': 'Posición mundial: número {rank}.',
+      'ann.onlineError': 'No se pudo contactar con la clasificación.',
 
       'ann.pauseEnter': 'En pausa. Pulsa Escape o P para reanudar. Pulsa Q para salir al menú principal.',
       'ann.helpEnter': 'Cómo se juega. Tabula por el texto y el botón de volver al final, o pulsa Escape para volver al menú.',

@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — hazards (falling pots, the gorilla).
+ * CRAZY CLIMBER — hazards (falling pots, the gorilla).
  *
  * Pots:
  *   - Spawn rate scales with the body floor and current building.

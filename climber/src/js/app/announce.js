@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — announcer.
+ * CRAZY CLIMBER — announcer.
  *
  * Two aria-live regions, polite and assertive. The "identical strings get
  * swallowed" workaround: clear the region, yield via requestAnimationFrame,

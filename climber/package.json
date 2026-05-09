@@ -1,7 +1,7 @@
 {
-  "name": "escalador",
+  "name": "crazyclimber",
   "version": "0.1.0",
-  "description": "ESCALADOR — audio-first Crazy Climber with two-handed independent grip input.",
+  "description": "CRAZY CLIMBER — audio-first Crazy Climber with two-handed independent grip input.",
   "license": "Unlicense",
   "private": true,
   "devDependencies": {

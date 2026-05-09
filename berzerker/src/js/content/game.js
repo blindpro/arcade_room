@@ -37,6 +37,7 @@ content.game = (() => {
     extraLifeThresholds: [5000, 15000, 30000, 50000, 75000, 100000, 150000],
     nextExtraLifeAt: 5000,
     killsThisRoom: 0,
+    kills: 0,
     robotsThisRoom: 0,
     debugEmpty: false, // hidden D-key mode: empty rooms, no Otto, no robots
   }
@@ -53,6 +54,7 @@ content.game = (() => {
     state.fledLastRoom = false
     state.nextExtraLifeAt = state.extraLifeThresholds[0]
     state.killsThisRoom = 0
+    state.kills = 0
     state.robotsThisRoom = 0
     O().reset()
   }
@@ -119,6 +121,7 @@ content.game = (() => {
     }
     addScore(50)
     state.killsThisRoom++
+    state.kills++
     if (Math.random() < 0.25) {
       // A surviving robot vows revenge — but wait until the dying
       // robot's curse has finished so the two voices don't collide.
@@ -239,7 +242,7 @@ content.game = (() => {
     state.started = false
     A_silenceTransients()
     O().reset()
-    app.screenManager.dispatch('gameOver', {score: state.score, room: state.room})
+    app.screenManager.dispatch('gameOver', {score: state.score, room: state.room, kills: state.kills})
   }
 
   function getScore() { return state.score }

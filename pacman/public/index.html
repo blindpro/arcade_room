@@ -73,6 +73,7 @@
         <section class="c-screen a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
           <h1 data-i18n="highscores.title">High Scores</h1>
           <ol class="a-highscores--list" data-i18n-attr="aria-label:highscores.listLabel"></ol>
+          <p class="a-highscores--online-link-wrap"><a class="a-highscores--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" data-i18n="online.viewBoard">View the world leaderboard</a></p>
           <button type="button" class="a-highscores--back" data-action="back" data-i18n="highscores.back">Back to Menu</button>
         </section>
       </div>
@@ -84,9 +85,11 @@
           <p class="a-gameover--rank-msg" hidden data-i18n="gameover.rankMsg">You earned a high score! Enter your name:</p>
           <form class="a-gameover--form">
             <label for="a-gameover-name" class="u-screenReader" data-i18n="gameover.nameLabel">Your name</label>
-            <input type="text" id="a-gameover-name" class="a-gameover--name" maxlength="16" autocomplete="off" data-i18n-attr="placeholder:gameover.namePlaceholder" />
+            <input type="text" id="a-gameover-name" class="a-gameover--name" autocomplete="off" data-i18n-attr="placeholder:gameover.namePlaceholder" />
             <button type="submit" class="a-gameover--submit" data-i18n="gameover.save">Save Score</button>
           </form>
+          <p class="a-gameover--online-status" role="status" aria-live="polite" hidden></p>
+          <p class="a-gameover--online-link-wrap"><a class="a-gameover--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" hidden></a></p>
           <button type="button" class="a-gameover--continue" data-action="continue" data-i18n="gameover.continue">Continue</button>
         </section>
       </div>

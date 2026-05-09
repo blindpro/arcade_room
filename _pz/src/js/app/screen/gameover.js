@@ -11,12 +11,17 @@ app.screen.gameover = app.screenManager.invent({
   state: {
     entryFrames: 0,
     nameInput: null,
+    statusEl: null,
+    linkEl: null,
     saved: false,
+    posting: false,
     snapshot: null,
   },
   onReady: function () {
     const root = this.rootElement
     this.state.nameInput = root.querySelector('.a-gameover--name-input')
+    this.state.statusEl = root.querySelector('.a-gameover--online-status')
+    this.state.linkEl = root.querySelector('.a-gameover--online-link')
 
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
@@ -31,6 +36,7 @@ app.screen.gameover = app.screenManager.invent({
   onEnter: function () {
     this.state.entryFrames = 6
     this.state.saved = false
+    this.state.posting = false
     if (content.game && content.game.runSummary) {
       this.state.snapshot = content.game.runSummary()
     } else {
@@ -38,6 +44,8 @@ app.screen.gameover = app.screenManager.invent({
     }
     this.renderStats()
     if (this.state.nameInput) this.state.nameInput.value = ''
+    if (this.state.statusEl) { this.state.statusEl.hidden = true; this.state.statusEl.textContent = '' }
+    if (this.state.linkEl) { this.state.linkEl.hidden = true }
     if (content.audio && content.audio.silenceAll) content.audio.silenceAll()
     app.announce.assertive(app.i18n.t('ann.gameOver', {dollars: this.state.snapshot.tips}))
   },
@@ -77,16 +85,29 @@ app.screen.gameover = app.screenManager.invent({
     root.querySelector('.a-gameover--jobs').textContent = app.i18n.t('gameover.jobs', {count: s.jobs})
   },
   handleSave: function () {
-    if (this.state.saved) return
+    if (this.state.saved || this.state.posting) return
     const s = this.state.snapshot
-    const name = (this.state.nameInput && this.state.nameInput.value || '').trim() || 'Player'
-    if (!app.highscores.qualifies(s.tips)) {
-      this.state.saved = true
-      app.screenManager.dispatch('menu')
+    const raw = (this.state.nameInput && this.state.nameInput.value || '').trim()
+    if (!raw) {
+      app.announce.assertive(app.i18n.t('gameover.nameRequired'))
+      if (this.state.nameInput) {
+        try { this.state.nameInput.focus() } catch (e) {}
+      }
       return
     }
-    app.highscores.add(name, s.tips, s.deliveries)
+    const name = raw
+    if (app.highscores.qualifies(s.tips)) {
+      app.highscores.add(name, s.tips, s.deliveries)
+    }
     this.state.saved = true
-    app.screenManager.dispatch('highscores')
+    this.state.posting = true
+    Promise.resolve(app.onlineSubmit.run({
+      name: name,
+      score: s.tips,
+      meta: {level: s.deliveries},
+      statusEl: this.state.statusEl,
+      linkEl: this.state.linkEl,
+    })).then(() => { this.state.posting = false })
+      .catch(() => { this.state.posting = false })
   },
 })

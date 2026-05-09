@@ -17,10 +17,14 @@ app.screen.highscores = app.screenManager.invent({
       if (!btn) return
       if (btn.dataset.action === 'back') app.screenManager.dispatch('back')
     })
+    const onlineLink = root.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
   },
   onEnter: function () {
     this.state.entryFrames = 6
     this.render()
+    const onlineLink = this.rootElement.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
   },
   onFrame: function () {
     try {

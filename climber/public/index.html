@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en-US">
   <head>
-    <title data-i18n="doc.title">ESCALADOR</title>
+    <title data-i18n="doc.title">CRAZY CLIMBER!</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/png" href="./favicon.png" />
     <link rel="stylesheet" type="text/css" href="./styles.min.css" />
@@ -95,11 +95,14 @@
         <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
           <h1 class="c-menu--title" data-i18n="gameover.title">You Fell</h1>
           <p class="c-menu--subtitle a-gameover--summary"></p>
-          <div class="a-gameover--newhighscore" hidden>
-            <p data-i18n="gameover.newHighScore">New high score! Enter your name:</p>
-            <input class="a-gameover--name" type="text" maxlength="16" />
+          <div class="a-gameover--save">
+            <label class="a-gameover--name-label" for="a-gameover--name" data-i18n="gameover.nameLabel">Your name</label>
+            <input id="a-gameover--name" class="a-gameover--name" type="text" autocomplete="off" />
           </div>
+          <p class="a-gameover--online-status" role="status" aria-live="polite" hidden></p>
+          <p class="a-gameover--online-link-wrap"><a class="a-gameover--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" hidden></a></p>
           <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="save" data-i18n="gameover.save">Save Score</button></li>
             <li><button class="c-menu--button" data-action="restart" data-i18n="gameover.restart">Climb Again</button></li>
             <li><button class="c-menu--button" data-action="menu" data-i18n="gameover.menu">Back to Menu</button></li>
           </ul>
@@ -110,6 +113,7 @@
         <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
           <h1 class="c-menu--title" data-i18n="highscores.title">High Scores</h1>
           <ol class="a-highscores--list"></ol>
+          <p class="a-highscores--online-link-wrap"><a class="a-highscores--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" data-i18n="online.viewBoard">View the world leaderboard</a></p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
           </ul>

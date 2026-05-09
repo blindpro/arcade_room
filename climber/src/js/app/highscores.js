@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — high score persistence.
+ * CRAZY CLIMBER — high score persistence.
  *
  * Dual backend: Electron writes a JSON file via the preload bridge; the
  * web build falls back to localStorage. Up to 10 entries.
@@ -8,7 +8,7 @@
  * rendered strings — locale switches keep the table coherent.
  */
 app.highscores = (() => {
-  const KEY = 'escalador-highscores-v1'
+  const KEY = 'crazyclimber-highscores-v1'
   const MAX = 10
 
   let cache = null
@@ -59,7 +59,7 @@ app.highscores = (() => {
     add: function (name, score, floor, building) {
       const list = load()
       list.push({
-        name: String(name || 'Player').slice(0, 16),
+        name: String(name || 'Player'),
         score: score | 0,
         floor: floor | 0,
         building: building | 0,

@@ -1,7 +1,7 @@
 /**
- * ESCALADOR — i18n.
+ * CRAZY CLIMBER — i18n.
  *
- * Per-game STORAGE_KEY ('escalador.lang') so locale doesn't leak across the
+ * Per-game STORAGE_KEY ('crazyclimber.lang') so locale doesn't leak across the
  * shared origin. Dictionaries are independent per locale (not translations) —
  * Spanish leans into feria/zarzuela cadence; English stays plain New York.
  *
@@ -10,7 +10,7 @@
  */
 app.i18n = (() => {
   const FALLBACK = 'en'
-  const STORAGE_KEY = 'escalador.lang'
+  const STORAGE_KEY = 'crazyclimber.lang'
 
   const localeNames = {
     en: 'English',
@@ -19,7 +19,7 @@ app.i18n = (() => {
 
   const dictionaries = {
     en: {
-      'doc.title': 'CLIMBER',
+      'doc.title': 'CRAZY CLIMBER!',
 
       'menu.aria': 'Main menu',
       'menu.subtitle': 'Two-handed climber. Use your ears.',
@@ -110,8 +110,20 @@ app.i18n = (() => {
       'gameover.title': 'You Fell',
       'gameover.summary': 'Floor {floor}. Score {score}. Building {building}.',
       'gameover.newHighScore': 'New high score! Enter your name:',
+      'gameover.nameLabel': 'Your name',
+      'gameover.nameRequired': 'Type a name to save your score.',
+      'gameover.save': 'Save Score',
+      'gameover.saved': 'Score saved.',
       'gameover.restart': 'Climb Again',
       'gameover.menu': 'Back to Menu',
+
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
+
+      'online.posting':   'Posting your score…',
+      'online.rank':      'Online rank: #{rank}',
+      'online.error':     'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
 
       'highscores.aria': 'High scores',
       'highscores.title': 'High Scores',
@@ -127,7 +139,7 @@ app.i18n = (() => {
     },
 
     es: {
-      'doc.title': 'ESCALADOR',
+      'doc.title': 'CRAZY CLIMBER!',
 
       'menu.aria': 'Menú principal',
       'menu.subtitle': '¡Trepa con las dos manos! Escucha bien.',
@@ -218,8 +230,20 @@ app.i18n = (() => {
       'gameover.title': '¡Te caíste!',
       'gameover.summary': 'Piso {floor}. Puntuación {score}. Edificio {building}.',
       'gameover.newHighScore': '¡Nuevo récord! Tu nombre:',
+      'gameover.nameLabel': 'Tu nombre',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.saved': 'Puntuación guardada.',
       'gameover.restart': 'Otra vez',
       'gameover.menu': 'Menú',
+
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
+
+      'online.posting':   'Enviando tu puntuación…',
+      'online.rank':      'Puesto en línea: número {rank}',
+      'online.error':     'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
 
       'highscores.aria': 'Récords',
       'highscores.title': 'Récords',

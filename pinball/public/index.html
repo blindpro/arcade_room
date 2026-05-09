@@ -181,6 +181,13 @@
         <section class="c-screen a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
           <h1 data-i18n="gameover.title">Game Over</h1>
           <p class="a-gameover--summary"></p>
+          <form class="a-gameover--form">
+            <label class="a-gameover--name-label" for="a-gameover--name-input" data-i18n="gameover.nameLabel">Name for the leaderboard</label>
+            <input id="a-gameover--name-input" class="a-gameover--name-input" type="text" autocomplete="off" />
+            <button type="submit" class="a-gameover--submit" data-action="save" data-i18n="gameover.save">Save Score</button>
+          </form>
+          <p class="a-gameover--online-status" role="status" aria-live="polite" hidden></p>
+          <p class="a-gameover--online-link-wrap"><a class="a-gameover--online-link" href="https://scores.oriolgomez.com" target="_blank" rel="noopener" hidden></a></p>
           <p data-i18n="gameover.body">Press Space or Enter to play again. Press Escape to return to the title screen.</p>
         </section>
       </div>

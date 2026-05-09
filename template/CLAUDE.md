@@ -566,7 +566,7 @@ Reset the flag in `game.reset()` (and any path that re-enters the phase). Refere
 engine.mixer.reverb.setActive(false)
 ```
 
-ESCALADOR (`../_cl/src/js/main.js`) does this. If a specific cue genuinely needs a room sound, build a per-cue convolver on that signal chain instead of leaning on the global send.
+CRAZY CLIMBER! (`../climber/src/js/main.js`) does this. If a specific cue genuinely needs a room sound, build a per-cue convolver on that signal chain instead of leaning on the global send.
 
 ### Hash routing in screenManager
 

@@ -55,6 +55,7 @@ app.screen.game = app.screenManager.invent({
     this.bindKeys()
     if (engine.loop.isPaused()) engine.loop.resume()
     content.audio.start()
+    try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     content.game.startRun({
       onGameOver: () => {
         // Defer screen change one frame so audio events finish posting

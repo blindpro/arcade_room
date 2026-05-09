@@ -95,6 +95,18 @@ app.i18n = (() => {
       'gameover.statPerfect':  'Perfect hits',
       'gameover.retry': 'Play Again',
       'gameover.menu': 'Main Menu',
+      'gameover.nameLabel': 'Name for the leaderboard',
+      'gameover.save': 'Save Score',
+      'gameover.nameRequired': 'Please enter a name to save your score.',
+
+      // Online leaderboard
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard.',
+      'online.viewBoard': 'View the world leaderboard',
+      'ann.savedScore': 'Score saved.',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Couldn’t reach the leaderboard.',
 
       // Pause
       'pause.aria': 'Paused',
@@ -294,6 +306,17 @@ app.i18n = (() => {
       'gameover.statPerfect':  'Aciertos perfectos',
       'gameover.retry': 'Jugar otra vez',
       'gameover.menu': 'Menú principal',
+      'gameover.nameLabel': 'Nombre para la clasificación',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Posición mundial: nº {rank}',
+      'online.error': 'No se pudo contactar con la clasificación.',
+      'online.viewBoard': 'Ver la clasificación mundial',
+      'ann.savedScore': 'Puntuación guardada.',
+      'ann.onlineRank': 'Posición mundial: número {rank}.',
+      'ann.onlineError': 'No se pudo contactar con la clasificación.',
 
       // Pause
       'pause.aria': 'En pausa',

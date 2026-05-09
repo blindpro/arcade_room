@@ -190,6 +190,18 @@ app.i18n = (() => {
       'gameover.time': 'Time',
       'gameover.restart': 'Drive again',
       'gameover.menu': 'Main menu',
+      'gameover.nameLabel': 'Name for the leaderboard',
+      'gameover.save': 'Save Score',
+      'gameover.nameRequired': 'Please enter a name to save your score.',
+
+      // Online leaderboard
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard.',
+      'online.viewBoard': 'View the world leaderboard',
+      'ann.savedScore': 'Score saved.',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Couldn’t reach the leaderboard.',
 
       // Stop reasons
       'stop.fuel': 'You ran out of fuel.',
@@ -393,6 +405,17 @@ app.i18n = (() => {
       'gameover.time': 'Tiempo',
       'gameover.restart': 'Conducir otra vez',
       'gameover.menu': 'Menú principal',
+      'gameover.nameLabel': 'Nombre para la clasificación',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
+
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Posición mundial: nº {rank}',
+      'online.error': 'No se pudo contactar con la clasificación.',
+      'online.viewBoard': 'Ver la clasificación mundial',
+      'ann.savedScore': 'Puntuación guardada.',
+      'ann.onlineRank': 'Posición mundial: número {rank}.',
+      'ann.onlineError': 'No se pudo contactar con la clasificación.',
 
       'stop.fuel': 'Te has quedado sin gasolina.',
       'stop.crash': 'Un choque te ha detenido.',

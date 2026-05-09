@@ -42,8 +42,18 @@ app.i18n = (() => {
       'gameover.scoreLine': 'Final score: {score} — Level {level}',
       'gameover.highScoreNew': 'New high score!',
       'gameover.highScoreLine': 'High score: {score}',
+      'gameover.nameLabel': 'Name for the leaderboard',
+      'gameover.save': 'Save score',
+      'gameover.nameRequired': 'Type a name to save your score.',
       'gameover.retry': 'Play again',
       'gameover.menu': 'Main menu',
+
+      'online.posting': 'Posting your score…',
+      'online.rank': 'Online rank: #{rank}',
+      'online.error': 'Couldn’t reach the leaderboard. Saved locally.',
+      'online.viewBoard': 'View the world leaderboard',
+      'ann.onlineRank': 'Online rank: number {rank}.',
+      'ann.onlineError': 'Could not reach the online leaderboard. Score saved locally.',
 
       // Help / instructions appended to splash
       'splash.helpTitle': 'How to play',
@@ -98,8 +108,18 @@ app.i18n = (() => {
       'gameover.scoreLine': 'Puntuación final: {score} — Nivel {level}',
       'gameover.highScoreNew': '¡Nuevo récord!',
       'gameover.highScoreLine': 'Récord: {score}',
+      'gameover.nameLabel': 'Nombre para el ránking',
+      'gameover.save': 'Guardar puntuación',
+      'gameover.nameRequired': 'Escribe un nombre para guardar tu puntuación.',
       'gameover.retry': 'Volver a jugar',
       'gameover.menu': 'Menú principal',
+
+      'online.posting': 'Enviando tu puntuación…',
+      'online.rank': 'Puesto en línea: número {rank}',
+      'online.error': 'No se pudo conectar con el ránking. Guardada localmente.',
+      'online.viewBoard': 'Ver el ránking mundial',
+      'ann.onlineRank': 'Puesto en línea: número {rank}.',
+      'ann.onlineError': 'No se pudo conectar con el ránking en línea. Puntuación guardada localmente.',
 
       'splash.helpTitle': 'Cómo se juega',
       'splash.helpAim': '<kbd>←</kbd> / <kbd>→</kbd> apuntan la manguera a izquierda y derecha.',

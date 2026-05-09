@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — diagnostic stereo test (#test route).
+ * CRAZY CLIMBER — diagnostic stereo test (#test route).
  *
  * Plays four ticks: hard left, centre, hard right, centre. Lets the
  * player verify that left ear ↔ left hand and right ear ↔ right hand

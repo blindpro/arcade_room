@@ -11,12 +11,12 @@
   app.i18n.applyDom()
   app.screenManager.ready()
 
-  // ESCALADOR persists high scores via app.highscores, not engine.state.
+  // CRAZY CLIMBER persists high scores via app.highscores, not engine.state.
   if (app.autosave && typeof app.autosave.disable === 'function') {
     app.autosave.disable()
   }
 
-  // ESCALADOR runs fully dry — no global reverb. Every cue authors its own
+  // CRAZY CLIMBER runs fully dry — no global reverb. Every cue authors its own
   // tail (release time on stings, lowpass-shaped wind), so leaking the
   // global convolver onto the gameOver dirge or any other on-screen sting
   // would just smear them. Disable the auxiliary reverb send entirely.

@@ -12,6 +12,8 @@ app.screen.highscores = app.screenManager.invent({
   onReady: function () {
     const root = this.rootElement
     this.state.list = root.querySelector('.a-highscores--list')
+    const onlineLink = root.querySelector('.a-highscores--online-link')
+    if (onlineLink && app.onlineScores) onlineLink.href = app.onlineScores.listUrl()
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
       if (!btn) return

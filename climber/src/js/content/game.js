@@ -1,5 +1,5 @@
 /**
- * ESCALADOR — top-level game module: scoring, lives, building progression,
+ * CRAZY CLIMBER — top-level game module: scoring, lives, building progression,
  * and the per-frame orchestration of player + wall + hazards + audio.
  *
  * Phase FSM:
@@ -22,8 +22,6 @@ content.game = (() => {
   const SCORE_DODGE = 250
   const SCORE_SWIPE_AVOIDED = 1000
   const BUILDING_CLEAR_BASE = 5000
-  const FIRST_EXTRA_AT = 30000
-  const NEXT_EXTRA_STEP = 50000
 
   const _state = {
     phase: PHASE_READY,
@@ -31,9 +29,8 @@ content.game = (() => {
     t: 0,
     score: 0,
     floorMax: 0,             // highest floor reached this run (for HUD)
-    lives: 3,
+    lives: 1,
     building: 1,
-    nextExtraAt: FIRST_EXTRA_AT,
     pendingDeathAt: 0,       // audio play-out deadline
     pendingClearAt: 0,
     deathReasonKey: null,
@@ -49,9 +46,8 @@ content.game = (() => {
     _state.t = 0
     _state.score = 0
     _state.floorMax = 0
-    _state.lives = 3
+    _state.lives = 1
     _state.building = 1
-    _state.nextExtraAt = FIRST_EXTRA_AT
     _state.pendingDeathAt = 0
     _state.pendingClearAt = 0
     _state.deathReasonKey = null
@@ -132,11 +128,6 @@ content.game = (() => {
 
   function addScore(n) {
     _state.score += n
-    while (_state.score >= _state.nextExtraAt) {
-      _state.lives++
-      _state.nextExtraAt += NEXT_EXTRA_STEP
-      content.audio.enqueue({type: 'extraLife'})
-    }
   }
 
   // ---------- per-frame tick ----------
@@ -184,32 +175,28 @@ content.game = (() => {
     }
 
     if (_state.phase === PHASE_DYING) {
-      // Audio fall + thud play out, then we either restart (lives left)
-      // or fire the gameOver dirge ONCE and let the screen transition
-      // us out. Without the _gameOverFired guard the dying-phase tick
-      // would re-enqueue the dirge every frame (60×/sec) and the stacked
-      // copies would sound like a reverb wash.
+      // Animate the fall: tick the player so fallT advances, then drive the
+      // grip voices and wind from a dropping altitude (death floor → 0 across
+      // FALL_DUR). The descending 'fall' SFX rides on top, the 'thud' lands
+      // at FALL_DUR. After pendingDeathAt we fade the drones out (silenceAll)
+      // and fire the gameOver callback so the screen can transition.
+      content.player.tick(dt)
+      const ps = content.player.snapshot()
+      const drop = 1 - ps.fallProgress
+      const lf = ps.fallStartLeft  * drop
+      const rf = ps.fallStartRight * drop
+      content.audio.updateGripVoice('left',  lf, 0, false)
+      content.audio.updateGripVoice('right', rf, 0, false)
+      content.audio.updateWind((lf + rf) / 2)
+
       if (_state.t >= _state.pendingDeathAt && !_state._handledDeath) {
         _state._handledDeath = true
-        _state.lives--
-        if (_state.lives > 0) {
-          // Restart on the same building, ground floor.
-          _state.floorMax = 0
-          content.player.reset()
-          content.wall.reset(_state.building)
-          content.hazards.reset()
-          _state.phase = PHASE_READY
-          _state.phaseT = 0
-          _state.deathReasonKey = null
-          _state.deathSide = null
-          _state._handledDeath = false
-        } else {
-          content.audio.enqueue({type: 'gameOver'})
-          if (_state.onGameOver) {
-            try { _state.onGameOver({score: _state.score, floor: _state.floorMax, building: _state.building, reasonKey: _state.deathReasonKey, side: _state.deathSide}) } catch (e) {}
-          }
-          // Phase stays DYING; the game screen handles transition.
+        _state.lives = 0
+        content.audio.silenceAll()
+        if (_state.onGameOver) {
+          try { _state.onGameOver({score: _state.score, floor: _state.floorMax, building: _state.building, reasonKey: _state.deathReasonKey, side: _state.deathSide}) } catch (e) {}
         }
+        // Phase stays DYING; the game screen handles transition.
       }
       return
     }

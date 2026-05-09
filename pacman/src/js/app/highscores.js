@@ -57,7 +57,7 @@ app.highscores = (() => {
     add: function (name, score, level) {
       const list = load()
       list.push({
-        name: String(name || 'Player').slice(0, 16),
+        name: String(name || 'Player'),
         score: score | 0,
         level: level | 0,
         date: new Date().toISOString(),

@@ -8,7 +8,9 @@ app.screen.gameover = app.screenManager.invent({
   state: {
     nameInput: null, submitBtn: null, form: null,
     rankMsg: null, scoreEl: null, bestEl: null, reasonEl: null,
+    statusEl: null, linkEl: null,
     qualifies: false, entryFrames: 0,
+    saved: false, posting: false,
   },
   onReady: function () {
     const root = this.rootElement
@@ -19,15 +21,13 @@ app.screen.gameover = app.screenManager.invent({
     this.state.bestEl = root.querySelector('.a-gameover--best')
     this.state.reasonEl = root.querySelector('.a-gameover--reason')
     this.state.form = root.querySelector('.a-gameover--form')
+    this.state.statusEl = root.querySelector('.a-gameover--online-status')
+    this.state.linkEl = root.querySelector('.a-gameover--online-link')
 
     if (this.state.form) {
       this.state.form.addEventListener('submit', (e) => {
         e.preventDefault()
-        const name = (this.state.nameInput.value || '').trim() || 'Player'
-        app.highscores.add(name, content.game.score())
-        content.sfx.menuSelect()
-        app.announce.polite(app.i18n.t('ann.scoreSaved'))
-        app.screenManager.dispatch('continue')
+        this.handleSave()
       })
     }
 
@@ -49,14 +49,20 @@ app.screen.gameover = app.screenManager.invent({
     }
     this.state.qualifies = app.highscores.qualifies(score)
     if (this.state.rankMsg) this.state.rankMsg.hidden = !this.state.qualifies
-    if (this.state.form) this.state.form.hidden = !this.state.qualifies
+    // Form stays visible regardless so online submission is always available.
+    if (this.state.form) this.state.form.hidden = false
+    if (this.state.nameInput) this.state.nameInput.value = ''
+    if (this.state.statusEl) { this.state.statusEl.hidden = true; this.state.statusEl.textContent = '' }
+    if (this.state.linkEl) { this.state.linkEl.hidden = true }
+    this.state.saved = false
+    this.state.posting = false
     if (this.state.qualifies) {
       content.sfx.cheer()
       app.announce.assertive(app.i18n.t('ann.gameOverHigh', {score}))
-      setTimeout(() => { if (this.state.nameInput) this.state.nameInput.focus() }, 250)
     } else {
       app.announce.assertive(app.i18n.t('ann.gameOver', {score}))
     }
+    setTimeout(() => { if (this.state.nameInput) this.state.nameInput.focus() }, 250)
     this.state.entryFrames = 6
   },
   onFrame: function () {
@@ -87,5 +93,33 @@ app.screen.gameover = app.screenManager.invent({
       if (target) target.click()
       else app.screenManager.dispatch('continue')
     }
+  },
+  handleSave: function () {
+    if (this.state.saved || this.state.posting) return
+    const score = content.game.score()
+    const raw = (this.state.nameInput && this.state.nameInput.value || '').trim()
+    if (!raw) {
+      app.announce.assertive(app.i18n.t('gameover.nameRequired'))
+      if (this.state.nameInput) {
+        try { this.state.nameInput.focus() } catch (e) {}
+      }
+      return
+    }
+    const name = raw
+    if (this.state.qualifies) {
+      app.highscores.add(name, score)
+    }
+    this.state.saved = true
+    content.sfx.menuSelect()
+    app.announce.polite(app.i18n.t('ann.scoreSaved'))
+    this.state.posting = true
+    Promise.resolve(app.onlineSubmit.run({
+      name: name,
+      score: score,
+      meta: {},
+      statusEl: this.state.statusEl,
+      linkEl: this.state.linkEl,
+    })).then(() => { this.state.posting = false })
+      .catch(() => { this.state.posting = false })
   },
 })
