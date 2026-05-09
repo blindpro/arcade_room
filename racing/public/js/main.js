@@ -122,6 +122,7 @@
 
   // ============ Single-player setup ============
   function resetRace() {
+	  Track.randomise()
     car = Car.create()
     if (!isOnline()) {
       ais = AI.createAll()
@@ -262,6 +263,7 @@
 
   function startCountdown() {
     phase = 'countdown'
+		       HUD.announce('Track: ' + Track.activeTrack)
     countdown = 0
     HUD.hideSplash()
     HUD.activate()
