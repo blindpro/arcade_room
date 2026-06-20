@@ -6,9 +6,7 @@
 content.announcer = (() => {
   let politeNode,
     assertiveNode,
-    useTts = false,
-    lastSaid = '',
-    lastSaidAt = 0
+    useTts = false
 
   // Swap the same text between two siblings so screen readers re-read repeats.
   const buffers = {
@@ -53,11 +51,6 @@ content.announcer = (() => {
      */
     say: function (text, priority = 'polite') {
       if (!text) return this
-      const now = Date.now()
-      if (text === lastSaid && (now - lastSaidAt) < 250) return this
-      lastSaid = text
-      lastSaidAt = now
-
       const node = priority === 'assertive' ? assertiveNode : politeNode
       write(node, priority, text)
       speak(text)
@@ -66,7 +59,6 @@ content.announcer = (() => {
     clear: function () {
       write(politeNode, 'polite', '')
       write(assertiveNode, 'assertive', '')
-      lastSaid = ''
       return this
     },
   }

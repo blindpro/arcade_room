@@ -847,6 +847,10 @@ content.game = (() => {
         break
       }
     }
+    // Auto-select the first cycle-eligible item if nothing is selected yet.
+    if (car === playerCar && !selectedItem && CYCLE_ORDER.includes(type)) {
+      selectedItem = type
+    }
   }
 
   // ---- Round lifecycle ---------------------------------------------------
@@ -1483,13 +1487,9 @@ content.game = (() => {
             const carId = respawnQueue[i].carId
             respawnQueue.splice(i, 1)
             respawnCar(carId)
+          }
+        }
       }
-    }
-    // Auto-select the first cycle-eligible item if nothing is selected yet.
-    if (car === playerCar && !selectedItem && CYCLE_ORDER.includes(type)) {
-      selectedItem = type
-    }
-  }
       if (roundEndsAt && engine.time() >= roundEndsAt && cars.length > 0) {
         // Build standings sorted by score descending; winner is the top
         // scorer (ties resolve to the first car in the list — kept simple).
@@ -1889,24 +1889,16 @@ content.game = (() => {
     const curIdx = selectedItem ? available.indexOf(selectedItem) : -1
     const nextIdx = (curIdx + 1) % available.length
     selectedItem = available[nextIdx]
-    // Tick sound (menu-focus tone).
-    content.sounds.uiTick(660, 0.18, 0.05)
-    // Announce.
-    announceSelectedItem()
-  }
-
-  function announceSelectedItem() {
-    if (!selectedItem || !playerCar || !playerCar.inventory) return
-    const field = INV_FIELD[selectedItem]
-    const count = field ? (playerCar.inventory[field] || 0) : 0
-    const t = app.i18n.t
+    // Announce first, then play tick — ensures the announcement isn't
+    // silenced if uiTick throws.
     content.announcer.say(
-      t('ann.itemSelected', {
-        item: t('pickup.' + selectedItem),
-        count,
+      app.i18n.t('ann.itemSelected', {
+        item: app.i18n.t('pickup.' + selectedItem),
+        count: (playerCar.inventory[INV_FIELD[selectedItem]] || 0),
       }),
       'polite',
     )
+    try { content.sounds.uiTick(660, 0.18, 0.05) } catch (_e) {}
   }
 
   /**
