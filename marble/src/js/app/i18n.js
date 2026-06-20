@@ -39,6 +39,7 @@ app.i18n = (() => {
       'menu.start': 'Start',
       'menu.help': 'How to play',
       'menu.learn': 'Learn the sounds',
+      'menu.quit': 'Return to Games List',
 
       // Language picker
       'language.aria': 'Choose language',
@@ -133,6 +134,7 @@ app.i18n = (() => {
       'menu.start': 'Empezar',
       'menu.help': 'Cómo jugar',
       'menu.learn': 'Aprende los sonidos',
+      'menu.quit': 'Volver a la lista de juegos',
 
       // Language picker
       'language.aria': 'Elegir idioma',

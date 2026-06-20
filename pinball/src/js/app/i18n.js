@@ -31,6 +31,7 @@ app.i18n = (() => {
       'splash.help': 'How to Play',
       'splash.learn': 'Learn the Sounds',
       'splash.language': 'Language',
+      'splash.quit': 'Return to Games List',
       'splash.author': 'a syngen template demo',
 
       // Splash announcement
@@ -222,6 +223,7 @@ app.i18n = (() => {
       'splash.help': 'Cómo se juega',
       'splash.learn': 'Aprende los sonidos',
       'splash.language': 'Idioma',
+      'splash.quit': 'Volver a la lista de juegos',
       'splash.author': 'demo de la plantilla syngen',
 
       'splash.announce': 'Menú principal de Audio Pinball. Usa Tab o las flechas para moverte, Enter o Espacio para elegir.',

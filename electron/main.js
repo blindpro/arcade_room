@@ -1,4 +1,4 @@
-const {app, BrowserWindow, ipcMain} = require('electron')
+const {app, BrowserWindow, ipcMain, Menu} = require('electron')
 
 const fs = require('fs'),
   os = require('os'),
@@ -20,8 +20,68 @@ if (os.platform() == 'win32') {
   app.commandLine.appendSwitch('enable-features', 'VaapiVideoDecoder')
 }
 
+function readGameList() {
+  try {
+    const root = path.join(__dirname, '..')
+    const skip = new Set(['electron', 'template', 'node_modules'])
+    return fs.readdirSync(root, {withFileTypes: true})
+      .filter(d => d.isDirectory() && !skip.has(d.name) && !d.name.startsWith('.') && !d.name.startsWith('!'))
+      .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'index.html')))
+      .map(d => d.name)
+      .sort()
+  } catch (_err) {
+    return []
+  }
+}
+
+function buildMenu() {
+  const games = readGameList()
+  const gameItems = games.map(name => ({
+    label: name.charAt(0).toUpperCase() + name.slice(1).replace(/_/g, ' '),
+    click: () => {
+      if (!mainWindow) return
+      mainWindow.loadFile(path.join(__dirname, '..', name, 'public', 'index.html'))
+    },
+  }))
+
+  const template = [
+    {
+      label: 'Games',
+      submenu: [
+        {
+          label: 'Game List',
+          accelerator: 'CmdOrCtrl+G',
+          click: () => { if (mainWindow) mainWindow.loadFile(LAUNCHER_FILE) },
+        },
+        { type: 'separator' },
+        ...gameItems,
+        { type: 'separator' },
+        {
+          label: 'Quit',
+          accelerator: 'CmdOrCtrl+Q',
+          click: () => app.quit(),
+        },
+      ],
+    },
+  ]
+
+  if (os.platform() === 'darwin') {
+    template.unshift({
+      label: app.name,
+      submenu: [
+        { role: 'about' },
+        { type: 'separator' },
+        { role: 'quit' },
+      ],
+    })
+  }
+
+  Menu.setApplicationMenu(Menu.buildFromTemplate(template))
+}
+
 app.on('ready', () => {
   app.accessibilitySupportEnabled = true
+  buildMenu()
   createWindow()
 })
 
@@ -48,7 +108,7 @@ function createWindow() {
     }
   })
 
-  mainWindow.removeMenu()
+  mainWindow.removeMenu() // Remove Chromium's default menu; our native menu replaces it
 
   mainWindow.webContents.session.setPermissionRequestHandler((_w, permission, callback) => {
     switch (permission) {
@@ -110,18 +170,7 @@ ipcMain.on('highscores:read', (e) => {
 })
 
 ipcMain.on('games:list', (e) => {
-  try {
-    const root = path.join(__dirname, '..')
-    const skip = new Set(['electron', 'template', 'node_modules'])
-    const items = fs.readdirSync(root, {withFileTypes: true})
-      .filter(d => d.isDirectory() && !skip.has(d.name) && !d.name.startsWith('.') && !d.name.startsWith('!'))
-      .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'index.html')))
-      .map(d => d.name)
-      .sort()
-    e.returnValue = items
-  } catch (_err) {
-    e.returnValue = []
-  }
+  e.returnValue = readGameList()
 })
 
 ipcMain.on('highscores:write', (e, data) => {

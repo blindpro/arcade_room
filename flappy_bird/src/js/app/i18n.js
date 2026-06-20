@@ -33,6 +33,7 @@ app.i18n = (() => {
       'menu.learn': 'Learn the sounds',
       'menu.highscores': 'High scores',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Tutorial
       'tutorial.aria': 'Tutorial',
@@ -190,6 +191,7 @@ app.i18n = (() => {
       'menu.learn': 'Aprender los sonidos',
       'menu.highscores': 'Mejores puntuaciones',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       // Tutorial
       'tutorial.aria': 'Tutorial',

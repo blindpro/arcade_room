@@ -8,6 +8,7 @@ app.screen.menu = app.screenManager.invent({
     learn: function () { this.change('learn') },
     language: function () { this.change('language') },
     soundtest: function () { this.change('soundtest') },
+    quit: function () { app.quit() },
   },
   state: {
     entryFrames: 0,
@@ -21,6 +22,7 @@ app.screen.menu = app.screenManager.invent({
         const ctx = engine.context()
         if (ctx && ctx.state === 'suspended') ctx.resume()
         const action = btn.getAttribute('data-menu-action')
+        if (action === 'quit') { app.quit(); return }
         app.screenManager.dispatch(action)
       })
     })

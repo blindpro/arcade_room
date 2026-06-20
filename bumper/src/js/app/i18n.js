@@ -42,6 +42,7 @@ app.i18n = (() => {
       'menu.learn': 'Learn the sounds',
       'menu.help': 'Help',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
       'menu.footerSuffix': ' · headphones strongly recommended',
 
       // Language screen
@@ -454,6 +455,7 @@ app.i18n = (() => {
       'menu.learn': 'Aprende los sonidos',
       'menu.help': 'Ayuda',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
       'menu.footerSuffix': ' · se recomiendan auriculares',
 
       // Language screen

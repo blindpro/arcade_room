@@ -42,7 +42,7 @@ app.i18n = (() => {
       'menu.learn': 'Learn game sounds',
       'menu.test': 'Test speaker orientation',
       'menu.help': 'How to play',
-      'menu.quit': 'Quit',
+      'menu.quit': 'Return to Games List',
 
       // Difficulty
       'difficulty.aria': 'Choose difficulty',
@@ -211,7 +211,7 @@ app.i18n = (() => {
       'menu.learn': 'Aprender sonidos',
       'menu.test': 'Probar orientación',
       'menu.help': 'Cómo jugar',
-      'menu.quit': 'Salir',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'difficulty.aria': 'Elegir dificultad',
       'difficulty.title': 'Elegir dificultad',

@@ -12,6 +12,7 @@ const I18n = (() => {
       'splash.learn':       'Learn Sounds',
       'splash.help':        'Help',
       'splash.lang':        'Language: English',
+      'splash.quit':        'Return to Games List',
       'splash.hint':        'Use Up / Down arrows and Enter.',
       'splash.menuAria':    'Main menu',
 
@@ -222,6 +223,7 @@ const I18n = (() => {
       'splash.learn':       'Aprender sonidos',
       'splash.help':        'Ayuda',
       'splash.lang':        'Idioma: Español',
+      'splash.quit':        'Volver al listado de juegos',
       'splash.hint':        'Usa flechas Arriba / Abajo e Intro.',
       'splash.menuAria':    'Menú principal',
 

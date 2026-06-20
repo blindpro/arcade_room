@@ -1439,6 +1439,7 @@
       else if (action === 'help') showHelp()
       else if (action === 'host') showNameEntry('host')
       else if (action === 'join') showNameEntry('join')
+      else if (action === 'quit') window.location.href = '../../'
       else if (action === 'lang') I18n.toggle()
     }
 

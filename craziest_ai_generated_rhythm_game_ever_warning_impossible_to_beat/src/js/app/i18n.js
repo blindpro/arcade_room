@@ -28,6 +28,7 @@ app.i18n = (() => {
       'menu.help': 'How to play',
       'menu.learn': 'Learn the sounds',
       'menu.highscores': 'High scores',
+      'menu.quit': 'Return to Games List',
 
       // Level select
       'levels.aria': 'Select sector',
@@ -247,6 +248,7 @@ app.i18n = (() => {
       'menu.help': 'Cómo jugar',
       'menu.learn': 'Aprende los sonidos',
       'menu.highscores': 'Puntuaciones',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'levels.aria': 'Seleccionar sector',
       'levels.title': 'Seleccionar sector',

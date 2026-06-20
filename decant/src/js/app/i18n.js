@@ -27,6 +27,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       'game.aria': 'Decant vials',
       'hud.score': 'Score',
@@ -141,6 +142,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'Frascos de Decant',
       'hud.score': 'Puntos',

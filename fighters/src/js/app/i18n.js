@@ -41,6 +41,7 @@ app.i18n = (() => {
       'menu.fight': 'Begin Fight',
       'menu.howto': 'How to Play',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
       'menu.hint': 'Headphones strongly recommended.',
 
       'select.aria': 'Choose your fighter',
@@ -242,6 +243,7 @@ app.i18n = (() => {
       'menu.fight': 'Empezar combate',
       'menu.howto': 'Cómo jugar',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
       'menu.hint': 'Se recomiendan auriculares.',
 
       'select.aria': 'Elige luchador',

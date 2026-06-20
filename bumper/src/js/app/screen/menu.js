@@ -9,6 +9,7 @@ app.screen.menu = app.screenManager.invent({
     help:     function () { this.change('help') },
     multi:    function () { this.change('multiplayer') },
     language: function () { this.change('language') },
+    quit: function () { app.quit() },
   },
   onReady: function () {
     const root = this.rootElement

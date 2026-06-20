@@ -33,6 +33,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Game HUD
       'game.aria': 'Bar tending',
@@ -137,6 +138,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'Sirviendo cañas',
       'game.hudHint': '<kbd>↑</kbd>/<kbd>↓</kbd> cambia barra &nbsp; <kbd>←</kbd>/<kbd>→</kbd> caminar &nbsp; <kbd>Espacio</kbd> mantén llena / suelta lanza. <kbd>F1</kbd>–<kbd>F4</kbd> estado. <kbd>Esc</kbd> pausa.',

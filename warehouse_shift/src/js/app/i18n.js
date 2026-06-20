@@ -103,6 +103,7 @@ app.i18n = (() => {
       'menu.aria': 'Main menu',
       'menu.help': 'How to Play',
       'menu.start': 'Start Shift',
+      'menu.quit': 'Return to Games List',
       'menu.subtitle': 'Audio-first Sokoban in a synth warehouse.',
       'menu.title': 'Warehouse Shift',
 
@@ -214,6 +215,7 @@ app.i18n = (() => {
       'menu.aria': 'Menú principal',
       'menu.help': 'Cómo jugar',
       'menu.start': 'Empezar turno',
+      'menu.quit': 'Volver a la lista de juegos',
       'menu.subtitle': 'Sokoban audio-first en un almacén de sintetizadores.',
       'menu.title': 'Warehouse Shift',
 

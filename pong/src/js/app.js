@@ -26,6 +26,8 @@ const app = (() => {
     quit: function () {
       if (this.isElectron()) {
         ElectronApi.quit()
+      } else {
+        window.location.href = '../../'
       }
 
       return this

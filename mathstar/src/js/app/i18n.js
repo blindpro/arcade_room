@@ -27,6 +27,7 @@ app.i18n = (() => {
       'menu.start':      'Start',
       'menu.levelSelect': 'Start at Level…',
       'menu.highscores': 'High scores',
+      'menu.quit': 'Return to Games List',
 
       // Level select
       'levelSelect.aria':          'Pick a starting level',
@@ -117,6 +118,7 @@ app.i18n = (() => {
       'menu.start':      'Empezar',
       'menu.levelSelect': 'Empezar en nivel…',
       'menu.highscores': 'Récords',
+      'menu.quit': 'Volver a la lista de juegos',
 
       // Level select
       'levelSelect.aria':          'Elige un nivel de inicio',

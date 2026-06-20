@@ -30,6 +30,7 @@ app.i18n = (() => {
       'menu.learn': 'Learn the sounds',
       'menu.test': 'Stereo test',
       'menu.highscores': 'High scores',
+      'menu.quit': 'Return to Games List',
 
       // Language picker
       'language.aria': 'Choose language',
@@ -196,6 +197,7 @@ app.i18n = (() => {
       'menu.learn': 'Aprender los sonidos',
       'menu.test': 'Prueba estéreo',
       'menu.highscores': 'Mejores puntuaciones',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'language.aria': 'Elegir idioma',
       'language.title': 'Idioma',

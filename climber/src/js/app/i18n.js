@@ -33,6 +33,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       'game.aria': 'Climbing',
       'game.hudHint': 'Left hand: <kbd>A</kbd> up, <kbd>Z</kbd> down. Right hand: <kbd>K</kbd> up, <kbd>M</kbd> down. Press <kbd>F1</kbd>–<kbd>F4</kbd> for status.',
@@ -153,6 +154,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'Escalando',
       'game.hudHint': 'Mano izquierda: <kbd>A</kbd> arriba, <kbd>Z</kbd> abajo. Mano derecha: <kbd>K</kbd> arriba, <kbd>M</kbd> abajo. <kbd>F1</kbd>–<kbd>F4</kbd> para estado.',

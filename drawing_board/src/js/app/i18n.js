@@ -27,6 +27,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       'game.aria': 'Drawing board grid',
       'hud.score': 'Score',
@@ -139,6 +140,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'Cuadrícula de la tabla de dibujos',
       'hud.score': 'Puntos',

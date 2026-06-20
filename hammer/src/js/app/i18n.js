@@ -32,6 +32,7 @@ app.i18n = (() => {
       'menu.help': 'How to Play',
       'menu.highscores': 'Hall of Fame',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
       'menu.version': 'v{version}',
 
       // Game screen
@@ -170,6 +171,7 @@ app.i18n = (() => {
       'menu.help': 'Cómo se juega',
       'menu.highscores': 'Salón de la Fama',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
       'menu.version': 'v{version}',
 
       // Game screen

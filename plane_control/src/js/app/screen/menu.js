@@ -18,7 +18,7 @@ app.screen.menu = app.screenManager.invent({
   onReady: function () {
     const root = this.rootElement
     const quitBtn = root.querySelector('button[data-action="quit"]')
-    if (quitBtn && app.isElectron()) quitBtn.hidden = false
+    if (quitBtn) quitBtn.hidden = false
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button[data-action]')
       if (btn) app.screenManager.dispatch(btn.dataset.action)

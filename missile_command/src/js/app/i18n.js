@@ -32,6 +32,7 @@ app.i18n = (() => {
       'menu.learn': 'Sound Learning',
       'menu.test': 'Spatial Audio Test',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Language picker
       'language.aria': 'Choose language',
@@ -228,6 +229,7 @@ app.i18n = (() => {
       'menu.learn': 'Aprender Sonidos',
       'menu.test': 'Prueba de Audio Espacial',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       // Language picker
       'language.aria': 'Elegir idioma',

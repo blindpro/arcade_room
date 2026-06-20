@@ -25,6 +25,7 @@ app.i18n = (() => {
       'menu.help': 'Help',
       'menu.learn': 'Learn Sounds',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
       'menu.hint': 'Use arrow keys and Enter to navigate.',
 
       // Language
@@ -248,6 +249,7 @@ app.i18n = (() => {
       'menu.help': 'Ayuda',
       'menu.learn': 'Aprende los sonidos',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
       'menu.hint': 'Usa las flechas y Enter para navegar.',
 
       'language.aria': 'Elegir idioma',

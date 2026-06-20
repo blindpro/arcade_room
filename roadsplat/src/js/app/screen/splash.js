@@ -23,6 +23,10 @@ app.screen.splash = app.screenManager.invent({
     root.addEventListener('click', (e) => {
       const action = e.target.closest('button[data-action]')
       if (action) {
+        if (action.dataset.action === 'quit') {
+          app.quit()
+          return
+        }
         app.screenManager.dispatch(action.dataset.action)
         return
       }

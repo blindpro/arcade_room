@@ -30,6 +30,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Game / HUD
       'game.aria': 'The climb',
@@ -168,6 +169,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'La subida',
       'hud.score': 'Puntos',

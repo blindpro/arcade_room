@@ -10,6 +10,7 @@ app.screen.menu = app.screenManager.invent({
     levelSelect: function () { this.change('levelSelect') },
     highscores: function () { this.change('highscores') },
     language: function () { this.change('language') },
+    quit: function () { app.quit() },
   },
   state: {
     entryFrames: 0,

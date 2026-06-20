@@ -11,6 +11,7 @@ app.screen.menu = app.screenManager.invent({
     language: function () { this.change('language') },
     test: function () { this.change('test') },
     music: function () { this.change('music') },
+    quit: function () { app.quit() },
   },
   state: {},
   onReady: function () {
@@ -55,6 +56,8 @@ app.screen.menu = app.screenManager.invent({
       app.screenManager.dispatch('help')
     } else if (name === 'language') {
       app.screenManager.dispatch('language')
+    } else if (name === 'quit') {
+      app.quit()
     }
   },
 })

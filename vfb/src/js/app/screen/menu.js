@@ -66,7 +66,7 @@ app.screen.menu = app.screenManager.invent({
     } else if (action == 'sounds') {
       app.screenManager.dispatch('sounds')
     } else if (action == 'quit') {
-      if (app.isElectron()) app.quit()
+      app.quit()
     }
   },
 })

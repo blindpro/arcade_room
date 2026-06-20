@@ -38,6 +38,7 @@ app.i18n = (() => {
       'menu.multiplayer': 'Multiplayer',
       'menu.learn': 'Learn the Sounds',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Style preview (hidden screen, Ctrl+Shift+P from main menu)
       'stylePreview.aria': 'Style previews',

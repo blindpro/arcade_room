@@ -9,6 +9,7 @@ app.screen.menu = app.screenManager.invent({
     learn:      function () { this.change('learn') },
     test:       function () { this.change('test') },
     language:   function () { this.change('language') },
+    quit:       function () { app.quit() },
   },
   state: { entryFrames: 0 },
   onReady: function () {

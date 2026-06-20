@@ -23,6 +23,7 @@ app.i18n = (() => {
       'splash.learn': 'Learn sounds',
       'splash.help': 'How to play',
       'splash.language': 'Language',
+      'splash.quit': 'Return to Games List',
 
       'help.aria': 'How to play',
       'help.title': 'How to play',
@@ -138,6 +139,7 @@ app.i18n = (() => {
       'splash.learn': 'Aprende los sonidos',
       'splash.help': 'Cómo jugar',
       'splash.language': 'Idioma',
+      'splash.quit': 'Volver a la lista de juegos',
 
       'help.aria': 'Cómo jugar',
       'help.title': 'Cómo jugar',

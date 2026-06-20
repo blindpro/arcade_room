@@ -32,6 +32,7 @@ app.i18n = (() => {
       'language.subtitle': 'Choose the language used for menus and announcements.',
       'language.back': 'Back',
       'language.button': 'Language',
+      'menu.quit': 'Return to Games List',
 
       'game.aria': 'FIRE! game in progress',
       'game.live': 'Game announcements',
@@ -98,6 +99,7 @@ app.i18n = (() => {
       'language.subtitle': 'Elige el idioma para los menús y los anuncios.',
       'language.back': 'Atrás',
       'language.button': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'game.aria': 'Partida de ¡FUEGO! en curso',
       'game.live': 'Anuncios de la partida',

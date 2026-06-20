@@ -20,6 +20,7 @@ app.screen.splash = app.screenManager.invent({
       btn.addEventListener('click', () => {
         const event = btn.getAttribute('data-action')
         if (event === 'start') app.screenManager.dispatch('interact')
+        else if (event === 'quit') app.quit()
         else app.screenManager.dispatch(event)
       })
     })

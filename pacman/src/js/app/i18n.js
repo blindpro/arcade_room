@@ -26,6 +26,7 @@ app.i18n = (() => {
       'menu.highscores': 'High Scores',
       'menu.help': 'How To Play',
       'menu.language': 'Language',
+      'menu.quit': 'Return to Games List',
 
       'language.aria': 'Choose language',
       'language.title': 'Language',
@@ -233,6 +234,7 @@ app.i18n = (() => {
       'menu.highscores': 'Récords',
       'menu.help': 'Cómo se juega',
       'menu.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'language.aria': 'Elegir idioma',
       'language.title': 'Idioma',

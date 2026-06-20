@@ -12,6 +12,7 @@ app.screen.menu = app.screenManager.invent({
     learn: function () { this.change('learn') },
     language: function () { this.change('language') },
     stylePreview: function () { this.change('stylePreview') },
+    quit: function () { app.quit() },
   },
   state: {
     entryFrames: 0,

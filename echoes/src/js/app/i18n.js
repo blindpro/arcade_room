@@ -21,6 +21,7 @@ app.i18n = (() => {
       'menu.start': 'Start',
       'menu.help': 'How to play',
       'menu.highscores': 'High scores',
+      'menu.quit': 'Return to Games List',
 
       'language.aria': 'Choose language',
       'language.title': 'Language',
@@ -123,6 +124,7 @@ app.i18n = (() => {
       'menu.start': 'Empezar',
       'menu.help': 'Cómo jugar',
       'menu.highscores': 'Puntuaciones',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'language.aria': 'Elegir idioma',
       'language.title': 'Idioma',

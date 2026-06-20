@@ -34,6 +34,10 @@ app.screen.splash = app.screenManager.invent({
     root.querySelector('.a-splash--language').addEventListener('click', () => {
       app.screenManager.dispatch('language')
     })
+
+    root.querySelector('.a-splash--quit').addEventListener('click', () => {
+      app.quit()
+    })
   },
   onEnter: function () {},
   onFrame: function () {},

@@ -27,6 +27,7 @@ app.i18n = (() => {
       'splash.help': 'How to play',
       'splash.settings': 'Settings',
       'splash.language': 'Language',
+      'menu.quit': 'Return to Games List',
 
       // Help
       'help.aria': 'How to play',
@@ -153,6 +154,7 @@ app.i18n = (() => {
       'splash.help': 'Cómo jugar',
       'splash.settings': 'Ajustes',
       'splash.language': 'Idioma',
+      'menu.quit': 'Volver a la lista de juegos',
 
       'help.aria': 'Cómo jugar',
       'help.title': 'Cómo jugar',
