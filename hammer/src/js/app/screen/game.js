@@ -15,6 +15,7 @@ app.screen.game = app.screenManager.invent({
   rootSelector: '.a-game',
   transitions: {
     gameOver: function () { this.change('gameover') },
+    menu:     function () { this.change('menu') },
   },
   state: {
     entryFrames: 0,
@@ -82,6 +83,12 @@ app.screen.game = app.screenManager.invent({
 
       const ui = app.controls.ui()
 
+      // Escape/Backspace → menu
+      if (ui.back || ui.pause) {
+        app.screenManager.dispatch('menu')
+        return
+      }
+
       // Smash on rising-edge keyboard handled via state.smashEdge.
       // Also accept the UI delta enter/space/confirm so gamepad A works,
       // but only when the focused element isn't the smash button (the
@@ -130,6 +137,11 @@ app.screen.game = app.screenManager.invent({
   // ---- key handling ----
   bindKeys: function () {
     const onDown = (e) => {
+      if (e.code === 'Escape' || e.code === 'Backspace') {
+        e.preventDefault()
+        app.screenManager.dispatch('menu')
+        return
+      }
       if (e.code === 'F1') { e.preventDefault(); this.announceScore(); return }
       if (e.code === 'F2') { this.announceLevel(); return }
       if (e.repeat) return

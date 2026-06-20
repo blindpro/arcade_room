@@ -2,7 +2,9 @@ app.screen.game = app.screenManager.invent({
   id: 'game',
   parentSelector: '.a-app--game',
   rootSelector: '.a-game',
-  transitions: {},
+  transitions: {
+    splash: function () { this.change('splash') },
+  },
   state: {
     hpEl: null,
     levelEl: null,
@@ -12,6 +14,7 @@ app.screen.game = app.screenManager.invent({
     iPressed: false,
     pPressed: false,
     f1: false, f2: false, f3: false, f4: false,
+    escPressed: false,
   },
   onReady: function () {
     const root = this.rootElement
@@ -37,6 +40,7 @@ app.screen.game = app.screenManager.invent({
     this.state.iPressed = false
     this.state.pPressed = false
     this.state.f1 = this.state.f2 = this.state.f3 = this.state.f4 = false
+    this.state.escPressed = false
   },
   onFrame: function (e) {
     const k = engine.input.keyboard
@@ -45,6 +49,17 @@ app.screen.game = app.screenManager.invent({
     if (k.is('KeyI')) {
       if (!this.state.iPressed) { this.state.iPressed = true; content.game.announceStatus() }
     } else this.state.iPressed = false
+
+    if (k.is('Escape') || k.is('Backspace')) {
+      if (!this.state.escPressed) {
+        this.state.escPressed = true
+        if (content.game.isPaused()) {
+          app.screenManager.dispatch('splash')
+          return
+        }
+        content.game.togglePause()
+      }
+    } else this.state.escPressed = false
 
     if (k.is('KeyP')) {
       if (!this.state.pPressed) { this.state.pPressed = true; content.game.togglePause() }

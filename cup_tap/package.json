@@ -19,5 +19,9 @@
     "merge-stream": "^2.0.0",
     "syngen": "^2.0.0-beta.3",
     "yargs": "^18.0.0"
+  },
+  "dependencies": {
+    "clean-css": "^5.3.3",
+    "source-map": "^0.7.6"
   }
 }

@@ -13,6 +13,7 @@ app.screen.game = app.screenManager.invent({
   transitions: {
     pause: function () { /* in-place: handled in onFrame */ },
     gameover: function () { this.change('gameover') },
+    menu: function () { this.change('menu') },
   },
   state: {
     entryFrames: 0,
@@ -67,6 +68,10 @@ app.screen.game = app.screenManager.invent({
       // Pause / quit
       if (e.code === 'Escape' || e.code === 'Backspace') {
         e.preventDefault()
+        if (this.state.paused) {
+          app.screenManager.dispatch('menu')
+          return
+        }
         this.togglePause()
         return
       }

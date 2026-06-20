@@ -3,6 +3,7 @@ app.screen.menu = app.screenManager.invent({
   parentSelector: '.a-app--menu',
   rootSelector: '.a-menu',
   transitions: {
+    quit: function () { app.quit() },
     help: function () { this.change('help') },
     language: function () { this.change('language') },
     levels: function () { this.change('levels') },

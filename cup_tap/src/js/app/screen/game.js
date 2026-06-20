@@ -15,6 +15,7 @@ app.screen.game = app.screenManager.invent({
   transitions: {
     pause:    function () {},
     gameover: function () { this.change('gameover') },
+    menu:     function () { this.change('menu') },
   },
   state: {
     entryFrames: 0,
@@ -83,6 +84,10 @@ app.screen.game = app.screenManager.invent({
       if (e.type === 'keydown') {
         if (code === 'Escape' || code === 'Backspace') {
           e.preventDefault()
+          if (this.state.paused) {
+            app.screenManager.dispatch('menu')
+            return
+          }
           this.togglePause()
           return
         }

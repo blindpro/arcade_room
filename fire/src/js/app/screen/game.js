@@ -4,6 +4,7 @@ app.screen.game = app.screenManager.invent({
   rootSelector: '.a-game',
   transitions: {
     gameover: function () { this.change('gameover') },
+    splash:   function () { this.change('splash') },
   },
   state: {
     entryFrames: 0,
@@ -20,6 +21,11 @@ app.screen.game = app.screenManager.invent({
     // the user can still toggle fullscreen.
     this._fkeys = (e) => {
       if (this.id !== app.screenManager.current().id) return
+      if (e.code === 'Escape' || e.code === 'Backspace') {
+        e.preventDefault()
+        app.screenManager.dispatch('splash')
+        return
+      }
       if (e.code === 'F1') {
         e.preventDefault()
         const t = app.i18n.t
@@ -86,6 +92,12 @@ app.screen.game = app.screenManager.invent({
       const now = engine.time()
       const dt = Math.max(0.001, Math.min(0.1, now - this.state.lastTime))
       this.state.lastTime = now
+
+      const ui = app.controls.ui()
+      if (ui.back || ui.pause) {
+        app.screenManager.dispatch('splash')
+        return
+      }
 
       content.game.tick(dt)
       this.refreshHud()
