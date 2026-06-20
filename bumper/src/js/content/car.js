@@ -43,7 +43,7 @@ content.car = (() => {
       ai: null,
       // Arcade-only inventory + a "shield was just consumed this hit"
       // flag the physics path can read.
-      inventory: arcade ? {shields: 0, bullets: 0, mines: 0, boosts: 0, teleports: 0} : null,
+      inventory: arcade ? {shields: 0, bullets: 0, mines: 0, boosts: 0, teleports: 0, repulsors: 0, rockets: 0} : null,
       // Set by host via content.game.activateBoost; replicated in
       // snapshots so clients drive their listener voice and HUD off
       // the same value.

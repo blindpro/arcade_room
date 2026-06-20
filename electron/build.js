@@ -1,25 +1,15 @@
 // Bundle the multi-game Electron app for the current platform.
 // Run with `npm run package`.
-const path = require('path')
+const fs = require('fs'), path = require('path')
 
 const ROOT = path.resolve(__dirname, '..')
 
-// Per-game directories whose runtime needs are entirely under ./public/.
-// Anything else (src/, docs/, assets/, node_modules/, Gulpfile.js, etc.)
-// is build-time only and stripped from the bundle.
-const GAME_DIRS = [
-  'bumper',
-  'combat',
-  'neverStop',
-  'pacman',
-  'pinball',
-  'pong',
-  'racing',
-  'roadsplat',
-  'tennis',
-  'vfb',
-  'whack',
-]
+// Auto-discover game directories that have a public/index.html.
+const GAME_DIRS = fs.readdirSync(ROOT, {withFileTypes: true})
+  .filter(d => d.isDirectory() && !['electron','template','node_modules'].includes(d.name) && !d.name.startsWith('.') && !d.name.startsWith('!'))
+  .filter(d => fs.existsSync(path.join(ROOT, d.name, 'public', 'index.html')))
+  .map(d => d.name)
+  .sort()
 
 // `ignore` runs against POSIX-style paths relative to the project root,
 // each starting with `/`. Anything matching a regex is dropped from the
@@ -29,6 +19,7 @@ const ignorePatterns = [
   /^\/\.gitignore$/,
   /^\/\.github(\/|$)/,
   /^\/\.claude(\/|$)/,
+  /^\/chat\.txt$/,
   /^\/dist(\/|$)/,
   /^\/template(\/|$)/,            // never ship the empty starter
   /^\/![^/]*(\/|$)/,              // hidden games (directories prefixed with !)
@@ -38,7 +29,7 @@ const ignorePatterns = [
 
 for (const g of GAME_DIRS) {
   // Inside each game, everything outside public/ is build-time noise.
-  ignorePatterns.push(new RegExp(`^/${g}/(src|docs|assets|node_modules|electron)(/|$)`))
+  ignorePatterns.push(new RegExp(`^/${g}/(src|docs|assets|node_modules|electron|template)(/|$)`))
   ignorePatterns.push(new RegExp(`^/${g}/(Gulpfile\\.js|package\\.json|package-lock\\.json|CLAUDE\\.md|README\\.md|LICENSE|\\.gitignore)$`))
 }
 

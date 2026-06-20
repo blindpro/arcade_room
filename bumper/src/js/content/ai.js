@@ -39,7 +39,9 @@ content.ai = (() => {
       nextBulletAttemptAt = 0,
       nextMineAttemptAt = engine.time() + 4,
       nextBoostAttemptAt = engine.time() + 2,
-      nextTeleportAttemptAt = engine.time() + 3
+      nextTeleportAttemptAt = engine.time() + 3,
+      nextRepulsorAttemptAt = engine.time() + 3,
+      nextRocketAttemptAt = engine.time() + 3
 
     function randomArenaPoint() {
       const b = content.arena.bounds, m = 1.5
@@ -424,6 +426,72 @@ content.ai = (() => {
           nextTeleportAttemptAt = t + 4
         } else {
           nextTeleportAttemptAt = t + 0.5
+        }
+      }
+
+      // Repulsor — defensive blast when surrounded or a threat is on top of us.
+      if (
+        car.inventory.repulsors > 0 &&
+        t >= nextRepulsorAttemptAt &&
+        content.game.activateRepulsor
+      ) {
+        let shouldRepulse = false
+        if (state === 'FLEE') {
+          const threat = nearestThreat()
+          if (threat) {
+            const d = Math.hypot(
+              threat.position.x - car.position.x,
+              threat.position.y - car.position.y,
+            )
+            if (d < 6) shouldRepulse = true
+          }
+        } else {
+          // Count nearby enemies within repulsor blast radius.
+          const cfg = content.physics.config
+          let nearby = 0
+          for (const other of game.cars) {
+            if (other.id === car.id || other.eliminated) continue
+            const d = Math.hypot(
+              other.position.x - car.position.x,
+              other.position.y - car.position.y,
+            )
+            if (d < cfg.repulsorRadius) nearby++
+          }
+          if (nearby >= 2) shouldRepulse = true
+        }
+        if (shouldRepulse) {
+          content.game.activateRepulsor(car)
+          nextRepulsorAttemptAt = t + 3
+        } else {
+          nextRepulsorAttemptAt = t + 0.5
+        }
+      }
+
+      // Rocket — aggressive ramming: launch toward a forward target
+      // within striking range.
+      const rocketActive = car.rocketUntil && t < car.rocketUntil
+      if (
+        car.inventory.rockets > 0 &&
+        !rocketActive &&
+        t >= nextRocketAttemptAt &&
+        content.game.activateRocket
+      ) {
+        let shouldRocket = false
+        if (state === 'PURSUE' && target && !target.eliminated) {
+          const dx = target.position.x - car.position.x,
+            dy = target.position.y - car.position.y
+          const d = Math.hypot(dx, dy)
+          if (d >= 4 && d <= 18) {
+            const fx = Math.cos(car.heading), fy = Math.sin(car.heading)
+            const dot = (dx * fx + dy * fy) / (d || 1)
+            if (dot > 0.6) shouldRocket = true
+          }
+        }
+        if (shouldRocket) {
+          content.game.activateRocket(car)
+          nextRocketAttemptAt = t + 1.5
+        } else {
+          nextRocketAttemptAt = t + 0.4
         }
       }
     }

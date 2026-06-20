@@ -12,6 +12,9 @@
   },
   "devDependencies": {
     "@electron/packager": "^20.0.0",
-    "electron": "^41.3.0"
+    "electron": "^41.8.0"
+  },
+  "allowScripts": {
+    "electron@41.8.0": true
   }
 }

@@ -944,6 +944,187 @@ content.sounds = (() => {
     disconnectAfter(ear.left, t0 + dur + 0.3, ear)
   }
 
+  /**
+   * One-shot when a repulsor pickup is grabbed: low thrumming pulse.
+   */
+  function pickupRepulsor(position) {
+    const t0 = now()
+    const dur = 0.5
+    const ear = playSpatial(position, () => {
+      const c = ctx()
+      const out = c.createGain()
+      out.gain.value = 0
+
+      const o = c.createOscillator()
+      o.type = 'triangle'
+      o.frequency.setValueAtTime(110, t0)
+      o.frequency.linearRampToValueAtTime(220, t0 + dur)
+      o.connect(out)
+      o.start(t0)
+      o.stop(t0 + dur + 0.05)
+
+      const lfo = c.createOscillator()
+      lfo.type = 'sine'
+      lfo.frequency.value = 8
+      const lfoGain = c.createGain()
+      lfoGain.gain.value = 0.3
+      lfo.connect(lfoGain).connect(out.gain)
+      lfo.start(t0)
+      lfo.stop(t0 + dur + 0.05)
+
+      envelope(out.gain, t0, 0.01, 0.1, dur - 0.11, 0.5)
+      return out
+    })
+    disconnectAfter(ear.left, t0 + dur + 0.3, ear)
+  }
+
+  /**
+   * One-shot when a rocket pickup is grabbed: high-energy ascending buzz.
+   */
+  function pickupRocket(position) {
+    const t0 = now()
+    const dur = 0.45
+    const ear = playSpatial(position, () => {
+      const c = ctx()
+      const out = c.createGain()
+      out.gain.value = 0
+
+      const o = c.createOscillator()
+      o.type = 'sawtooth'
+      o.frequency.setValueAtTime(300, t0)
+      o.frequency.exponentialRampToValueAtTime(900, t0 + dur)
+      const lp = c.createBiquadFilter()
+      lp.type = 'lowpass'
+      lp.frequency.value = 2000
+      lp.Q.value = 3
+      o.connect(lp).connect(out)
+      o.start(t0)
+      o.stop(t0 + dur + 0.05)
+
+      envelope(out.gain, t0, 0.005, 0.04, dur - 0.05, 0.5)
+      return out
+    })
+    disconnectAfter(ear.left, t0 + dur + 0.3, ear)
+  }
+
+  // --- Repulsor Blast ------------------------------------------------
+
+  /**
+   * Deep "WOOMF" — low-passed noise burst with a sub sine sweep.
+   * Spatialised at the activator's position. All peers hear it.
+   */
+  function repulsorActivated(position) {
+    const t0 = now()
+    const dur = 0.55
+    const ear = playSpatial(position, () => {
+      const c = ctx()
+      const out = c.createGain()
+      out.gain.value = 0
+
+      // Sub thump — the chest-hit
+      const sub = c.createOscillator()
+      sub.type = 'sine'
+      sub.frequency.setValueAtTime(80, t0)
+      sub.frequency.exponentialRampToValueAtTime(35, t0 + dur)
+      const subGain = c.createGain()
+      subGain.gain.value = 0.8
+      sub.connect(subGain).connect(out)
+      sub.start(t0)
+      sub.stop(t0 + dur + 0.05)
+
+      // Bandpassed noise for the "pressure wave"
+      const noise = c.createBufferSource()
+      noise.buffer = engine.buffer.whiteNoise({channels: 1, duration: dur + 0.1})
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(400, t0)
+      bp.frequency.exponentialRampToValueAtTime(100, t0 + dur)
+      bp.Q.value = 6
+      const noiseGain = c.createGain()
+      noiseGain.gain.value = 0
+      envelope(noiseGain.gain, t0, 0.005, 0.04, dur - 0.05, 0.6)
+      noise.connect(bp).connect(noiseGain).connect(out)
+      noise.start(t0)
+      noise.stop(t0 + dur + 0.05)
+
+      envelope(out.gain, t0, 0.005, 0.08, dur - 0.09, 0.75)
+      return out
+    })
+    disconnectAfter(ear.left, t0 + dur + 0.3, ear)
+  }
+
+  // --- Rocket Boost --------------------------------------------------
+
+  /**
+   * Rising whoosh when a rocket fires. Short, aggressive, immediate.
+   */
+  function rocketActivated(position) {
+    const t0 = now()
+    const dur = 0.45
+    const ear = playSpatial(position, () => {
+      const c = ctx()
+      const out = c.createGain()
+      out.gain.value = 0
+
+      // Rapid ascending saw
+      const o = c.createOscillator()
+      o.type = 'sawtooth'
+      o.frequency.setValueAtTime(200, t0)
+      o.frequency.exponentialRampToValueAtTime(2000, t0 + dur)
+      const lp = c.createBiquadFilter()
+      lp.type = 'lowpass'
+      lp.frequency.value = 3000
+      lp.Q.value = 3
+      o.connect(lp).connect(out)
+      o.start(t0)
+      o.stop(t0 + dur + 0.05)
+
+      // Noise burst
+      const noise = c.createBufferSource()
+      noise.buffer = engine.buffer.whiteNoise({channels: 1, duration: dur + 0.1})
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(1000, t0)
+      bp.frequency.exponentialRampToValueAtTime(3500, t0 + dur)
+      bp.Q.value = 4
+      const ng = c.createGain()
+      ng.gain.value = 0
+      envelope(ng.gain, t0, 0.005, 0.04, dur - 0.05, 0.5)
+      noise.connect(bp).connect(ng).connect(out)
+      noise.start(t0)
+      noise.stop(t0 + dur + 0.05)
+
+      envelope(out.gain, t0, 0.005, 0.04, dur - 0.05, 0.65)
+      return out
+    })
+    disconnectAfter(ear.left, t0 + dur + 0.3, ear)
+  }
+
+  /**
+   * Descending wind-down when a rocket expires.
+   */
+  function rocketExpired(position) {
+    const t0 = now()
+    const dur = 0.4
+    const ear = playSpatial(position, () => {
+      const c = ctx()
+      const out = c.createGain()
+      out.gain.value = 0
+
+      const o = c.createOscillator()
+      o.type = 'triangle'
+      o.frequency.setValueAtTime(1200, t0)
+      o.frequency.exponentialRampToValueAtTime(200, t0 + dur)
+      o.connect(out)
+      o.start(t0)
+      o.stop(t0 + dur + 0.05)
+
+      envelope(out.gain, t0, 0.005, 0.04, dur - 0.05, 0.3)
+      return out
+    })
+    disconnectAfter(ear.left, t0 + dur + 0.3, ear)
+  }
+
   return {
     collision,
     scoring,
@@ -974,5 +1155,10 @@ content.sounds = (() => {
     bulletDenied,
     shieldBlock,
     explosion,
+    repulsorActivated,
+    rocketActivated,
+    rocketExpired,
+    pickupRepulsor,
+    pickupRocket,
   }
 })()

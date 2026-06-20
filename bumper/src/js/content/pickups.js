@@ -18,7 +18,7 @@
  */
 content.pickups = (() => {
   const config = {
-    pickupRadius: 0.9,         // collide radius for grabbing
+    pickupRadius: 1.5,         // collide radius for grabbing
     spawnIntervalMin: 4,       // seconds between spawn attempts
     spawnIntervalMax: 7,
     maxConcurrent: 5,          // simultaneous pickups in arena
@@ -34,6 +34,8 @@ content.pickups = (() => {
     mine:     {weight: 1, label: 'mine'},
     speed:    {weight: 2, label: 'speed burst'},
     teleport: {weight: 1, label: 'teleport'},
+    repulsor: {weight: 1, label: 'repulsor'},
+    rocket:   {weight: 1, label: 'rocket'},
   }
 
   let nextId = 1
@@ -524,6 +526,135 @@ content.pickups = (() => {
     }
   }
 
+  function createRepulsorVoice(position) {
+    const c = engine.context()
+    const out = c.createGain()
+    out.gain.value = 0
+
+    // Deep pulsing sub-bass throb — like a large magnet charging.
+    const sub = c.createOscillator()
+    sub.type = 'triangle'
+    sub.frequency.value = 55
+    const subGain = c.createGain()
+    subGain.gain.value = 0
+
+    // Amplitude modulation at 3 Hz for the "charging" pulse.
+    const lfo = c.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 3
+    const lfoGain = c.createGain()
+    lfoGain.gain.value = 0.5
+    lfo.connect(lfoGain).connect(subGain.gain)
+    const offset = c.createConstantSource()
+    offset.offset.value = 0.3
+    offset.connect(subGain.gain)
+    sub.connect(subGain).connect(out)
+
+    const muffle = attachMuffler(c, out, [sub])
+    const ear = engine.ear.binaural.create({
+      gainModel: engine.ear.gainModel.exponential.instantiate({
+        maxDistance: 50, power: 3,
+      }),
+    })
+    ear.from(muffle.input)
+    ear.to(engine.mixer.output())
+
+    sub.start()
+    lfo.start()
+    offset.start()
+    subGain.gain.setValueAtTime(0.35, c.currentTime + 0.3)
+
+    return {
+      ear,
+      applyBehind: muffle.applyBehind,
+      destroy() {
+        const t = engine.time()
+        out.gain.cancelScheduledValues(t)
+        out.gain.linearRampToValueAtTime(0, t + 0.15)
+        setTimeout(() => {
+          try { sub.stop() } catch (e) {}
+          try { lfo.stop() } catch (e) {}
+          try { offset.stop() } catch (e) {}
+          try { out.disconnect() } catch (e) {}
+          try { ear.destroy() } catch (e) {}
+        }, 250)
+      },
+    }
+  }
+
+  function createRocketVoice(position) {
+    const c = engine.context()
+    const out = c.createGain()
+    out.gain.value = 0
+
+    // Aggressive high-energy whine: a sawtooth with fast LFO wobble
+    // plus bandpassed noise, like a jet engine spooling.
+    const carrier = c.createOscillator()
+    carrier.type = 'sawtooth'
+    carrier.frequency.value = 380
+    const wobble = c.createOscillator()
+    wobble.type = 'sine'
+    wobble.frequency.value = 11
+    const wobbleGain = c.createGain()
+    wobbleGain.gain.value = 60
+    wobble.connect(wobbleGain).connect(carrier.frequency)
+
+    const sub = c.createOscillator()
+    sub.type = 'sine'
+    sub.frequency.value = 140
+    const subGain = c.createGain()
+    subGain.gain.value = 0.3
+
+    const noise = c.createBufferSource()
+    noise.buffer = engine.buffer.pinkNoise({channels: 1, duration: 2})
+    noise.loop = true
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 1800
+    bp.Q.value = 3
+    const noiseGain = c.createGain()
+    noiseGain.gain.value = 0.25
+    noise.connect(bp).connect(noiseGain)
+
+    carrier.connect(out)
+    sub.connect(subGain).connect(out)
+    noiseGain.connect(out)
+
+    const muffle = attachMuffler(c, out, [carrier, sub])
+    const ear = engine.ear.binaural.create({
+      gainModel: engine.ear.gainModel.exponential.instantiate({
+        maxDistance: 50, power: 3,
+      }),
+    })
+    ear.from(muffle.input)
+    ear.to(engine.mixer.output())
+
+    carrier.start()
+    wobble.start()
+    sub.start()
+    noise.start()
+
+    out.gain.linearRampToValueAtTime(0.15, c.currentTime + 0.3)
+
+    return {
+      ear,
+      applyBehind: muffle.applyBehind,
+      destroy() {
+        const t = engine.time()
+        out.gain.cancelScheduledValues(t)
+        out.gain.linearRampToValueAtTime(0, t + 0.15)
+        setTimeout(() => {
+          try { carrier.stop() } catch (e) {}
+          try { wobble.stop() } catch (e) {}
+          try { sub.stop() } catch (e) {}
+          try { noise.stop() } catch (e) {}
+          try { out.disconnect() } catch (e) {}
+          try { ear.destroy() } catch (e) {}
+        }, 250)
+      },
+    }
+  }
+
   const VOICE_FACTORY = {
     health: createHealthVoice,
     shield: createShieldVoice,
@@ -531,6 +662,8 @@ content.pickups = (() => {
     mine: createMineVoice,
     speed: createSpeedVoice,
     teleport: createTeleportVoice,
+    repulsor: createRepulsorVoice,
+    rocket: createRocketVoice,
   }
 
   // ---- Pickup model ---------------------------------------------------

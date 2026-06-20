@@ -124,32 +124,13 @@ app.screen.game = app.screenManager.invent({
           const key = remaining === 1 ? 'game.bulletCooldown1' : 'game.bulletCooldownN'
           content.announcer.say(app.i18n.t(key, {seconds: remaining}), 'polite')
         }
-      } else if (e.code === 'KeyF') {
+      } else if (e.code === 'KeyE' && !e.repeat) {
         e.preventDefault()
-        if (player.inventory && player.inventory.mines > 0) {
-          if (!content.game.placeMine()) {
-            content.announcer.say(app.i18n.t('game.cantPlaceMine'), 'polite')
-          }
-        } else {
-          content.announcer.say(app.i18n.t('game.noMines'), 'polite')
-        }
-      } else if (e.code === 'KeyG') {
+        content.game.cycleItem()
+      } else if (e.code === 'Tab') {
         e.preventDefault()
-        if (player.inventory && player.inventory.boosts > 0) {
-          if (!content.game.useBoost()) {
-            content.announcer.say(app.i18n.t('game.boostNotReady'), 'polite')
-          }
-        } else {
-          content.announcer.say(app.i18n.t('game.noBoosts'), 'polite')
-        }
-      } else if (e.code === 'KeyH') {
-        e.preventDefault()
-        if (player.inventory && player.inventory.teleports > 0) {
-          if (!content.game.useTeleport()) {
-            content.announcer.say(app.i18n.t('game.cantTeleport'), 'polite')
-          }
-        } else {
-          content.announcer.say(app.i18n.t('game.noTeleports'), 'polite')
+        if (!content.game.useSelectedItem()) {
+          content.announcer.say(app.i18n.t('game.noItemSelected'), 'polite')
         }
       }
     })

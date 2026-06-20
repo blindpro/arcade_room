@@ -4,16 +4,12 @@
  */
 content.physics = (() => {
   const config = {
-    // Heavy & underpowered, like a real bumper car: takes ~4 s of full
-    // throttle to approach maxSpeed asymptotically. Lowering this makes
-    // the audio-pitch ramp track speed instead of jumping to "max"
-    // instantly when the player presses up.
-    engineForward: 3.0,
-    engineReverse: 1.0,
-    linearDrag: 0.6,
+    engineForward: 4.0,
+    engineReverse: 1.5,
+    linearDrag: 0.45,
     angularDrag: 4.0,
-    turnRate: 3.2,
-    maxSpeed: 5.0,
+    turnRate: 3.5,
+    maxSpeed: 6.5,
     carRestitution: 0.85,
     wallRestitution: 0.55,
     damageScaleCar: 6.0,
@@ -26,12 +22,19 @@ content.physics = (() => {
     scrapeRate: 0.4,            // hp/s while scraping
     scrapeMinSpeed: 0.6,
     // Speed-burst pickup: while car.boostUntil > engine.time(), the
-    // car uses these instead of the base values. Roughly 2x — fast
-    // enough to clearly out-run an unboosted car and rack up high-impact
-    // rams without trivialising the rest of the round.
-    boostMaxSpeed: 10.0,
-    boostEngineForward: 6.5,
-    boostDuration: 3.0,         // seconds per boost charge
+    // car uses these instead of the base values. Roughly 2x base,
+    // long enough to chase down or escape.
+    boostMaxSpeed: 14.0,
+    boostEngineForward: 9.0,
+    boostDuration: 4.0,         // seconds per boost charge
+    // Repulsor blast — radial push + damage
+    repulsorRadius: 12,
+    repulsorPush: 15,
+    repulsorDamage: 15,
+    // Rocket boost — extreme forward burst with high collision damage
+    rocketSpeed: 20,
+    rocketDuration: 1.2,
+    rocketDamageMultiplier: 5,
   }
 
   function integrate(car, delta) {
@@ -91,6 +94,13 @@ content.physics = (() => {
     // π (it's effectively a rotation, not a wrap). cos/sin tolerate
     // drift, and the AI's diff-to-desired uses atan2(sin, cos) which
     // handles wrap-around itself. Leaving heading unwrapped is safe.
+
+    // Rocket boost: override velocity to fixed speed in heading direction
+    if (car.rocketUntil && engine.time() < car.rocketUntil) {
+      const rSpd = config.rocketSpeed
+      car.velocity.x = Math.cos(car.heading) * rSpd
+      car.velocity.y = Math.sin(car.heading) * rSpd
+    }
 
     // Position
     car.position.x += car.velocity.x * delta

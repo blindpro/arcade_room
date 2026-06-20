@@ -57,7 +57,11 @@ content.game = (() => {
     // Hold-to-honk state for the local player. `isLocalHonking` mirrors
     // the Space-key down state so we don't fire duplicate hornStart
     // events on keyboard auto-repeat.
-    isLocalHonking = false
+    isLocalHonking = false,
+    // Currently selected inventory item for the cycle-and-use system.
+    // Set by cycleItem(), consumed by useSelectedItem(). Local-only
+    // (not networked — each peer manages their own selection).
+    selectedItem = null
 
   // ---- Multiplayer state -------------------------------------------------
 
@@ -81,6 +85,16 @@ content.game = (() => {
   // Spoken time-remaining warnings (seconds before round end). Each fires
   // exactly once per round.
   const DM_WARN_MARKS = [60, 30, 10]
+
+  // Ordered list of cycleable item types (in selection order). Excludes
+  // shields (passive) and bullets (dedicated A/S/D keys). When the player
+  // presses E, we iterate through this list, skipping any with 0 count.
+  const CYCLE_ORDER = ['boost', 'teleport', 'repulsor', 'rocket', 'mine']
+  // Maps cycle type to the inventory field name (which may differ).
+  const INV_FIELD = {
+    boost: 'boosts', teleport: 'teleports',
+    repulsor: 'repulsors', rocket: 'rockets', mine: 'mines',
+  }
 
   // Modes that ship with the arcade item layer (pickups, bullets, mines,
   // shields, boosts, teleports). Anything checking "do cars get an
@@ -111,6 +125,8 @@ content.game = (() => {
     'mineDetonated',
     'boostActivated',
     'teleportUsed',
+    'repulsorUsed',
+    'rocketUsed',
     // Deathmatch: respawn after the fixed delay. Networked so every peer
     // hard-snaps the car position, plays the SFX at the new spot, and
     // announces.
@@ -459,6 +475,8 @@ content.game = (() => {
       case 'mine':    if (car.inventory) car.inventory.mines++; break
       case 'speed':   if (car.inventory) car.inventory.boosts++; break
       case 'teleport': if (car.inventory) car.inventory.teleports++; break
+      case 'repulsor': if (car.inventory) car.inventory.repulsors++; break
+      case 'rocket':   if (car.inventory) car.inventory.rockets++; break
     }
     // Use `pickupType` rather than `type` — the networked-event capture
     // spreads payload onto `{type: eventName, ...payload}`, so a payload
@@ -611,6 +629,61 @@ content.game = (() => {
     }
   })
 
+  // Repulsor blast: radial push + damage. SFX plays on every peer;
+  // state mutations (push, damage, score) on host / single-player only.
+  content.events.on('repulsorUsed', ({carId, x, y}) => {
+    if (!hasItems() || !running) return
+    content.sounds.repulsorActivated({x, y})
+    if (role === 'client' || !running) return
+    const activator = cars.find((c) => c.id === carId)
+    if (!activator) return
+    const cfg = content.physics.config
+    const radiusSq = cfg.repulsorRadius * cfg.repulsorRadius
+    for (const other of cars) {
+      if (other === activator || other.eliminated) continue
+      const dx = other.position.x - x
+      const dy = other.position.y - y
+      const distSq = dx * dx + dy * dy
+      if (distSq > radiusSq) continue
+      const dist = Math.sqrt(distSq) || 1
+      const nx = dx / dist, ny = dy / dist
+      other.velocity.x += nx * cfg.repulsorPush
+      other.velocity.y += ny * cfg.repulsorPush
+      const blocked = hasItems() && content.car.consumeShield(other)
+      if (!blocked) {
+        const prev = other.health
+        content.car.applyDamage(other, cfg.repulsorDamage, activator)
+        const dealt = prev - other.health
+        activator.score = (activator.score || 0) + Math.round(dealt)
+      }
+    }
+    if (activator === playerCar) {
+      content.announcer.say(app.i18n.t('ann.repulsorUseYou'), 'assertive')
+    } else {
+      content.announcer.say(app.i18n.t('ann.repulsorUseOther', {label: activator.label}), 'polite')
+    }
+  })
+
+  // Rocket boost: extreme forward burst + collision damage multiplier.
+  content.events.on('rocketUsed', ({carId, until}) => {
+    if (!hasItems() || !running) return
+    const car = cars.find((c) => c.id === carId)
+    if (!car) return
+    if (role === 'client') car.rocketUntil = until
+    content.sounds.rocketActivated(car.position)
+    if (car === playerCar) {
+      content.announcer.say(app.i18n.t('ann.rocketUseYou'), 'assertive')
+    } else {
+      content.announcer.say(app.i18n.t('ann.rocketUseOther', {label: car.label}), 'polite')
+    }
+    const ms = Math.max(0, (until - engine.time()) * 1000)
+    setTimeout(() => {
+      if (running && !car.eliminated) {
+        content.sounds.rocketExpired(car.position)
+      }
+    }, ms)
+  })
+
   content.events.on('mineHit', ({ownerId, victimId, damage}) => {
     if (!hasItems()) return
     const victim = cars.find((c) => c.id === victimId)
@@ -739,6 +812,40 @@ content.game = (() => {
         }
         break
       }
+      case 'repulsor': {
+        content.sounds.pickupRepulsor(car.position)
+        if (car === playerCar) {
+          content.announcer.say(
+            car.inventory.repulsors === 1
+              ? t('ann.repulsorYou1')
+              : t('ann.repulsorYouN', {count: car.inventory.repulsors}),
+            'assertive',
+          )
+        } else {
+          content.announcer.say(
+            t('ann.repulsorOther', {label: car.label, count: car.inventory.repulsors}),
+            'polite',
+          )
+        }
+        break
+      }
+      case 'rocket': {
+        content.sounds.pickupRocket(car.position)
+        if (car === playerCar) {
+          content.announcer.say(
+            car.inventory.rockets === 1
+              ? t('ann.rocketYou1')
+              : t('ann.rocketYouN', {count: car.inventory.rockets}),
+            'assertive',
+          )
+        } else {
+          content.announcer.say(
+            t('ann.rocketOther', {label: car.label, count: car.inventory.rockets}),
+            'polite',
+          )
+        }
+        break
+      }
     }
   }
 
@@ -774,6 +881,9 @@ content.game = (() => {
     mode = requestedMode === 'arcade' ? 'arcade'
          : requestedMode === 'deathmatch' ? 'deathmatch'
          : 'chill'
+
+    // Pick a random arena map for this round.
+    content.arena.selectMap()
 
     let list
     if (Array.isArray(controllers) && controllers.length > 0) {
@@ -851,6 +961,7 @@ content.game = (() => {
     snapshotAccum = 0
     playerLastFireAt = -Infinity
     isLocalHonking = false
+    selectedItem = null
 
     running = true
     heartbeatNextAt = engine.time() + 1
@@ -903,6 +1014,12 @@ content.game = (() => {
         : (isArcade ? 'ann.roundStartNArcade' : 'ann.roundStartN')
       content.announcer.say(t(key, {count: aiCount}), 'assertive')
     }
+
+    // Announce the arena map name (polite, so it doesn't interrupt countdown).
+    content.announcer.say(
+      t('ann.arenaMap', {name: content.arena.getMapName()}),
+      'polite',
+    )
   }
 
   function end({silent = false, winnerId = null} = {}) {
@@ -1052,6 +1169,10 @@ content.game = (() => {
             activateBoost(car)
           } else if (msg.action === 'useTeleport') {
             activateTeleport(car)
+          } else if (msg.action === 'useRepulsor') {
+            activateRepulsor(car)
+          } else if (msg.action === 'useRocket') {
+            activateRocket(car)
           }
         }
       } else if (msg.type === 'snap') {
@@ -1101,9 +1222,12 @@ content.game = (() => {
         mi: c.inventory.mines,
         bo: c.inventory.boosts,
         te: c.inventory.teleports,
+        rp: c.inventory.repulsors,
+        rk: c.inventory.rockets,
       } : null,
-      // Boost end time (engine.time()-domain). 0 / null while idle.
+      // Boost end time (engine.time-domain). 0 / null while idle.
       bu: c.boostUntil || 0,
+      ru: c.rocketUntil || 0,
     }))
     const snap = {
       type: 'snap',
@@ -1150,8 +1274,11 @@ content.game = (() => {
         car.inventory.mines   = cd.inv.mi
         if (cd.inv.bo != null) car.inventory.boosts = cd.inv.bo
         if (cd.inv.te != null) car.inventory.teleports = cd.inv.te
+        if (cd.inv.rp != null) car.inventory.repulsors = cd.inv.rp
+        if (cd.inv.rk != null) car.inventory.rockets = cd.inv.rk
       }
       if (cd.bu != null) car.boostUntil = cd.bu
+      if (cd.ru != null) car.rocketUntil = cd.ru
     }
 
     // Reconcile item-layer managers with host's authoritative item
@@ -1262,12 +1389,20 @@ content.game = (() => {
         let dealtA = 0, dealtB = 0
         if (!a.eliminated && !aBlocked) {
           const prev = a.health
-          content.car.applyDamage(a, ev.damage * aShare, b)
+          let dmg = ev.damage * aShare
+          if (hasItems() && ev.aggressor === b && b.rocketUntil && engine.time() < b.rocketUntil) {
+            dmg *= content.physics.config.rocketDamageMultiplier
+          }
+          content.car.applyDamage(a, dmg, b)
           dealtA = prev - a.health
         }
         if (!b.eliminated && !bBlocked) {
           const prev = b.health
-          content.car.applyDamage(b, ev.damage * bShare, a)
+          let dmg = ev.damage * bShare
+          if (hasItems() && ev.aggressor === a && a.rocketUntil && engine.time() < a.rocketUntil) {
+            dmg *= content.physics.config.rocketDamageMultiplier
+          }
+          content.car.applyDamage(b, dmg, a)
           dealtB = prev - b.health
         }
 
@@ -1348,9 +1483,13 @@ content.game = (() => {
             const carId = respawnQueue[i].carId
             respawnQueue.splice(i, 1)
             respawnCar(carId)
-          }
-        }
       }
+    }
+    // Auto-select the first cycle-eligible item if nothing is selected yet.
+    if (car === playerCar && !selectedItem && CYCLE_ORDER.includes(type)) {
+      selectedItem = type
+    }
+  }
       if (roundEndsAt && engine.time() >= roundEndsAt && cars.length > 0) {
         // Build standings sorted by score descending; winner is the top
         // scorer (ties resolve to the first car in the list — kept simple).
@@ -1594,6 +1733,8 @@ content.game = (() => {
       inv.mines === 1 ? t('ann.minesPart1') : t('ann.minesPartN', {count: inv.mines}),
       (inv.boosts || 0) === 1 ? t('ann.boostsPart1') : t('ann.boostsPartN', {count: inv.boosts || 0}),
       (inv.teleports || 0) === 1 ? t('ann.teleportsPart1') : t('ann.teleportsPartN', {count: inv.teleports || 0}),
+      (inv.repulsors || 0) === 1 ? t('ann.repulsorsPart1') : t('ann.repulsorsPartN', {count: inv.repulsors || 0}),
+      (inv.rockets || 0) === 1 ? t('ann.rocketsPart1') : t('ann.rocketsPartN', {count: inv.rockets || 0}),
     ]
     content.announcer.say(t('ann.inventory', {parts: parts.join(', ')}), 'polite')
   }
@@ -1703,6 +1844,95 @@ content.game = (() => {
     }
     return activateTeleport(playerCar)
   }
+  function useRepulsor() {
+    if (!hasItems() || !playerCar || playerCar.eliminated) return false
+    if (role === 'client') {
+      if (!playerCar.inventory || playerCar.inventory.repulsors <= 0) return false
+      try { app.net && app.net.sendToHost && app.net.sendToHost({type: 'action', action: 'useRepulsor'}) } catch (e) {}
+      return true
+    }
+    return activateRepulsor(playerCar)
+  }
+  function useRocket() {
+    if (!hasItems() || !playerCar || playerCar.eliminated) return false
+    if (role === 'client') {
+      if (!playerCar.inventory || playerCar.inventory.rockets <= 0) return false
+      try { app.net && app.net.sendToHost && app.net.sendToHost({type: 'action', action: 'useRocket'}) } catch (e) {}
+      return true
+    }
+    return activateRocket(playerCar)
+  }
+
+  // ---- Cycle-and-use item selection ---------------------------------------
+
+  /**
+   * Cycle forward to the next inventory item that has > 0 charges.
+   * Skips empty slots and wraps around. Plays a tick sound and
+   * announces the selection. No-op if no items are available or
+   * the player is eliminated.
+   */
+  function cycleItem() {
+    if (!hasItems() || !playerCar || playerCar.eliminated || !playerCar.inventory) return
+    const inv = playerCar.inventory
+    // Build a list of available items in CYCLE_ORDER.
+    const available = CYCLE_ORDER.filter((t) => {
+      const field = INV_FIELD[t]
+      const v = field ? inv[field] : undefined
+      return typeof v === 'number' && v > 0
+    })
+    if (!available.length) {
+      selectedItem = null
+      content.announcer.say(app.i18n.t('game.noItems'), 'polite')
+      return
+    }
+    // Find the current index and advance.
+    const curIdx = selectedItem ? available.indexOf(selectedItem) : -1
+    const nextIdx = (curIdx + 1) % available.length
+    selectedItem = available[nextIdx]
+    // Tick sound (menu-focus tone).
+    content.sounds.uiTick(660, 0.18, 0.05)
+    // Announce.
+    announceSelectedItem()
+  }
+
+  function announceSelectedItem() {
+    if (!selectedItem || !playerCar || !playerCar.inventory) return
+    const field = INV_FIELD[selectedItem]
+    const count = field ? (playerCar.inventory[field] || 0) : 0
+    const t = app.i18n.t
+    content.announcer.say(
+      t('ann.itemSelected', {
+        item: t('pickup.' + selectedItem),
+        count,
+      }),
+      'polite',
+    )
+  }
+
+  /**
+   * Use whichever item is currently selected. Dispatches to the existing
+   * use*() function for the item type. If the item's count reaches 0 after
+   * use, auto-advances to the next available item.
+   */
+  function useSelectedItem() {
+    if (!hasItems() || !playerCar || playerCar.eliminated) return false
+    const field = selectedItem ? INV_FIELD[selectedItem] : null
+    if (!field || !playerCar.inventory || (playerCar.inventory[field] || 0) <= 0) {
+      return false
+    }
+    let used = false
+    switch (selectedItem) {
+      case 'boost':     used = useBoost();     break
+      case 'teleport':  used = useTeleport();  break
+      case 'repulsor':  used = useRepulsor();  break
+      case 'rocket':    used = useRocket();    break
+      case 'mine':      used = placeMine();    break
+    }
+    if (used && (!playerCar.inventory[field] || playerCar.inventory[field] <= 0)) {
+      cycleItem()
+    }
+    return used
+  }
 
   // Horn (hold Space). Plays in both chill and arcade. Each peer keeps
   // a spatial voice per honking car; start/stop ride the event bus so
@@ -1789,6 +2019,36 @@ content.game = (() => {
     return true
   }
 
+  function activateRepulsor(car) {
+    if (!car || car.eliminated) return false
+    if (!car.inventory || car.inventory.repulsors <= 0) return false
+    car.inventory.repulsors--
+    content.events.emit('repulsorUsed', {
+      carId: car.id,
+      x: car.position.x,
+      y: car.position.y,
+    })
+    return true
+  }
+
+  function activateRocket(car) {
+    if (!car || car.eliminated) return false
+    if (!car.inventory || car.inventory.rockets <= 0) return false
+    // Refuse if already rocketing — no stacking.
+    if (car.rocketUntil && engine.time() < car.rocketUntil) return false
+    car.inventory.rockets--
+    car.rocketUntil = engine.time() + content.physics.config.rocketDuration
+    // Hard-set velocity so the car launches immediately at rocket speed
+    // (physics.integrate will maintain it each frame).
+    car.velocity.x = Math.cos(car.heading) * content.physics.config.rocketSpeed
+    car.velocity.y = Math.sin(car.heading) * content.physics.config.rocketSpeed
+    content.events.emit('rocketUsed', {
+      carId: car.id,
+      until: car.rocketUntil,
+    })
+    return true
+  }
+
   // Host-side: revive an eliminated car at a safe random spot. Emits
   // `carRespawned` so every peer applies the same position+state. The
   // local subscriber (above) handles the actual mutation and SFX.
@@ -1831,6 +2091,12 @@ content.game = (() => {
     activateBoost,
     useTeleport,
     activateTeleport,
+    useRepulsor,
+    activateRepulsor,
+    useRocket,
+    activateRocket,
+    cycleItem,
+    useSelectedItem,
     startHonk,
     stopHonk,
     setSpectator,

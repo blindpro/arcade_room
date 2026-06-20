@@ -1,45 +1,77 @@
 /**
- * Arena geometry. The walls are axis-aligned; physics knows how to bounce
- * cars off them. Spawn points are evenly spaced around the perimeter so
- * cars never start inside one another.
+ * Arena geometry. Provides multiple map presets of different sizes.
+ * One is selected (at random, or by name) at the start of each round.
+ * All code that reads arena dimensions goes through `content.arena.bounds`
+ * and `content.arena.config`, which reflect the currently active map.
  */
 content.arena = (() => {
-  // 100 × 70 arena: ~20 s straight-across at maxSpeed (5 m/s), ~24 s
-  // diagonal. Big enough to give blind players time to listen, drive,
-  // and react before walls become a concern.
-  const config = {
-    width: 100,
-    height: 70,
+  // ---- Map presets ----------------------------------------------------
+  const MAPS = {
+    standard: {width: 100, height: 70,  label: 'Standard'},
+    compact:  {width: 60,  height: 40,  label: 'Compact'},
+    large:    {width: 140, height: 90,  label: 'Large'},
+    wide:     {width: 120, height: 50,  label: 'Wide'},
+    tall:     {width: 80,  height: 100, label: 'Tall'},
+    square:   {width: 90,  height: 90,  label: 'Square'},
   }
 
-  const bounds = {
-    minX: -config.width / 2,
-    maxX: config.width / 2,
-    minY: -config.height / 2,
-    maxY: config.height / 2,
+  const MAP_NAMES = Object.keys(MAPS)
+
+  // Current active map. Initialised to standard; game calls selectMap
+  // before each round.
+  let currentName = 'standard'
+  let currentConfig = MAPS.standard
+  let currentBounds = {
+    minX: -currentConfig.width / 2,
+    maxX: currentConfig.width / 2,
+    minY: -currentConfig.height / 2,
+    maxY: currentConfig.height / 2,
+  }
+
+  function updateBounds() {
+    currentBounds.minX = -currentConfig.width / 2
+    currentBounds.maxX = currentConfig.width / 2
+    currentBounds.minY = -currentConfig.height / 2
+    currentBounds.maxY = currentConfig.height / 2
+  }
+
+  /**
+   * Pick a map by name, or random if none given.
+   * Returns the map name that was selected.
+   */
+  function selectMap(name) {
+    if (name && MAPS[name]) {
+      currentName = name
+    } else {
+      const keys = MAP_NAMES
+      currentName = keys[Math.floor(Math.random() * keys.length)]
+    }
+    currentConfig = MAPS[currentName]
+    updateBounds()
+    return currentName
+  }
+
+  function getMapName() {
+    return currentConfig.label
+  }
+
+  function getMapNames() {
+    return MAP_NAMES.slice()
   }
 
   function spawnPoints(count) {
-    // Distribute around an inner ellipse so cars face the centre.
+    const {width, height} = currentConfig
     const points = []
-    // 9 m inset (was 7) — gives the car body ~8 m of clear space to the
-    // nearest wall after the radius bump, so a full-throttle drift in
-    // any direction has ~1.5 s of clear arena before any wall is a
-    // concern.
-    const inset = 9
-    const rx = (config.width / 2) - inset,
-      ry = (config.height / 2) - inset
+    // Inset scales with the smaller dimension so spawn points always
+    // have a proportional buffer from walls.
+    const inset = Math.max(5, Math.min(width, height) * 0.12)
+    const rx = (width / 2) - inset
+    const ry = (height / 2) - inset
 
     for (let i = 0; i < count; i++) {
       const t = (i / count) * engine.const.tau
       const x = Math.cos(t) * rx
       const y = Math.sin(t) * ry
-      // Heading faces toward arena centre (atan2(-y,-x) is the angle of
-      // the vector from this point to the origin). Tiny ±3° jitter for
-      // visual/audible variety — the old ±11° swing could rotate a
-      // corner spawn close enough to parallel-with-the-nearest-wall that
-      // it felt like "spawned facing the wall" even though geometrically
-      // it wasn't.
       const heading = Math.atan2(-y, -x) + (Math.random() - 0.5) * 0.1
       points.push({x, y, heading})
     }
@@ -48,12 +80,11 @@ content.arena = (() => {
   }
 
   function bearingDescription(dx, dy) {
-    // dx,dy are listener-local: +x forward, +y left
     const dist = Math.hypot(dx, dy)
     const t = (k, p) => (app.i18n ? app.i18n.t(k, p) : k)
     if (dist < 0.001) return t('arena.onTopOfYou')
 
-    const angle = Math.atan2(dy, dx) // 0 = front, +pi/2 = left
+    const angle = Math.atan2(dy, dx)
     const deg = angle * 180 / Math.PI
 
     let bearingKey
@@ -74,8 +105,13 @@ content.arena = (() => {
   }
 
   return {
-    config,
-    bounds,
+    get config() { return currentConfig },
+    get bounds() { return currentBounds },
+    MAPS,
+    MAP_NAMES,
+    selectMap,
+    getMapName,
+    getMapNames,
     spawnPoints,
     bearingDescription,
   }
