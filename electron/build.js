@@ -46,7 +46,7 @@ ignorePatterns.push(/\/node_modules\/.*\/(test|tests|docs|man|example|examples)(
   const out = await packager({
     dir: ROOT,
     out: path.join(ROOT, 'dist'),
-    name: 'oriolgomez-games',
+    name: 'arcade_room',
     asar: true,
     overwrite: true,
     platform: platforms,
