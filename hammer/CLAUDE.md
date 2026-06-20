@@ -172,6 +172,8 @@ sweep and the bell tail (per template main.js setup).
 
 - **Space / Enter / Gamepad A** — smash the hammer (only meaningful in
   the `slide` phase; ignored otherwise).
+- **Esc / Backspace** — quit to the game menu (where "Return to Games List"
+  calls `app.quit()`).
 - **F1** — announce score.
 - **F2** — announce level.
 

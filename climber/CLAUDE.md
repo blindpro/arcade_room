@@ -24,7 +24,7 @@ Window-level keydown captures (in `src/js/app/screen/game.js`), not
 | `Z` | Left hand drops down (also dodges left-side pots) |
 | `K` | Right hand reaches up |
 | `M` | Right hand drops down (also dodges right-side pots) |
-| `Esc` / `Backspace` | Pause/resume |
+| `Esc` / `Backspace` | Pause (first press); quit to game menu (second press) |
 | `F1` | Read floor / goal |
 | `F2` | Read score |
 | `F3` | Read lives |

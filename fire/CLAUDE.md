@@ -28,6 +28,17 @@ src/js/app/screen/{splash,game,gameover,language}.js
 src/css/app/game.css      HUD + game-over palette
 ```
 
+## Controls
+
+- **Esc** / **Backspace** — quit to the splash screen (where "Return to Games List"
+  calls `app.quit()`).
+- **Aiming**: left/right turn while spraying (via arrow keys, gamepad, or mouse pointer-lock).
+- **Spray**: hold Space / Enter / mouse button to spray water.
+- **F1** — read score and level.
+- **F2** — nearest fire direction.
+- **F3** — overall threat level.
+- **F4** — read score and level again.
+
 i18n storage key: `fire.lang`. Highscore key: `fire.highscore`. Both in `localStorage` (not `app.storage`) so they resolve before the IndexedDB store opens.
 
 ## Starting from scratch (template re-init)

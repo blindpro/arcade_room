@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <title data-i18n="doc.title">Dogfight - accessible audio arena</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <div class="a-app--announcer u-screenReader" aria-live="polite" aria-atomic="true" id="a-announcer-polite"></div>
+      <div class="a-app--announcer u-screenReader" aria-live="assertive" aria-atomic="true" id="a-announcer-assertive"></div>
+
+      <div class="a-app--screen a-app--gameOver">
+        <section class="c-screen c-menu a-gameOver" tabindex="-1" data-i18n-attr="aria-label:gameOver.aria">
+          <h1 class="c-menu--title a-gameOver--title" data-i18n="gameOver.titleLose">Round Over</h1>
+          <p class="c-menu--subtitle a-gameOver--result"></p>
+          <dl class="a-gameOver--score">
+            <dt data-i18n="gameOver.score">Score</dt><dd class="a-gameOver--scoreValue">0</dd>
+            <dt data-i18n="gameOver.best">Personal Best</dt><dd class="a-gameOver--bestValue">0</dd>
+          </dl>
+          <section class="a-gameOver--standings" hidden aria-labelledby="a-gameOver--standingsTitle">
+            <h2 id="a-gameOver--standingsTitle" class="a-gameOver--standingsTitle" data-i18n="gameOver.standings">Final standings</h2>
+            <ol class="a-gameOver--standingsList"></ol>
+          </section>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="rematch" data-i18n="gameOver.rematch">Play again</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="gameOver.menu">Back to main menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <p class="u-screenReader" data-i18n="game.instructions">
+            Arrow keys fly. Space fires machine guns. F fires a locked missile. Q sweeps enemy planes.
+          </p>
+          <div class="a-game--hud" aria-hidden="true">
+            <div class="a-game--health"><span data-i18n="game.health">Health: </span><span class="a-game--healthValue">100</span></div>
+            <div class="a-game--score"><span data-i18n="game.score">Score: </span><span class="a-game--scoreValue">0</span></div>
+            <div class="a-game--cars"><span data-i18n="game.planes">Planes left: </span><span class="a-game--carsValue">1</span></div>
+          </div>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--help">
+        <section class="c-screen c-menu a-help" tabindex="-1" data-i18n-attr="aria-label:help.aria">
+          <h1 class="c-menu--title" data-i18n="help.title">How to play</h1>
+          <div class="c-menu--prose">
+            <h2 data-i18n="help.controls">Controls</h2>
+            <ul>
+              <li data-i18n-html="help.controlUp"><kbd>Up</kbd> - throttle up</li>
+              <li data-i18n-html="help.controlDown"><kbd>Down</kbd> - air brake / throttle down</li>
+              <li data-i18n-html="help.controlSteer"><kbd>Left</kbd> <kbd>Right</kbd> - bank and turn</li>
+              <li data-i18n-html="help.controlGun"><kbd>Space</kbd> - fire machine guns</li>
+              <li data-i18n-html="help.controlMissile"><kbd>F</kbd> - fire missile when locked</li>
+              <li data-i18n-html="help.controlSweep"><kbd>Q</kbd> - announce enemy planes and their bearing</li>
+              <li data-i18n-html="help.controlReadouts"><kbd>F1</kbd> score, <kbd>F2</kbd> planes left, <kbd>F3</kbd> nearest target, <kbd>F4</kbd> health</li>
+              <li data-i18n-html="help.controlEscape"><kbd>Escape</kbd> - quit to menu</li>
+              <li data-i18n-html="help.controlConfirm"><kbd>Enter</kbd> / <kbd>Space</kbd> - confirm in menus</li>
+            </ul>
+            <h2 data-i18n="help.howSounds">How it sounds</h2>
+            <p data-i18n="help.sounds1">Each plane has a spatial engine voice. Planes in front sound brighter; planes behind sound darker.</p>
+            <p data-i18n="help.sounds2">A missile lock tone tightens as an enemy enters your nose cone. Incoming missiles warn from their direction.</p>
+            <p data-i18n="help.sounds3">Gunfire chips health, missiles hit hard, and ramming causes huge damage to both planes.</p>
+            <h2 data-i18n="help.goal">Goal</h2>
+            <p data-i18n="help.goalText">Be the last plane alive. Damage you deal scores points; eliminations and survival score bonuses.</p>
+          </div>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="help.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--learnSounds">
+        <section class="c-screen c-menu a-learnSounds" tabindex="-1" data-i18n-attr="aria-label:learn.aria">
+          <h1 class="c-menu--title" data-i18n="learn.title">Learn the sounds</h1>
+          <p class="c-menu--subtitle" data-i18n="learn.subtitle">Press a button to preview each sound.</p>
+          <ul class="c-menu--list a-learnSounds--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="learn.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--setup">
+        <section class="c-screen c-menu a-setup" tabindex="-1" data-i18n-attr="aria-label:setup.aria">
+          <h1 class="c-menu--title a-setup--title" data-i18n="setup.title">Single player</h1>
+          <p class="c-menu--subtitle a-setup--subtitle" data-i18n="setup.subtitle">
+            Choose how many AI pilots to fight. Zero is sandbox mode for learning movement and audio.
+          </p>
+          <ul class="c-menu--list a-setup--ai">
+            <li><button class="c-menu--button" data-ai="0" data-i18n="setup.ai0">Sandbox - no opponents</button></li>
+            <li><button class="c-menu--button" data-ai="1" data-i18n="setup.ai1">1 opponent</button></li>
+            <li><button class="c-menu--button" data-ai="2" data-i18n="setup.ai2">2 opponents</button></li>
+            <li><button class="c-menu--button" data-ai="3" data-i18n="setup.ai3">3 opponents</button></li>
+            <li><button class="c-menu--button" data-ai="4" data-i18n="setup.ai4">4 opponents</button></li>
+            <li><button class="c-menu--button" data-ai="5" data-i18n="setup.ai5">5 opponents (full sky)</button></li>
+          </ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="setup.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="menu.title">Dogfight</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">An audio-first accessible plane combat arena.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="play" data-i18n="menu.play">Single player</button></li>
+            <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the sounds</button></li>
+            <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">Help</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="menu.language">Language</button></li>
+            <li><button class="c-menu--button" data-action="quit" data-i18n="menu.quit">Quit</button></li>
+          </ul>
+          <p class="c-menu--footer"><span class="a-menu--version"></span><span class="a-menu--footerSuffix" data-i18n="menu.footerSuffix"> - headphones strongly recommended</span></p>
+        </section>
+      </div>
+
+      <div class="a-app--screen a-app--splash">
+        <section class="c-screen a-splash" tabindex="-1">
+          <h1 class="a-splash--logo">Dogfight</h1>
+          <div class="a-splash--details">
+            <div class="a-splash--version"></div>
+            <div class="a-splash--author" data-i18n="splash.author">audio-first arena</div>
+          </div>
+          <div class="a-splash--instruction" data-i18n="splash.instruction">Press any key to begin</div>
+        </section>
+      </div>
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>

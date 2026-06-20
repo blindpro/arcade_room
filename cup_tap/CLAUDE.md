@@ -75,7 +75,7 @@ FSM.
   never moves.
 - **Audio's role**: audio-first. The visual HUD is a text-grid fallback;
   the game must be playable purely by ear.
-- **Input**: keyboard primary (arrow keys / WASD / Space-Enter), gamepad
+- **Input**: keyboard primary (arrow keys / WASD / Space-Enter, Escape/Backspace for pause/quit), gamepad
   fallback. See "Input handling" gotcha below.
 - **Persistence**: high scores only (top 10), via `app.highscores`. No
   `engine.state` autosave — the run is entirely session-state.
@@ -206,6 +206,9 @@ consulted as a **gamepad fallback** when no keyboard key is held.
 `Space`/`Enter`/`KeyJ`/`KeyK` are all aliases for the action button.
 Auto-repeat is harmless because the rising-edge gate lives inside
 `content.game.handleInput()`, not the listener.
+
+`Esc` / `Backspace` toggles pause. When already paused, pressing `Esc` / `Backspace`
+again quits to the game menu, where "Return to Games List" calls `app.quit()`.
 
 ## Status hotkeys (F1–F4)
 
