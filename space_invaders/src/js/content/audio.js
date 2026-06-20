@@ -371,12 +371,10 @@ content.audio = (() => {
   // i.e. firing now would connect. Critical for blind play: without this the
   // crosshair tone alone doesn't tell you when you've crossed onto an enemy.
   // Pans live at the target's position so the lock cue carries its own
-  // localisation. The beep mirrors the locked ship's urgency-tick voice
-  // (same waveform + frequency family, including chain note for tagged
-  // ships), but fires at ~30 Hz — far above any ship's own pulse rate
-  // (scout near = 6.5 Hz). The result: the lock sounds like *that* ship
-  // buzzed up into a fast trill, so the player can identify what they're
-  // locked onto without confusing it for the ship itself.
+  // localisation. Uses a sine wave (clean, pure tone) to stay distinct from
+  // the enemy's own square-wave urgency tick, while keeping the same
+  // frequency family (including chain note for tagged ships) so the player
+  // can still identify the locked ship class by pitch. Fires at ~30 Hz.
   function setTargetLock(on, info) {
     if (on) {
       const data = info || {}
@@ -407,18 +405,22 @@ content.audio = (() => {
         const lk = _state.targetLock
         const def = CLASS_DEFS[lk.kind] || CLASS_DEFS.scout
         let freq = def.base * (1 + (1 - lk.z) * 0.6)
-        if (lk.chainIndex && CHAIN_NOTES[lk.chainIndex]) freq = CHAIN_NOTES[lk.chainIndex]
+        if (lk.chainIndex && CHAIN_NOTES[lk.chainIndex]) {
+          freq = CHAIN_NOTES[lk.chainIndex]
+        } else {
+          freq *= 1.5
+        }
         const o = c.createOscillator()
-        o.type = lk.kind === 'civilian' ? 'triangle' : (lk.kind === 'battleship' ? 'sawtooth' : 'square')
+        o.type = lk.kind === 'battleship' ? 'sawtooth' : 'sine'
         o.frequency.value = freq
         const g = c.createGain()
         g.gain.value = 0
         const pan = c.createStereoPanner()
         pan.pan.value = lk.panX
         o.connect(g).connect(pan).connect(lk.trillBus)
-        adsr(g.gain, t0, 0.001, 0.008, 0.020, 0.32)
+        adsr(g.gain, t0, 0.001, 0.008, 0.020, 0.65)
         o.start(t0)
-        o.stop(t0 + 0.05)
+        o.stop(t0 + 0.065)
         setTimeout(() => {
           try { o.disconnect() } catch (e) {}
           try { g.disconnect() } catch (e) {}
