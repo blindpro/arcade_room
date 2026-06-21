@@ -136,9 +136,9 @@ content.game = (() => {
     const out = []
     // Base counts (ramped by wave)
     const base = 6 + wave * 2          // total contacts
-    const total = Math.min(28, base)
+    const total = Math.min(24, base)
     // Spawn interval shrinks with wave
-    const interval = Math.max(0.65, 1.4 - 0.06 * wave)
+    const interval = Math.max(0.75, 1.4 - 0.06 * wave)
 
     // Friendlies fraction (mechanic 6)
     const friendFrac = wave >= 4 ? Math.min(0.20, 0.10 + 0.015 * (wave - 4)) : 0

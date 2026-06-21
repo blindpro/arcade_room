@@ -264,7 +264,7 @@ content.audio = (() => {
       try { bin.pan.pan.setTargetAtTime(Math.max(-1, Math.min(1, e.x)), t, 0.04) } catch (err) {}
       // gain rises as z → 0 (with a soft floor so distant ships are barely audible)
       const closeness = 1 - Math.max(0, Math.min(1, e.z))
-      const gain = 0.05 + closeness * 0.85
+      const gain = 0.02 + closeness * 0.88
       try { bin.output.gain.setTargetAtTime(gain, t, 0.05) } catch (err) {}
       // lowpass cutoff opens with closeness
       const cutoff = 350 + closeness * 6500
