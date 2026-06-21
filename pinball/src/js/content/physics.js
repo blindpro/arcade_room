@@ -127,6 +127,13 @@ content.physics = (() => {
       stuckPosX: 0,
       stuckPosY: 0,
       spatialStuckFrames: 0,
+      // Safety-net: tracks absolute position regardless of flipper proximity.
+      // If the ball hasn't moved significantly for an extended period, drain
+      // it. This catches wedge traps near a flipper where both speed-based
+      // and spatial layers are suppressed by the nearAnyFlipper gate.
+      safetyPosX: 0,
+      safetyPosY: 0,
+      safetyStuckFrames: 0,
     }
   }
 
@@ -602,6 +609,9 @@ content.physics = (() => {
       ball.spatialStuckFrames = 0
       ball.stuckPosX = ball.x
       ball.stuckPosY = ball.y
+      ball.safetyStuckFrames = 0
+      ball.safetyPosX = ball.x
+      ball.safetyPosY = ball.y
       pushEvent('rearm')
     }
 
@@ -657,6 +667,31 @@ content.physics = (() => {
       ball.spatialStuckFrames = 0
       ball.stuckPosX = ball.x
       ball.stuckPosY = ball.y
+    }
+    // Layer 3 (safety-net): universal position tracker — NOT suppressed by
+    // flipper proximity. If the ball hasn't moved more than 0.5 units in
+    // 600 frames (~10 s), drain it. This catches cases where the ball is
+    // wedged near a flipper tip or pivot pocket where the speed-based and
+    // spatial layers are gated off.
+    if (!ball.onPlunger) {
+      const sdx = ball.x - ball.safetyPosX
+      const sdy = ball.y - ball.safetyPosY
+      if (Math.hypot(sdx, sdy) < 0.5) {
+        ball.safetyStuckFrames += 1
+      } else {
+        ball.safetyStuckFrames = 0
+        ball.safetyPosX = ball.x
+        ball.safetyPosY = ball.y
+      }
+      if (ball.safetyStuckFrames > 600) {
+        ball.live = false
+        pushEvent('drain', {x: ball.x, y: ball.y, reason: 'stuck-safety'})
+        return
+      }
+    } else {
+      ball.safetyStuckFrames = 0
+      ball.safetyPosX = ball.x
+      ball.safetyPosY = ball.y
     }
   }
 

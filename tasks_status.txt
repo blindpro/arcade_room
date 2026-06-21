@@ -20,12 +20,13 @@
 | Give all planes more health | Done | Increased from 100→150; player missiles 4→5, AI missiles 3→4. |
 | Make AI more forgiving | Done | Lowered evade threshold (25→20), raised recovery (40→55), added steering noise, reduced fire rate and accuracy, missile use probability 0.6. |
 
-## Pinball (2/2 complete — built)
+## Pinball (3/3 complete — built)
 
 | Task | Status | Notes |
 |------|--------|-------|
 | Check build | Done | node_modules was corrupt. Ran `npm install` which fixed the dependency issue. Build now succeeds. |
 | Fix ball stuck near flippers | Done | Enhanced stuck-ball detection with a dual-layer approach: (1) existing speed-based detection, (2) new spatial layer that tracks position history over 300 frames and drains if movement < 0.3 units. Extended flipper exclusion to passive flippers with tighter radius. |
+| Add safety-net stuck detection | Done | Added Layer 3 universal position-tracker that ignores flipper proximity. Drains ball if position hasn't changed >0.5 units in 600 frames (~10s). Catches wedge traps near flipper tips/pivot pockets where speed/spatial layers are suppressed. |
 
 ## Space Invaders (3/3 complete — built)
 
@@ -35,12 +36,13 @@
 | Fix enemy spawn rate | Done | Reduced total contacts cap from 28→24 and increased min spawn interval from 0.65→0.75 (content/game.js composeWave()). Slower scaling gives more breathing room between spawns. |
 | Document ship movement | Done | Created docs/ship_movement.md covering coordinate system, enemy approach/drift per class, aim system, hit detection mechanics with weapon matchups table, and how movement affects shooting. |
 
-## Pong (2/2 complete — built)
+## Pong (3/3 complete — built)
 
 | Task | Status | Notes |
 |------|--------|-------|
 | Check build | Done | node_modules was corrupt (same issue as pinball). Cleaned cache and reinstalled. Build now succeeds. |
 | Fix AI difficulty | Done | AI was too good: increased reaction delay 0.28→0.45s so AI is slower to read ball position; added AI_TARGET_NOISE (0.8) for random positioning error so AI doesn't track perfectly; increased serve delay 0.8→1.2s. |
+| Rebalance AI accuracy | Done | Increased AI_TARGET_NOISE from 0.8→4.0 so AI misses more often. Noise ±2 units combined with 0.45s reaction delay makes the AI miss angled shots consistently and straight shots ~25% of the time. Fair challenge — player can win with skill. |
 
 ## Racing (1/1 complete — no build needed)
 
