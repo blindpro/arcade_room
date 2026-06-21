@@ -21,10 +21,10 @@ content.game = (() => {
   const LOITER_GRACE = 3.0
   const LOITER_PENALTY = 100          // flat per tick
   const SCORE_TO_NEXT_LEVEL_BASE = 1000
-  const SPEED_PER_LEVEL = 0.10        // +10% car speed per level
+  const SPEED_PER_LEVEL = 0.06        // +6% car speed per level (was 10% — too harsh at high levels)
   const MAX_CARS_BASE = 1             // simultaneous cars at level 1
-  const MAX_CARS_PER_LEVEL = 0.5      // +1 every 2 levels (capped)
-  const MAX_CARS_CAP = 5
+  const MAX_CARS_PER_LEVEL = 0.4      // +1 every 2.5 levels (capped)
+  const MAX_CARS_CAP = 4
   const RAGDOLL_DURATION = 2.0
   const RAGDOLL_PEAK_HEIGHT = 4.5
   const START_GRACE = 3.0
@@ -77,8 +77,8 @@ content.game = (() => {
   // Spawn cadence — the gap between successive *spawn attempts*, not between
   // car deaths. With multi-car allowed this is what controls density.
   function spawnGapsForLevel(level) {
-    const min = Math.max(0.4, 1.0 - 0.04 * (level - 1))
-    const max = Math.max(1.2, 2.5 - 0.10 * (level - 1))
+    const min = Math.max(0.5, 1.0 - 0.03 * (level - 1))
+    const max = Math.max(1.3, 2.5 - 0.08 * (level - 1))
     return [min, max]
   }
   function scoreToNextLevel(level) {
@@ -272,6 +272,10 @@ content.game = (() => {
     state.ragdoll = null
     content.audio.playGameOver()
     app.announce.assertive(app.i18n.t('ann.gameOver', {reason, level: state.level, score: state.score}))
+    // Return to splash after the game-over sound finishes (~2.5s)
+    setTimeout(() => {
+      app.screenManager.dispatch('splash')
+    }, 3000)
   }
 
   // ---------- Scoring & levels ----------
@@ -344,6 +348,35 @@ content.game = (() => {
   }
 
   // ---------- Public API ----------
+  function reset() {
+    // Kill all live cars
+    for (const v of state.cars) {
+      if (v && v.alive) v.kill()
+    }
+    state.running = false
+    state.paused = false
+    state.dead = false
+    state.started = false
+    state.hp = MAX_HP
+    state.score = 0
+    state.level = 1
+    state.roadWidth = BASE_ROAD_STEPS + 1
+    state.scoreInLevel = 0
+    state.playerCross = 0
+    state.playerY = 0
+    state.playerZ = 0
+    state.walkInput = 0
+    state.lastSidewalk = 'south'
+    state.iframesUntil = 0
+    state.cars = []
+    state.nextSpawnAt = 0
+    state.ragdoll = null
+    state.loiterStart = null
+    state.nextLoiterTickAt = 0
+    state.gracePeriodEnd = 0
+    state.lastFootstepInt = 0
+  }
+
   function start() {
     if (state.started) return
     state.started = true
@@ -438,6 +471,7 @@ content.game = (() => {
   return {
     state,
     start,
+    reset,
     update,
     togglePause,
     announceStatus,

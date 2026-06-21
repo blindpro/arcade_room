@@ -35,6 +35,7 @@ app.screen.game = app.screenManager.invent({
     this.refreshHud()
   },
   onEnter: function () {
+    content.game.reset()
     content.game.start()
     this.refreshHud()
     this.state.iPressed = false

@@ -151,6 +151,65 @@ content.targeting = (() => {
       })
     }
 
+    /**
+     * Soft friendly beacon for the player's wingman/teammate in 2v2 mode.
+     * Deliberately distinct from every other cue:
+     *   - enemy proximity beeps are sines at 1400/520 Hz
+     *   - wall sensor beeps are square waves at 660 Hz
+     *   - pickup radar pings are descending sines 1180 -> 940 Hz
+     * The wingman beacon is a soft triangle two-note chime (1046 -> 1318 Hz,
+     * C6 -> E6) — higher and more musical than the enemy blips, so the player
+     * can pick out "where is my wingman" instantly without confusing it with
+     * a threat. Lower gain than threat beeps so it stays informative without
+     * being annoying. Uses the wingman's own position so it pans to wherever
+     * the wingman currently is.
+     */
+    function friendlyBeacon(car) {
+      const t0 = engine.time()
+      const c = engine.context()
+      const out = c.createGain()
+      out.gain.value = 0
+      out.connect(engine.mixer.output())
+
+      // Pivot the beep on whichever car the listener is bound to (player
+      // while alive, spectated car after elimination).
+      const listener = game.listenerCar ? game.listenerCar() : game.player()
+      const dx = car.position.x - listener.position.x,
+        dy = car.position.y - listener.position.y
+      const cos = Math.cos(-listener.heading), sin = Math.sin(-listener.heading)
+      const localX = dx * cos - dy * sin
+      const localY = dx * sin + dy * cos
+
+      const ear = engine.ear.binaural.create()
+      ear.to(engine.mixer.output())
+      ear.update({x: localX, y: localY, z: 0})
+      ear.from(out)
+
+      // Two-note ascending major-third chime, soft triangle timbre.
+      const notes = [1046.50, 1318.51]   // C6, E6
+      notes.forEach((freq, i) => {
+        const o = c.createOscillator()
+        o.type = 'triangle'
+        o.frequency.value = freq
+        o.connect(out)
+        const start = t0 + i * 0.09
+        o.start(start)
+        o.stop(start + 0.13)
+      })
+
+      // Single shared envelope — gentle attack/release so it reads as a
+      // soft chime rather than a sharp blip.
+      out.gain.setValueAtTime(0, t0)
+      out.gain.linearRampToValueAtTime(0.14, t0 + 0.012)
+      out.gain.setValueAtTime(0.14, t0 + 0.10)
+      out.gain.linearRampToValueAtTime(0, t0 + 0.22)
+
+      setTimeout(() => {
+        try { out.disconnect() } catch (e) {}
+        try { ear.destroy() } catch (e) {}
+      }, 300)
+    }
+
     function wallBeep(worldX, worldY) {
       spatialBeep({
         worldX, worldY,
@@ -271,8 +330,37 @@ content.targeting = (() => {
       const now = engine.time()
       const seen = new Set()
 
+      // ---- Wingman friendly beacon (2v2 mode) ---------------------------
+      // In team mode the player needs to know where their wingman is so
+      // they can regroup / co-ordinate. The beacon is a soft, slow chime —
+      // distinct from threat beeps — that pulses a couple of times a
+      // second so the player can locate the teammate by ear without it
+      // competing with combat cues. Friendly cars are excluded from the
+      // enemy proximity beep loop below.
+      const friendlyState = state.get('__wingman__')
+      if (friendlyState === undefined) {
+        state.set('__wingman__', {nextAt: now})
+      }
+      const ws = state.get('__wingman__')
       for (const other of game.cars) {
         if (other.id === player.id || other.eliminated) continue
+        const isFriendly = !!player.team && !!other.team && other.team === player.team
+        if (!isFriendly) continue
+        seen.add('__wingman__')
+        if (now >= ws.nextAt) {
+          friendlyBeacon(other)
+          // Slow, steady cadence regardless of distance — it's a locator,
+          // not a proximity warning.
+          ws.nextAt = now + 1.4
+        }
+        break   // only one wingman in 2v2
+      }
+
+      for (const other of game.cars) {
+        if (other.id === player.id || other.eliminated) continue
+        // Skip teammates — they get the friendly beacon above, not threat beeps.
+        const isFriendly = !!player.team && !!other.team && other.team === player.team
+        if (isFriendly) continue
         seen.add(other.id)
 
         const dx = other.position.x - player.position.x,

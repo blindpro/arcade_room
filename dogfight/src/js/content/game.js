@@ -9,9 +9,13 @@ content.game = (() => {
     missileDamage: 45,
     missileCooldown: 1.2,
     missileSpeed: 24,
-    missileTurnRate: 2.9,
+    missileTurnRate: 2.3,
     missileLifetime: 5.5,
     missileHitRadius: 1.8,
+    // When the target is boosting, the missile's tracking degrades — a
+    // fast-accelerating target is harder to lead. This makes boost a real
+    // evasion tool instead of just "get there faster."
+    missileBoostTurnPenalty: 0.55,
   }
 
   const api = {
@@ -493,7 +497,14 @@ content.game = (() => {
       const dy = missile.target.position.y - missile.position.y
       const desired = Math.atan2(dy, dx)
       const diff = Math.atan2(Math.sin(desired - missile.heading), Math.cos(desired - missile.heading))
-      const turn = engine.fn.clamp(diff, -config.missileTurnRate * delta, config.missileTurnRate * delta)
+      // Degrade tracking against a boosting target. A target pouring on
+      // boost is accelerating hard, which is exactly when a pure-pursuit
+      // missile struggles most — so boost becomes a viable missile break.
+      let effectiveTurn = config.missileTurnRate
+      if (missile.target.boostUntil > now) {
+        effectiveTurn *= (1 - config.missileBoostTurnPenalty)
+      }
+      const turn = engine.fn.clamp(diff, -effectiveTurn * delta, effectiveTurn * delta)
       missile.heading += turn
       missile.position.x += Math.cos(missile.heading) * config.missileSpeed * delta
       missile.position.y += Math.sin(missile.heading) * config.missileSpeed * delta

@@ -106,10 +106,15 @@ content.audio = (() => {
   // ----------------------------- per-class voice voices -----------------------------
   // Per-class base frequency families. Pitch jitter per-instance keeps
   // multiple ships of the same class disambiguable (CLAUDE.md "pitch
-  // families").
+  // families"). Bomber vs battleship are deliberately pushed apart in
+  // register: bomber lives in the mid-low band with a bright bell partial,
+  // battleship owns the sub-bass with a sub-octave under its fundamental.
+  // The old values (bomber 165 Hz + 82.5 Hz sub, battleship 82 Hz) let the
+  // bomber's sub-oscillator land on top of the battleship's fundamental,
+  // making the two hard to tell apart.
   const CLASS_DEFS = {
     scout:      {base: 880, drift: 0.12, droneType: 'square',   droneGain: 0.04, label: 'scout'},
-    bomber:     {base: 165, drift: 0.06, droneType: 'sine',     droneGain: 0.10, label: 'bomber'},
+    bomber:     {base: 220, drift: 0.06, droneType: 'sine',     droneGain: 0.10, label: 'bomber'},
     battleship: {base:  82, drift: 0.04, droneType: 'sawtooth', droneGain: 0.08, label: 'battleship'},
     civilian:   {base: 330, drift: 0.04, droneType: 'triangle', droneGain: 0.05, label: 'civilian'},
   }
@@ -152,8 +157,11 @@ content.audio = (() => {
       dyadGain.gain.value = def.droneGain * 0.85
       dyad.connect(dyadGain).connect(output)
     }
-    // Bombers also get a low rumble sub-osc for their "low rumble + bell" tell
-    let sub = null, subGain = null
+    // Bombers get a low rumble sub-osc plus a bright bell partial — the
+    // tutorial sells them as "low rumble with a bell strike," and the bell
+    // (a sine a perfect fifth above the fundamental) is the unmistakable
+    // tell that separates them from the battleship's pure sub-bass drone.
+    let sub = null, subGain = null, bell = null, bellGain = null
     if (enemy.kind === 'bomber') {
       sub = c.createOscillator()
       sub.type = 'sine'
@@ -161,9 +169,21 @@ content.audio = (() => {
       subGain = c.createGain()
       subGain.gain.value = 0.05
       sub.connect(subGain).connect(output)
+      // Bright bell partial — a perfect fifth above the fundamental. Sine
+      // for a pure, ringing quality that the battleship (sawtooth) never
+      // produces, and high enough (330 Hz at the new base) to read as a
+      // distinct "ping" on top of the rumble.
+      bell = c.createOscillator()
+      bell.type = 'sine'
+      bell.frequency.value = baseHz * 1.5
+      bellGain = c.createGain()
+      bellGain.gain.value = 0.06
+      bell.connect(bellGain).connect(output)
     }
-    // Battleships add a detuned saw partial for the heavy drone
-    let det = null, detGain = null
+    // Battleships add a detuned saw partial for the heavy drone, plus a
+    // sub-octave sine below the fundamental to anchor them in the sub-bass
+    // — well beneath where the bomber operates, so the two can't blur.
+    let det = null, detGain = null, subBass = null, subBassGain = null
     if (enemy.kind === 'battleship') {
       det = c.createOscillator()
       det.type = 'sawtooth'
@@ -171,18 +191,30 @@ content.audio = (() => {
       detGain = c.createGain()
       detGain.gain.value = 0.05
       det.connect(detGain).connect(output)
+      // Sub-octave under the fundamental (41 Hz) — chest-resonance territory
+      // the bomber never enters. Reinforces "huge and slow" vs the bomber's
+      // "mid-low with a bell."
+      subBass = c.createOscillator()
+      subBass.type = 'sine'
+      subBass.frequency.value = baseHz / 2
+      subBassGain = c.createGain()
+      subBassGain.gain.value = 0.07
+      subBass.connect(subBassGain).connect(output)
     }
 
     drone.start()
     if (dyad) dyad.start()
     if (sub) sub.start()
+    if (bell) bell.start()
     if (det) det.start()
+    if (subBass) subBass.start()
 
     const bin = {
       kind: enemy.kind,
       baseHz,
       pan, output, lowpass,
-      drone, droneGain, dyad, dyadGain, sub, subGain, det, detGain,
+      drone, droneGain, dyad, dyadGain, sub, subGain, bell, bellGain,
+      det, detGain, subBass, subBassGain,
     }
     _state.enemyBins.set(enemy.id, bin)
     return bin
@@ -202,7 +234,9 @@ content.audio = (() => {
       try { bin.drone.stop() } catch (e) {}
       try { bin.dyad && bin.dyad.stop() } catch (e) {}
       try { bin.sub && bin.sub.stop() } catch (e) {}
+      try { bin.bell && bin.bell.stop() } catch (e) {}
       try { bin.det && bin.det.stop() } catch (e) {}
+      try { bin.subBass && bin.subBass.stop() } catch (e) {}
       try { bin.output.disconnect() } catch (e) {}
       try { bin.lowpass.disconnect() } catch (e) {}
       try { bin.pan.disconnect() } catch (e) {}
