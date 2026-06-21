@@ -56,6 +56,8 @@ app.screen.menu = app.screenManager.invent({
       app.screenManager.dispatch('help')
     } else if (name === 'language') {
       app.screenManager.dispatch('language')
+    } else if (name === 'quit') {
+      app.quit()
     }
   },
 })
