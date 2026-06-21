@@ -124,6 +124,9 @@ content.physics = (() => {
       // settle into in static equilibrium — there's a real one between the
       // right flipper at rest, the pivot pocket wall, and the drain wall.
       stuckFrames: 0,
+      stuckPosX: 0,
+      stuckPosY: 0,
+      spatialStuckFrames: 0,
     }
   }
 
@@ -596,41 +599,64 @@ content.physics = (() => {
       ball.vx = 0; ball.vy = 0
       ball.gutterFrames = 0
       ball.stuckFrames = 0
+      ball.spatialStuckFrames = 0
+      ball.stuckPosX = ball.x
+      ball.stuckPosY = ball.y
       pushEvent('rearm')
     }
 
-    // Generic stuck-ball detector. Some closed regions of the table form
-    // static-equilibrium wedges where three walls converge on the ball:
-    // for the right side it's `right flipper at rest + pivot pocket wall +
-    // drain wall`. Once a ball settles into such a wedge, normal forces
-    // balance gravity exactly and damping eats the small oscillations.
-    // The ball can sit there forever.
+    // Generic stuck-ball detector — two layers.
     //
-    // The robust fix is to drain anything that's slow enough for long
-    // enough — except a ball cradled on a held flipper, which is also
-    // legitimately near-stationary but is something the player wants.
+    // Layer 1 (speed-based): drains a ball that's been nearly stationary
+    // for a sustained period. Catches the classic dead-floor wedge trap
+    // between a flipper at rest, the pivot pocket wall, and the drain wall.
+    //
+    // Layer 2 (spatial): drains a ball that's been oscillating in a small
+    // area (speed may be > 0.5 but the ball never escapes the wedge).
+    //
+    // Both skip balls on the plunger or close to any flipper (active or
+    // passive) so legitimate cradles and roll-offs aren't penalized.
     const speed = Math.hypot(ball.vx, ball.vy)
-    let onActiveFlipper = false
+    let nearAnyFlipper = false
     for (const k of ['left', 'right', 'upper']) {
       const f = all[k]
-      if (!f.active) continue
       const fseg = flipperSegment(f)
       const cp = closestPointOnSegment(fseg.a.x, fseg.a.y, fseg.b.x, fseg.b.y, ball.x, ball.y)
       const d = Math.hypot(ball.x - cp.x, ball.y - cp.y)
-      if (d < ball.r + 0.5) { onActiveFlipper = true; break }
+      if (d < ball.r + (f.active ? 0.5 : 0.3)) { nearAnyFlipper = true; break }
     }
-    if (speed < 0.5 && !ball.onPlunger && !onActiveFlipper) {
+    if (speed < 0.5 && !ball.onPlunger && !nearAnyFlipper) {
       ball.stuckFrames += 1
     } else {
       ball.stuckFrames = 0
     }
-    // 90 frames ≈ 1.5 s at 60 fps. Long enough to not interrupt a slow
-    // legit roll, short enough that a wedged ball doesn't sit there
-    // forever frustrating the player.
+    // 90 frames ≈ 1.5 s at 60 fps.
     if (ball.stuckFrames > 90) {
       ball.live = false
       pushEvent('drain', {x: ball.x, y: ball.y, reason: 'stuck'})
       return
+    }
+    // Layer 2: spatial stuck — if the ball hasn't moved more than 0.3
+    // units from its recorded position in 300 frames (~5 s), it's trapped.
+    if (!ball.onPlunger && !nearAnyFlipper) {
+      const dx = ball.x - ball.stuckPosX
+      const dy = ball.y - ball.stuckPosY
+      if (Math.hypot(dx, dy) < 0.3) {
+        ball.spatialStuckFrames += 1
+      } else {
+        ball.spatialStuckFrames = 0
+        ball.stuckPosX = ball.x
+        ball.stuckPosY = ball.y
+      }
+      if (ball.spatialStuckFrames > 300) {
+        ball.live = false
+        pushEvent('drain', {x: ball.x, y: ball.y, reason: 'stuck'})
+        return
+      }
+    } else {
+      ball.spatialStuckFrames = 0
+      ball.stuckPosX = ball.x
+      ball.stuckPosY = ball.y
     }
   }
 
