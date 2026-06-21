@@ -6,19 +6,35 @@ app.screen.setup = app.screenManager.invent({
     play: function (data) { this.change('game', data) },
     back: function () { this.change('menu') },
   },
+  state: {
+    showingMode: true,
+  },
   onReady: function () {
     const root = this.rootElement
+    const self = this
 
     root.addEventListener('click', (e) => {
       const btn = e.target.closest('button')
       if (!btn) return
       if (btn.dataset.action === 'back') {
-        app.screenManager.dispatch('back')
+        if (self.state.showingMode) {
+          app.screenManager.dispatch('back')
+        } else {
+          self.showModeSelection()
+        }
+        return
+      }
+      if (btn.dataset.action === 'teamDm') {
+        app.screenManager.dispatch('play', {aiOpponents: 3, mode: 'teamDm'})
+        return
+      }
+      if (btn.dataset.action === 'ffa') {
+        self.showFfaSelection()
         return
       }
       const ai = parseInt(btn.dataset.ai, 10)
       if (Number.isFinite(ai)) {
-        app.screenManager.dispatch('play', {aiOpponents: ai})
+        app.screenManager.dispatch('play', {aiOpponents: ai, mode: 'ffa'})
       }
     })
 
@@ -26,15 +42,40 @@ app.screen.setup = app.screenManager.invent({
       if (e.target.matches('button')) content.sounds.uiFocus()
     })
   },
+  showModeSelection: function () {
+    this.state.showingMode = true
+    const root = this.rootElement
+    root.querySelector('.a-setup--title').textContent = app.i18n.t('setup.title')
+    root.querySelector('.a-setup--subtitle').textContent = app.i18n.t('setup.subtitle')
+    root.querySelector('.a-setup--ffa').hidden = true
+    root.querySelector('.a-setup--modeSel').hidden = false
+    root.querySelector('.a-setup--ffaTitle').hidden = true
+    root.querySelector('.a-setup--ffaSubtitle').hidden = true
+  },
+  showFfaSelection: function () {
+    this.state.showingMode = false
+    const root = this.rootElement
+    root.querySelector('.a-setup--title').textContent = app.i18n.t('setup.title')
+    root.querySelector('.a-setup--subtitle').textContent = ''
+    root.querySelector('.a-setup--ffaTitle').hidden = false
+    root.querySelector('.a-setup--ffaTitle').textContent = app.i18n.t('setup.title')
+    root.querySelector('.a-setup--ffaSubtitle').hidden = false
+    root.querySelector('.a-setup--ffaSubtitle').textContent = app.i18n.t('setup.ffaSubtitle')
+    root.querySelector('.a-setup--modeSel').hidden = true
+    root.querySelector('.a-setup--ffa').hidden = false
+  },
   onEnter: function () {
-    this.rootElement.querySelector('.a-setup--title').textContent = app.i18n.t('setup.title')
-    this.rootElement.querySelector('.a-setup--subtitle').textContent = app.i18n.t('setup.subtitle')
+    this.showModeSelection()
   },
   onFrame: function () {
     const ui = app.controls.ui()
     if (ui.back) {
       content.sounds.uiBack()
-      app.screenManager.dispatch('back')
+      if (this.state.showingMode) {
+        app.screenManager.dispatch('back')
+      } else {
+        this.showModeSelection()
+      }
       return
     }
     app.utility.menuNav.handle(this.rootElement)

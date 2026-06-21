@@ -18,6 +18,7 @@ content.car = (() => {
     radius = 1.15,
     mass = 1,
     arcade = false,             // attach inventory + shield slot
+    friendly = false,           // friendly AI (wingman)
   } = {}) {
     const car = {
       id: id || `car-${nextId++}`,
@@ -57,6 +58,7 @@ content.car = (() => {
       hornOffset: Math.round(Math.random() * 100 - 50),
       sound: content.carEngine.create(profileIndex, {
         isSelf: controller === 'player',
+        isFriend: friendly,
       }),
     }
 

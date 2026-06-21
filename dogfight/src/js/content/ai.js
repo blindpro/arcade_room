@@ -3,7 +3,7 @@ content.ai = (() => {
     return Math.atan2(Math.sin(a), Math.cos(a))
   }
 
-  function create(plane, game) {
+  function create(plane, game, teamId) {
     let state = 'WANDER'
     let target = null
     let wanderTarget = randomPoint()
@@ -20,11 +20,17 @@ content.ai = (() => {
       }
     }
 
+    function isEnemy(other) {
+      if (other === plane || other.eliminated) return false
+      if (teamId && other.team) return other.team !== teamId
+      return true
+    }
+
     function pickTarget() {
       let best = null
       let bestScore = -Infinity
       for (const other of game.cars) {
-        if (other === plane || other.eliminated) continue
+        if (!isEnemy(other)) continue
         const d = Math.hypot(other.position.x - plane.position.x, other.position.y - plane.position.y)
         const score = -d * 0.7 - other.health + (other === plane.lastHitBy ? 35 : 0)
         if (score > bestScore) {

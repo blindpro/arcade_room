@@ -20,6 +20,7 @@
           <dl class="a-gameOver--score">
             <dt data-i18n="gameOver.score">Score</dt><dd class="a-gameOver--scoreValue">0</dd>
             <dt data-i18n="gameOver.best">Personal Best</dt><dd class="a-gameOver--bestValue">0</dd>
+            <dt class="a-gameOver--teamScoreLabel" hidden data-i18n="gameOver.roundScore">Round score</dt><dd class="a-gameOver--teamScoreDisplay" hidden><span class="a-gameOver--teamScore">0 - 0</span></dd>
           </dl>
           <section class="a-gameOver--standings" hidden aria-labelledby="a-gameOver--standingsTitle">
             <h2 id="a-gameOver--standingsTitle" class="a-gameOver--standingsTitle" data-i18n="gameOver.standings">Final standings</h2>
@@ -41,6 +42,8 @@
             <div class="a-game--health"><span data-i18n="game.health">Health: </span><span class="a-game--healthValue">100</span></div>
             <div class="a-game--score"><span data-i18n="game.score">Score: </span><span class="a-game--scoreValue">0</span></div>
             <div class="a-game--cars"><span data-i18n="game.planes">Planes left: </span><span class="a-game--carsValue">1</span></div>
+            <div class="a-game--round a-game--teamOnly"><span data-i18n="game.round">Round: </span><span class="a-game--roundValue">1</span></div>
+            <div class="a-game--teamScoreDisplay a-game--teamOnly"><span>Match: </span><span class="a-game--teamScore">0 - 0</span></div>
           </div>
         </section>
       </div>
@@ -88,10 +91,16 @@
       <div class="a-app--screen a-app--setup">
         <section class="c-screen c-menu a-setup" tabindex="-1" data-i18n-attr="aria-label:setup.aria">
           <h1 class="c-menu--title a-setup--title" data-i18n="setup.title">Single player</h1>
-          <p class="c-menu--subtitle a-setup--subtitle" data-i18n="setup.subtitle">
-            Choose how many AI pilots to fight. Zero is sandbox mode for learning movement and audio.
-          </p>
-          <ul class="c-menu--list a-setup--ai">
+          <p class="c-menu--subtitle a-setup--subtitle" data-i18n="setup.subtitle">Choose a game mode.</p>
+
+          <ul class="c-menu--list a-setup--modeSel">
+            <li><button class="c-menu--button" data-action="ffa" data-i18n="setup.modeFfa">Free For All</button></li>
+            <li><button class="c-menu--button" data-action="teamDm" data-i18n="setup.modeTeamDm">2v2 Duel</button></li>
+          </ul>
+
+          <h2 class="c-menu--title a-setup--ffaTitle" hidden data-i18n="setup.title">Single player</h2>
+          <p class="c-menu--subtitle a-setup--ffaSubtitle" hidden data-i18n="setup.ffaSubtitle">Choose how many AI pilots to fight.</p>
+          <ul class="c-menu--list a-setup--ffa" hidden>
             <li><button class="c-menu--button" data-ai="0" data-i18n="setup.ai0">Sandbox - no opponents</button></li>
             <li><button class="c-menu--button" data-ai="1" data-i18n="setup.ai1">1 opponent</button></li>
             <li><button class="c-menu--button" data-ai="2" data-i18n="setup.ai2">2 opponents</button></li>

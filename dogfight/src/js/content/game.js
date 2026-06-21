@@ -38,12 +38,20 @@ content.game = (() => {
   const BOOST_COOLDOWN = 5
   const BOOST_IMPULSE = 12
 
+  // Team / round state
+  let mode = 'ffa'
+  let currentRound = 1
+  let playerRoundWins = 0
+  let enemyRoundWins = 0
+  let lastOptions = {}
+
   function t(key, params) {
     return app.i18n ? app.i18n.t(key, params) : key
   }
 
-  function start({aiOpponents = 0} = {}) {
+  function start({aiOpponents = 0, mode: gameMode = 'ffa'} = {}) {
     end({silent: true})
+    mode = gameMode
     running = true
     paused = false
     roundEnding = false
@@ -51,37 +59,87 @@ content.game = (() => {
     missiles = []
     nextLockToneAt = 0
     lastLockedId = null
+    lastOptions = {aiOpponents, mode}
 
     content.arena.selectMap('large')
-    const count = Math.max(1, Math.min(6, aiOpponents + 1))
-    const spawns = content.arena.spawnPoints(count)
     api.cars = []
 
-    for (let i = 0; i < count; i++) {
-      const isPlayer = i === 0
-      const plane = content.car.create({
-        id: isPlayer ? 'player' : `ai-${i}`,
-        label: isPlayer ? t('label.you') : t('label.ai', {n: i}),
-        controller: isPlayer ? 'player' : 'ai',
-        profileIndex: i,
-        position: {x: spawns[i].x, y: spawns[i].y},
-        heading: spawns[i].heading,
-        health: 180,
-        radius: 1.15,
-      })
-      plane.throttle = isPlayer ? 0.45 : 0.5
-      api.cars.push(plane)
-      if (isPlayer) playerCar = plane
+    if (mode === 'teamDm') {
+      // 2v2 team mode: player + 1 wingman vs 2 enemy AI
+      const spawns = content.arena.spawnPoints(4)
+      const teamConfigs = [
+        {id: 'player', label: t('label.you'), controller: 'player', profileIndex: 0, team: 'player', friendly: false},
+        {id: 'ai-wingman', label: t('label.wingman'), controller: 'ai', profileIndex: 5, team: 'player', friendly: true},
+        {id: 'ai-1', label: t('label.bandit', {n: 1}), controller: 'ai', profileIndex: 1, team: 'enemy', friendly: false},
+        {id: 'ai-2', label: t('label.bandit', {n: 2}), controller: 'ai', profileIndex: 2, team: 'enemy', friendly: false},
+      ]
+      for (let i = 0; i < teamConfigs.length; i++) {
+        const cfg = teamConfigs[i]
+        const isPlayer = cfg.controller === 'player'
+        const plane = content.car.create({
+          id: cfg.id,
+          label: cfg.label,
+          controller: cfg.controller,
+          profileIndex: cfg.profileIndex,
+          position: {x: spawns[i].x, y: spawns[i].y},
+          heading: spawns[i].heading,
+          health: 180,
+          radius: 1.15,
+          friendly: cfg.friendly,
+        })
+        plane.team = cfg.team
+        plane.throttle = isPlayer ? 0.45 : 0.5
+        api.cars.push(plane)
+        if (isPlayer) playerCar = plane
+      }
+      // Wingman gets 5 missiles like player
+      const wingman = api.cars.find((p) => p.id === 'ai-wingman')
+      if (wingman) wingman.ammo.missiles = 5
+      // Enemies get 4 each
+      for (const plane of api.cars) {
+        if (plane.controller === 'ai' && plane.team === 'enemy') {
+          plane.ammo.missiles = 4
+        }
+      }
+    } else {
+      const count = Math.max(1, Math.min(6, aiOpponents + 1))
+      const spawns = content.arena.spawnPoints(count)
+      for (let i = 0; i < count; i++) {
+        const isPlayer = i === 0
+        const plane = content.car.create({
+          id: isPlayer ? 'player' : `ai-${i}`,
+          label: isPlayer ? t('label.you') : t('label.ai', {n: i}),
+          controller: isPlayer ? 'player' : 'ai',
+          profileIndex: i,
+          position: {x: spawns[i].x, y: spawns[i].y},
+          heading: spawns[i].heading,
+          health: 180,
+          radius: 1.15,
+        })
+        plane.throttle = isPlayer ? 0.45 : 0.5
+        api.cars.push(plane)
+        if (isPlayer) playerCar = plane
+      }
     }
 
     for (const plane of api.cars) {
-      if (plane.controller === 'ai') plane.ai = content.ai.create(plane, api)
+      if (plane.controller === 'ai') {
+        plane.ai = content.ai.create(plane, api, plane.team)
+      }
     }
 
     targeting = content.targeting.create(api)
     updateAudioStage()
     content.sounds.roundStart()
-    if (aiOpponents <= 0) {
+
+    if (mode === 'teamDm') {
+      if (currentRound === 1) {
+        content.announcer.say(t('ann.roundTeam1'), 'assertive')
+      } else {
+        content.announcer.say(t('ann.roundTeamN', {round: currentRound}), 'assertive')
+      }
+      setTimeout(() => sweep(), 900)
+    } else if (aiOpponents <= 0) {
       content.announcer.say(t('ann.sandbox'), 'assertive')
     } else {
       content.announcer.say(
@@ -90,6 +148,21 @@ content.game = (() => {
       )
       setTimeout(() => sweep(), 900)
     }
+  }
+
+  function resetMatch() {
+    currentRound = 1
+    playerRoundWins = 0
+    enemyRoundWins = 0
+  }
+
+  function nextRound() {
+    currentRound++
+    start(lastOptions)
+  }
+
+  function getMatchState() {
+    return {mode, currentRound, playerRoundWins, enemyRoundWins}
   }
 
   function end({silent = false} = {}) {
@@ -221,6 +294,7 @@ content.game = (() => {
       for (let j = i + 1; j < api.cars.length; j++) {
         const b = api.cars[j]
         if (b.eliminated) continue
+        if (mode === 'teamDm' && a.team === b.team) continue
         const ev = content.physics.resolveCarCar(a, b)
         if (!ev) continue
         const severity = engine.fn.clamp(ev.damage / 80, 0.2, 1)
@@ -320,6 +394,7 @@ content.game = (() => {
     let bestInfo = null
     for (const target of api.cars) {
       if (target === owner || target.eliminated) continue
+      if (mode === 'teamDm' && target.team === owner.team) continue
       const info = lockInfo(owner, target)
       if (!info.locked && !info.inGunCone) continue
       const score = info.diff * 30 + info.distance
@@ -337,6 +412,7 @@ content.game = (() => {
     let bestDist = Infinity
     for (const plane of api.cars) {
       if (plane === playerCar || plane.eliminated) continue
+      if (mode === 'teamDm' && plane.team === playerCar.team) continue
       const d = Math.hypot(plane.position.x - playerCar.position.x, plane.position.y - playerCar.position.y)
       if (d < bestDist) {
         best = plane
@@ -499,6 +575,74 @@ content.game = (() => {
 
   function checkRoundEnd() {
     if (roundEnding || api.cars.length <= 1) return
+
+    if (mode === 'teamDm') {
+      const playerTeamAlive = api.cars.some((p) => !p.eliminated && p.team === 'player')
+      const enemyTeamAlive = api.cars.some((p) => !p.eliminated && p.team === 'enemy')
+      if (playerTeamAlive && enemyTeamAlive) return
+
+      roundEnding = true
+      const playerTeamWon = playerTeamAlive && !enemyTeamAlive
+
+      if (playerTeamWon) playerRoundWins++
+      else enemyRoundWins++
+
+      if (playerTeamWon) score += 100
+      if (playerCar && playerCar.eliminated) score = Math.max(0, score - 25)
+
+      const matchOver = playerRoundWins >= 2 || enemyRoundWins >= 2
+
+      content.sounds.roundEnd(playerTeamWon)
+      content.announcer.say(t(playerTeamWon ? 'ann.roundTeamWon' : 'ann.roundTeamLost'), 'assertive')
+
+      if (matchOver) {
+        const youWonMatch = playerRoundWins >= 2
+        content.announcer.say(t(youWonMatch ? 'ann.matchWon' : 'ann.matchLost', {
+          playerWins: playerRoundWins,
+          enemyWins: enemyRoundWins,
+        }), 'assertive')
+
+        const standings = api.cars
+          .map((plane) => ({
+            id: plane.id,
+            label: plane.label,
+            team: plane.team,
+            score: plane === playerCar ? score : Math.max(0, Math.round(plane.health)),
+            eliminated: plane.eliminated,
+            winner: !plane.eliminated,
+          }))
+          .sort((a, b) => (b.winner - a.winner) || (a.team === 'player' ? -1 : 1))
+
+        setTimeout(() => {
+          if (!running) return
+          onRoundOver({
+            youWon: youWonMatch,
+            score,
+            standings,
+            selfId: playerCar && playerCar.id,
+            mode: 'teamDm',
+            matchOver: true,
+            playerRoundWins,
+            enemyRoundWins,
+          })
+        }, 1200)
+      } else {
+        setTimeout(() => {
+          if (!running) return
+          onRoundOver({
+            youWon: playerTeamWon,
+            score,
+            selfId: playerCar && playerCar.id,
+            mode: 'teamDm',
+            matchOver: false,
+            playerRoundWins,
+            enemyRoundWins,
+          })
+        }, 2000)
+      }
+      return
+    }
+
     const alive = api.cars.filter((plane) => !plane.eliminated)
     if (alive.length > 1) return
     roundEnding = true
@@ -522,7 +666,7 @@ content.game = (() => {
 
     setTimeout(() => {
       if (!running) return
-      onRoundOver({youWon, score, standings, selfId: playerCar && playerCar.id})
+      onRoundOver({youWon, score, standings, selfId: playerCar && playerCar.id, mode: 'ffa'})
     }, 900)
   }
 
@@ -602,6 +746,9 @@ content.game = (() => {
     announceTarget,
     sweep,
     hasItems: () => false,
+    resetMatch,
+    nextRound,
+    getMatchState,
   })
 
   return api

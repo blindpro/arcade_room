@@ -8,25 +8,57 @@ app.screen.game = app.screenManager.invent({
   },
   state: {
     aiOpponents: 0,
+    mode: 'ffa',
     pendingHud: 0,
   },
   onReady: function () {
     this.elHealth = this.rootElement.querySelector('.a-game--healthValue')
     this.elScore  = this.rootElement.querySelector('.a-game--scoreValue')
     this.elCars   = this.rootElement.querySelector('.a-game--carsValue')
+    this.elRound  = this.rootElement.querySelector('.a-game--roundValue')
+    this.elTeamScore = this.rootElement.querySelector('.a-game--teamScore')
 
-    content.game.setOnRoundOver(({youWon, score, standings, selfId}) => {
-      const data = app.storage.get('dogfight') || {}
-      const best = Math.max(data.bestScore || 0, score)
-      app.storage.set('dogfight', {...data, bestScore: best})
+    content.game.setOnRoundOver((data) => {
+      if (data.mode === 'teamDm') {
+        if (data.matchOver) {
+          const store = app.storage.get('dogfight') || {}
+          const best = Math.max(store.bestScore || 0, data.score || 0)
+          app.storage.set('dogfight', {...store, bestScore: best})
+          app.screenManager.dispatch('over', {
+            youWon: data.youWon,
+            score: data.score,
+            best,
+            multiplayer: false,
+            standings: data.standings,
+            selfId: data.selfId,
+            mode: 'teamDm',
+            playerRoundWins: data.playerRoundWins,
+            enemyRoundWins: data.enemyRoundWins,
+          })
+        } else {
+          const t = app.i18n.t
+          const msg = data.youWon
+            ? t('ann.roundTeamWon')
+            : t('ann.roundTeamLost')
+          content.announcer.say(msg + '. ' + t('ann.roundTeamN', {round: data.playerRoundWins + data.enemyRoundWins + 1}), 'assertive')
+          setTimeout(() => {
+            content.game.nextRound()
+          }, 2500)
+        }
+        return
+      }
+
+      const store = app.storage.get('dogfight') || {}
+      const best = Math.max(store.bestScore || 0, data.score || 0)
+      app.storage.set('dogfight', {...store, bestScore: best})
 
       app.screenManager.dispatch('over', {
-        youWon,
-        score,
+        youWon: data.youWon,
+        score: data.score,
         best,
         multiplayer: false,
-        standings,
-        selfId,
+        standings: data.standings,
+        selfId: data.selfId,
         mode: 'dogfight',
       })
     })
@@ -86,7 +118,15 @@ app.screen.game = app.screenManager.invent({
   },
   onEnter: function (e = {}) {
     this.state.aiOpponents = e.aiOpponents || 0
-    content.game.start({aiOpponents: this.state.aiOpponents})
+    this.state.mode = e.mode || 'ffa'
+    const hud = this.rootElement.querySelector('.a-game--hud')
+    if (this.state.mode === 'teamDm') {
+      content.game.resetMatch()
+      hud.classList.add('a-game--hud-team')
+    } else {
+      hud.classList.remove('a-game--hud-team')
+    }
+    content.game.start({aiOpponents: this.state.aiOpponents, mode: this.state.mode})
     this.updateHud()
   },
   onExit: function () {
@@ -128,5 +168,10 @@ app.screen.game = app.screenManager.invent({
     if (player) this.elHealth.textContent = String(Math.round(player.health))
     this.elScore.textContent = String(content.game.getScore())
     this.elCars.textContent = String(content.game.livingCount())
+    const match = content.game.getMatchState()
+    if (match.mode === 'teamDm') {
+      this.elRound.textContent = String(match.currentRound)
+      this.elTeamScore.textContent = match.playerRoundWins + ' - ' + match.enemyRoundWins
+    }
   },
 })

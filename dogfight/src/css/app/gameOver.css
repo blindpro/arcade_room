@@ -9,6 +9,7 @@
 }
   .a-gameOver--score dt { opacity: 0.7; }
   .a-gameOver--score dd { font-weight: 700; color: #00FFC8; }
+  .a-gameOver--teamScore { color: #FFD479; font-weight: 700; }
 
 .a-gameOver--standings {
   margin: 1.25rem auto 0;

@@ -523,8 +523,12 @@ content.targeting = (() => {
       others.sort((a, b) => a.dist - b.dist)
       for (const {other, localX, localY, motionKey} of others) {
         const bearing = content.arena.bearingDescription(localX, localY)
+        let label = other.label
+        if (other.team && other.team === (game.player && game.player() && game.player().team) && other !== game.player()) {
+          label = app.i18n.t('label.wingman')
+        }
         lines.push(app.i18n.t('target.sweepLine', {
-          label: other.label,
+          label,
           bearing,
           motion: app.i18n.t(motionKey),
           health: Math.round(other.health),

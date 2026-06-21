@@ -22,3 +22,10 @@
       color: #00FFC8;
       font-weight: 700;
     }
+    .a-game--teamOnly { display: none; }
+    .a-game--hud-team .a-game--teamOnly { display: block; }
+    .a-game--roundValue,
+    .a-game--teamScore {
+      color: #FFD479;
+      font-weight: 700;
+    }

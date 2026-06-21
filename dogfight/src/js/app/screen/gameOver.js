@@ -38,36 +38,53 @@ app.screen.gameOver = app.screenManager.invent({
     const best = e.best || 0
     const youWon = !!e.youWon
     const isDm = e.mode === 'deathmatch'
+    const isTeam = e.mode === 'teamDm'
     const t = app.i18n.t
 
     root.querySelector('.a-gameOver--title').textContent =
-      t(youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
+      isTeam
+        ? t(youWon ? 'gameOver.titleTeamWin' : 'gameOver.titleTeamLose')
+        : t(youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
     root.querySelector('.a-gameOver--result').textContent =
-      t(youWon
-          ? (isDm ? 'gameOver.resultWinDm' : 'gameOver.resultWin')
-          : (isDm ? 'gameOver.resultLoseDm' : 'gameOver.resultLose'))
+      isTeam
+        ? t(youWon ? 'gameOver.resultTeamWin' : 'gameOver.resultTeamLose')
+        : t(youWon
+            ? (isDm ? 'gameOver.resultWinDm' : 'gameOver.resultWin')
+            : (isDm ? 'gameOver.resultLoseDm' : 'gameOver.resultLose'))
+
+    // Team match score display
+    const teamScoreEl = root.querySelector('.a-gameOver--teamScore')
+    if (isTeam && teamScoreEl) {
+      teamScoreEl.parentElement.hidden = false
+      teamScoreEl.textContent = t('gameOver.matchScore', {
+        playerWins: e.playerRoundWins || 0,
+        enemyWins: e.enemyRoundWins || 0,
+      })
+    } else if (teamScoreEl) {
+      teamScoreEl.parentElement.hidden = true
+    }
+
     root.querySelector('.a-gameOver--scoreValue').textContent = String(score)
     root.querySelector('.a-gameOver--bestValue').textContent = String(best)
 
     // Multiplayer leaderboard. Single-player rounds skip it (you're the
     // only "real" car — the AI scores aren't a meaningful comparison).
+    // Team mode shows the standings since it has team info.
     const standingsSection = root.querySelector('.a-gameOver--standings')
     const standingsList = root.querySelector('.a-gameOver--standingsList')
     const standings = Array.isArray(e.standings) ? e.standings : null
-    const showStandings = !!(e.multiplayer && standings && standings.length)
+    const showStandings = !!((e.multiplayer || isTeam) && standings && standings.length)
     standingsSection.hidden = !showStandings
     standingsList.innerHTML = ''
     if (showStandings) {
       for (const s of standings) {
         const li = document.createElement('li')
         const isYou = e.selfId != null && s.id === e.selfId
-        // Three states: winner > eliminated > ranked. Deathmatch non-
-        // winners fall through to "ranked" (no tag) because nobody was
-        // permanently eliminated — they were just outscored.
         const isWinner = !!s.winner
         const isEliminated = !isWinner && !!s.eliminated
         li.dataset.status = isWinner ? 'winner' : isEliminated ? 'eliminated' : 'ranked'
         if (isYou) li.dataset.self = '1'
+        if (isTeam && s.team) li.dataset.team = s.team
 
         const nameEl = document.createElement('span')
         nameEl.className = 'a-gameOver--standingName'
@@ -98,10 +115,17 @@ app.screen.gameOver = app.screenManager.invent({
       rematchBtn.parentElement.hidden = !e.multiplayer
     }
 
-    const summary = t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
+    const summary = isTeam
+      ? t(youWon ? 'gameOver.summaryTeamWin' : 'gameOver.summaryTeamLose', {
+          score,
+          best,
+          playerWins: e.playerRoundWins || 0,
+          enemyWins: e.enemyRoundWins || 0,
+        })
+      : t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
     content.announcer.say(summary, 'assertive')
 
-    // Spoken leaderboard for screen-reader users (multiplayer only).
+    // Spoken leaderboard for screen-reader users (multiplayer / team).
     if (showStandings) {
       const spoken = standings.map((s, i) => {
         const place = i + 1

@@ -44,6 +44,7 @@ content.carEngine = (() => {
   function createForProfileIndex(profileIndex, options = {}) {
     const profile = profiles[profileIndex % profiles.length]
     const isSelf = !!options.isSelf
+    const isFriend = !!options.isFriend
     const c = engine.context()
 
     // Self car is always at distance 0 from the listener — binaural gain
@@ -111,6 +112,29 @@ content.carEngine = (() => {
     noise.connect(noiseFilter).connect(noiseGain).connect(out)
     air.connect(airFilter).connect(airGain).connect(out)
 
+    // Tremolo for friendly (wingman) identification. A slow ~2.5 Hz
+    // amplitude modulation makes the wingman's engine pulse gently so
+    // the player can audibly distinguish friend from foe at a glance.
+    const tremoloGain = c.createGain()
+    tremoloGain.gain.value = 1.0
+    let tremoloLfo = null
+    if (isFriend) {
+      const lfo = c.createOscillator()
+      lfo.type = 'sine'
+      lfo.frequency.value = 2.5
+      const lfoMod = c.createGain()
+      lfoMod.gain.value = 0.15
+      const lfoBias = c.createConstantSource()
+      lfoBias.offset.value = 0.85
+      lfo.connect(lfoMod)
+      lfoMod.connect(tremoloGain.gain)
+      lfoBias.connect(tremoloGain.gain)
+      lfo.start()
+      lfoBias.start()
+      tremoloLfo = {lfo, lfoMod, lfoBias}
+    }
+    out.connect(tremoloGain)
+
     // Tone shaper — fixed lowpass that lops off the upper harmonics of
     // the square/sawtooth profiles (and the upper FM sidebands) before
     // they hit the 4-8 kHz region the ear is most sensitive to. Without
@@ -119,7 +143,7 @@ content.carEngine = (() => {
     tone.type = 'lowpass'
     tone.frequency.value = isSelf ? 4500 : 4000
     tone.Q.value = 0.5
-    out.connect(tone)
+    tremoloGain.connect(tone)
 
     // Behind-listener muffler. We let the tone-shaped voice flow through
     // a second lowpass whose cutoff drops as the source rotates behind
@@ -298,6 +322,12 @@ content.carEngine = (() => {
           try { noise.stop() } catch (e) {}
           try { air.stop() } catch (e) {}
           try { scrape.stop() } catch (e) {}
+          if (tremoloLfo) {
+            try { tremoloLfo.lfo.stop() } catch (e) {}
+            try { tremoloLfo.lfoBias.stop() } catch (e) {}
+            try { tremoloLfo.lfoMod.disconnect() } catch (e) {}
+            try { tremoloLfo.lfoBias.disconnect() } catch (e) {}
+          }
           try { out.disconnect() } catch (e) {}
           try { ear.destroy() } catch (e) {}
         }, 300)
