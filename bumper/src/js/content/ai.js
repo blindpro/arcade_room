@@ -263,9 +263,10 @@ content.ai = (() => {
       const goalLen = Math.hypot(dx, dy) || 1
       const goalX = dx / goalLen, goalY = dy / goalLen
       const avoid = wallAvoidanceVector(6.0)
-      // Avoidance scaled to dominate the goal direction at the wall
-      // (avoid magnitude 1 → push 2x the unit goal vector).
-      const desired = Math.atan2(goalY + avoid.y * 2, goalX + avoid.x * 2)
+      // Avoidance scaled so the AI still steers clear of walls without
+      // sharp swerves that look like dodging (avoid magnitude 1 → push
+      // 1.2x the unit goal vector).
+      const desired = Math.atan2(goalY + avoid.y * 1.2, goalX + avoid.x * 1.2)
       const diff = shortAngle(desired - car.heading)
       const steer = Math.sin(diff) * 2 + antiparallelBias(diff, avoid)
       car.input.steering = engine.fn.clamp(steer, -1, 1)
@@ -584,9 +585,10 @@ content.ai = (() => {
           if (!target || target.eliminated || now >= chargeEndAt || distToTarget > personality.chargeRange * 1.5) {
             state = 'PURSUE'
           } else {
-            // Full-throttle straight at target, ignore pickups.
+            // Rush straight at target, ignore pickups. steerToward
+            // already sets full forward throttle — no speed boost so
+            // the AI doesn't guarantee a high-damage ram every time.
             steerToward(target.position)
-            car.input.throttle = engine.fn.clamp(car.input.throttle * 1.3, 0.7, 1)
             maybeUseItems()
             return
           }

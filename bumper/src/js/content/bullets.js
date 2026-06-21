@@ -211,8 +211,12 @@ content.bullets = (() => {
         damage = config.directDamage
       } else {
         // Linear scale: closer to direct hit = more damage.
+        // Use effective radii (car body + config margin) to match the
+        // widened hit test above.
+        const effDirect = victim.radius + config.directHitRadius
+        const effGraze = victim.radius + config.grazeRadius
         const t = engine.fn.clamp(
-          1 - (dist - config.directHitRadius) / (config.grazeRadius - config.directHitRadius),
+          1 - (dist - effDirect) / (effGraze - effDirect),
           0, 1,
         )
         damage = engine.fn.lerp(config.grazeDamageMin, config.grazeDamageMax, t)
@@ -251,7 +255,9 @@ content.bullets = (() => {
           continue
         }
 
-        // Hit-test against all non-eliminated cars (skip owner during muzzle window)
+        // Hit-test against all non-eliminated cars (skip owner during muzzle window).
+        // Cars have a radius (0.95m) — include it so the bullet need only pass
+        // near the car body, not through the exact center.
         const ownerImmunityActive = (t - bullet.spawnedAt) < config.selfImmunityTime
         let hitCar = null, hitDist = Infinity, isDirect = false
         for (const car of game.cars) {
@@ -260,9 +266,11 @@ content.bullets = (() => {
           const dx = car.position.x - bullet.position.x,
             dy = car.position.y - bullet.position.y
           const d = Math.hypot(dx, dy)
-          if (d <= config.directHitRadius) {
+          const directMax = car.radius + config.directHitRadius
+          const grazeMax = car.radius + config.grazeRadius
+          if (d <= directMax) {
             if (d < hitDist) { hitDist = d; hitCar = car; isDirect = true }
-          } else if (d <= config.grazeRadius && !isDirect) {
+          } else if (d <= grazeMax && !isDirect) {
             if (d < hitDist) { hitDist = d; hitCar = car; isDirect = false }
           }
         }

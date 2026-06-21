@@ -14,11 +14,12 @@ content.physics = (() => {
     wallRestitution: 0.55,
     damageScaleCar: 6.0,
     damageScaleWall: 2.5,
-    minDamage: 1.5,
+    minDamage: 3.0,
     // Attack incentive: aggressor (the car driving harder *into* the
     // contact normal) eats only this share of ev.damage. Victim takes
-    // the rest. 0.25 means ramming costs you ¼ what the rammed car takes.
-    aggressorDamageShare: 0.25,
+    // the rest. 0.35 means ramming costs you about half what the rammed
+    // car takes (up from 0.25), so the AI can't endlessly trade up.
+    aggressorDamageShare: 0.35,
     scrapeRate: 0.4,            // hp/s while scraping
     scrapeMinSpeed: 0.6,
     // Speed-burst pickup: while car.boostUntil > engine.time(), the
