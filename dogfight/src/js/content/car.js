@@ -14,7 +14,7 @@ content.car = (() => {
     profileIndex = 0,
     position = {x: 0, y: 0},
     heading = 0,
-    health = 100,
+    health = 150,
     radius = 1.15,
     mass = 1,
     arcade = false,             // attach inventory + shield slot
@@ -45,7 +45,7 @@ content.car = (() => {
       // flag the physics path can read.
       inventory: arcade ? {shields: 0, bullets: 0, mines: 0, boosts: 0, teleports: 0, repulsors: 0, rockets: 0} : null,
       ammo: {
-        missiles: controller === 'player' ? 4 : 3,
+        missiles: controller === 'player' ? 5 : 4,
         gunsHeat: 0,
         nextGunAt: 0,
         nextMissileAt: 0,

@@ -74,7 +74,7 @@ app.i18n = (() => {
       'help.controlUp': '<kbd>Up</kbd> - throttle up',
       'help.controlDown': '<kbd>Down</kbd> - air brake / throttle down',
       'help.controlSteer': '<kbd>Left</kbd> <kbd>Right</kbd> - bank and turn',
-      'help.controlGun': '<kbd>Space</kbd> - fire machine guns',
+      'help.controlGun': '<kbd>Space</kbd> - fire machine guns (hold; overheats)',
       'help.controlMissile': '<kbd>F</kbd> - fire missile when locked',
       'help.controlSweep': '<kbd>Q</kbd> - announce enemy planes and their bearing',
       'help.controlReadouts': '<kbd>F1</kbd> score, <kbd>F2</kbd> planes left, <kbd>F3</kbd> nearest target, <kbd>F4</kbd> health',
@@ -140,6 +140,8 @@ app.i18n = (() => {
       'ann.missileFired': 'Missile away. {count} left.',
       'ann.missileIncoming': 'Incoming missile.',
       'ann.target': 'Nearest target: {line}.',
+      'ann.gunsOverheated': 'Guns overheated.',
+      'ann.gunsCooled': 'Guns cooled.',
 
       'label.you': 'You',
       'label.ai': 'Bandit {n}',

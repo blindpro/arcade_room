@@ -28,6 +28,11 @@ content.game = (() => {
   let nextLockToneAt = 0
   let roundEnding = false
   let lastLockedId = null
+  let gunsFiring = false
+  let gunHeat = 0
+  const GUN_HEAT_MAX = 100
+  const GUN_HEAT_RATE = 50
+  const GUN_COOL_RATE = 35
 
   function t(key, params) {
     return app.i18n ? app.i18n.t(key, params) : key
@@ -57,7 +62,7 @@ content.game = (() => {
         profileIndex: i,
         position: {x: spawns[i].x, y: spawns[i].y},
         heading: spawns[i].heading,
-        health: 100,
+        health: 150,
         radius: 1.15,
       })
       plane.throttle = isPlayer ? 0.45 : 0.65
@@ -87,6 +92,9 @@ content.game = (() => {
     if (!running && !api.cars.length) return
     running = false
     paused = false
+    gunsFiring = false
+    gunHeat = 0
+    content.sounds.stopMachineGun()
     if (targeting) {
       targeting.destroy()
       targeting = null
@@ -104,6 +112,45 @@ content.game = (() => {
     playerCar.input.steering = input.steering || 0
   }
 
+  function updateGuns(delta) {
+    if (!playerCar || playerCar.eliminated) {
+      if (gunsFiring) { gunsFiring = false; content.sounds.stopMachineGun() }
+      return
+    }
+    const now = engine.time()
+
+    if (gunsFiring) {
+      if (gunHeat < GUN_HEAT_MAX) {
+        gunHeat = Math.min(GUN_HEAT_MAX, gunHeat + GUN_HEAT_RATE * delta)
+        const lock = bestLock(playerCar)
+        if (lock && lock.info.inGunCone && now >= (playerCar.ammo.nextGunAt || 0)) {
+          playerCar.ammo.nextGunAt = now + config.gunCooldown
+          damagePlane(lock.target, config.gunDamage, playerCar, 'gun')
+        }
+        content.sounds.startMachineGun(playerCar.position)
+      } else {
+        content.sounds.stopMachineGun()
+        content.announcer.say(t('ann.gunsOverheated'), 'assertive')
+        gunsFiring = false
+      }
+    } else {
+      if (gunHeat > 0) {
+        gunHeat = Math.max(0, gunHeat - GUN_COOL_RATE * delta)
+        if (gunHeat <= 0) content.announcer.say(t('ann.gunsCooled'), 'polite')
+      }
+    }
+  }
+
+  function startGuns() {
+    if (!running || !playerCar || playerCar.eliminated) return
+    gunsFiring = true
+  }
+
+  function stopGuns() {
+    gunsFiring = false
+    content.sounds.stopMachineGun()
+  }
+
   function update(delta) {
     if (!running || paused) return
     delta = Math.min(0.05, Math.max(0, delta || 0))
@@ -116,6 +163,7 @@ content.game = (() => {
     }
 
     resolveCollisions()
+    updateGuns(delta)
     updateMissiles(delta)
     updateAudioStage()
     if (targeting) targeting.update()
@@ -255,17 +303,12 @@ content.game = (() => {
     return best
   }
 
-  function fireGuns(owner = playerCar) {
-    if (!running || !owner || owner.eliminated) return false
+  function fireGuns(owner) {
+    if (!owner || owner === playerCar) return false
     const now = engine.time()
     owner.ammo = owner.ammo || {missiles: 0, nextGunAt: 0, nextMissileAt: 0}
-    if (now < owner.ammo.nextGunAt) {
-      if (owner === playerCar) content.announcer.say(t('game.gunsCooldown'), 'polite')
-      return false
-    }
+    if (now < owner.ammo.nextGunAt) return false
     owner.ammo.nextGunAt = now + config.gunCooldown
-    content.sounds.machineGun(owner.position)
-
     const lock = bestLock(owner)
     if (!lock || !lock.info.inGunCone) return true
     damagePlane(lock.target, config.gunDamage, owner, 'gun')
@@ -467,6 +510,8 @@ content.game = (() => {
     end,
     update,
     applyPlayerInput,
+    startGuns,
+    stopGuns,
     fireGuns,
     fireMissile,
     lockInfo,

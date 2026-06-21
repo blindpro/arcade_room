@@ -33,12 +33,12 @@ content.carEngine = (() => {
   // pitch). Square vs sawtooth alone doesn't differentiate much under
   // the 4 kHz tone-shaping lowpass, so we spread on the other axes.
   const profiles = [
-    {name: 'red',    carrierFreq: 90,  modRatio: 1.0,  modDepth: 8,   noiseGain: 0.05, noiseBase: 350, type: 'triangle'},
-    {name: 'blue',   carrierFreq: 150, modRatio: 2.0,  modDepth: 22,  noiseGain: 0.07, noiseBase: 650, type: 'square'},
-    {name: 'green',  carrierFreq: 60,  modRatio: 1.5,  modDepth: 50,  noiseGain: 0.14, noiseBase: 280, type: 'sawtooth'},
-    {name: 'yellow', carrierFreq: 200, modRatio: 0.5,  modDepth: 14,  noiseGain: 0.06, noiseBase: 950, type: 'triangle'},
-    {name: 'purple', carrierFreq: 105, modRatio: 2.7,  modDepth: 48,  noiseGain: 0.09, noiseBase: 480, type: 'sawtooth'},
-    {name: 'orange', carrierFreq: 75,  modRatio: 1.0,  modDepth: 30,  noiseGain: 0.12, noiseBase: 180, type: 'square'},
+    {name: 'red',    carrierFreq: 90,  modRatio: 1.0,  modDepth: 5,   noiseGain: 0.12, noiseBase: 400, airGain: 0.08, airBase: 1800, type: 'sine'},
+    {name: 'blue',   carrierFreq: 150, modRatio: 2.0,  modDepth: 12,  noiseGain: 0.15, noiseBase: 700, airGain: 0.10, airBase: 2200, type: 'sine'},
+    {name: 'green',  carrierFreq: 60,  modRatio: 1.5,  modDepth: 30,  noiseGain: 0.20, noiseBase: 320, airGain: 0.12, airBase: 1500, type: 'triangle'},
+    {name: 'yellow', carrierFreq: 200, modRatio: 0.5,  modDepth: 8,   noiseGain: 0.14, noiseBase: 1000, airGain: 0.09, airBase: 2500, type: 'sine'},
+    {name: 'purple', carrierFreq: 105, modRatio: 2.7,  modDepth: 28,  noiseGain: 0.16, noiseBase: 520, airGain: 0.11, airBase: 2000, type: 'triangle'},
+    {name: 'orange', carrierFreq: 75,  modRatio: 1.0,  modDepth: 18,  noiseGain: 0.18, noiseBase: 220, airGain: 0.13, airBase: 1600, type: 'sine'},
   ]
 
   function createForProfileIndex(profileIndex, options = {}) {
@@ -85,16 +85,31 @@ content.carEngine = (() => {
     const noiseGain = c.createGain()
     noiseGain.gain.value = profile.noiseGain
 
+    // Airflow hiss — bandpass noise for the "airy" feel, inspired by
+    // plane_control's engine voice. Gives presence and locatability
+    // without tonal pitch.
+    const airBuf = engine.buffer.brownNoise({channels: 1, duration: 2})
+    const air = c.createBufferSource()
+    air.buffer = airBuf
+    air.loop = true
+    const airFilter = c.createBiquadFilter()
+    airFilter.type = 'bandpass'
+    airFilter.frequency.value = profile.airBase
+    airFilter.Q.value = 0.7
+    const airGain = c.createGain()
+    airGain.gain.value = profile.airGain
+
     // Engine voice gains. Self gets less sub so the player isn't
     // sitting under a bass drone the whole round.
     const carrierGain = c.createGain()
-    carrierGain.gain.value = isSelf ? 0.55 : 0.5
+    carrierGain.gain.value = isSelf ? 0.30 : 0.25
     const subGain = c.createGain()
-    subGain.gain.value = isSelf ? 0.10 : 0.35
+    subGain.gain.value = isSelf ? 0.08 : 0.25
 
     carrier.connect(carrierGain).connect(out)
     sub.connect(subGain).connect(out)
     noise.connect(noiseFilter).connect(noiseGain).connect(out)
+    air.connect(airFilter).connect(airGain).connect(out)
 
     // Tone shaper — fixed lowpass that lops off the upper harmonics of
     // the square/sawtooth profiles (and the upper FM sidebands) before
@@ -154,6 +169,7 @@ content.carEngine = (() => {
     modulator.start()
     sub.start()
     noise.start()
+    air.start()
     scrape.start()
 
     out.gain.linearRampToValueAtTime(0.0, c.currentTime)
@@ -251,6 +267,18 @@ content.carEngine = (() => {
           0.20,
         )
 
+        // Air hiss grows with speed (airflow increases)
+        engine.fn.setParam(
+          airGain.gain,
+          profile.airGain * (0.3 + speedFactor * 0.7),
+          0.25,
+        )
+        engine.fn.setParam(
+          airFilter.frequency,
+          profile.airBase + speedFactor * 800,
+          0.25,
+        )
+
         // Scrape
         const scrapeTarget = engine.fn.clamp(state.scrapeSpeed * 0.18, 0, 0.45)
         engine.fn.setParam(scrapeGain.gain, scrapeTarget, 0.05)
@@ -268,6 +296,7 @@ content.carEngine = (() => {
           try { modulator.stop() } catch (e) {}
           try { sub.stop() } catch (e) {}
           try { noise.stop() } catch (e) {}
+          try { air.stop() } catch (e) {}
           try { scrape.stop() } catch (e) {}
           try { out.disconnect() } catch (e) {}
           try { ear.destroy() } catch (e) {}

@@ -61,42 +61,41 @@ content.sounds = (() => {
   // --- one-shots -----------------------------------------------------
 
   function collision(position, severity = 0.5) {
-    // Severity 0..1
     const t0 = now()
-    const dur = 0.35
-
+    const dur = 0.5
     const ear = playSpatial(position, () => {
       const c = ctx()
       const out = c.createGain()
       out.gain.value = 0
 
-      // Sine thump
-      const osc = c.createOscillator()
-      osc.type = 'sine'
-      osc.frequency.setValueAtTime(120 + 40 * severity, t0)
-      osc.frequency.exponentialRampToValueAtTime(40, t0 + dur)
-      osc.connect(out)
-      osc.start(t0)
-      osc.stop(t0 + dur + 0.05)
-
-      // Noise burst
       const buf = engine.buffer.whiteNoise({channels: 1, duration: dur})
       const src = c.createBufferSource()
       src.buffer = buf
-      const nf = c.createBiquadFilter()
-      nf.type = 'lowpass'
-      nf.frequency.setValueAtTime(1500 + 1500 * severity, t0)
-      nf.frequency.exponentialRampToValueAtTime(200, t0 + dur)
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(800 + 1200 * severity, t0)
+      bp.frequency.exponentialRampToValueAtTime(100, t0 + dur)
+      bp.Q.value = 2
       const ng = c.createGain()
       ng.gain.value = 0
-      envelope(ng.gain, t0, 0.005, 0.02, dur - 0.025, 0.6 * severity + 0.3)
-      src.connect(nf).connect(ng).connect(out)
+      envelope(ng.gain, t0, 0.005, 0.05, dur - 0.055, 0.5 * severity + 0.3)
+      src.connect(bp).connect(ng).connect(out)
       src.start(t0)
 
-      envelope(out.gain, t0, 0.005, 0.05, dur - 0.055, engine.fn.clamp(0.4 + severity, 0.4, 1.2))
+      const crunch = c.createOscillator()
+      crunch.type = 'sawtooth'
+      crunch.frequency.setValueAtTime(60, t0)
+      crunch.frequency.exponentialRampToValueAtTime(20, t0 + dur * 0.6)
+      const cg = c.createGain()
+      cg.gain.value = 0
+      envelope(cg.gain, t0, 0.005, 0.1, dur * 0.4, 0.25)
+      crunch.connect(cg).connect(out)
+      crunch.start(t0)
+      crunch.stop(t0 + dur)
+
+      envelope(out.gain, t0, 0.005, 0.08, dur - 0.085, engine.fn.clamp(0.3 + severity * 0.5, 0.3, 0.9))
       return out
     })
-
     disconnectAfter(ear.left, t0 + dur + 0.2, ear)
   }
 
@@ -179,34 +178,22 @@ content.sounds = (() => {
    */
   function scoring(magnitude = 0.4) {
     const m = engine.fn.clamp(magnitude, 0, 1)
-    const baseFreq = engine.fn.lerp(440, 900, m)
-    const interval = engine.fn.lerp(0.085, 0.040, m)
-    const dur = 0.08
     const c = ctx()
     const t0 = now()
-
     const out = c.createGain()
-    out.gain.value = 0.55
+    out.gain.value = 0.5
     out.connect(engine.mixer.output())
 
-    // Major-arpeggio up to the octave: 1 - 5/4 - 3/2 - 2
-    const ratios = [1, 1.25, 1.5, 2]
-    let t = t0
-    for (const r of ratios) {
-      const o = c.createOscillator()
-      o.type = 'triangle'
-      o.frequency.value = baseFreq * r
-      const g = c.createGain()
-      g.gain.value = 0
-      o.connect(g).connect(out)
-      g.gain.setValueAtTime(0, t)
-      g.gain.linearRampToValueAtTime(0.45, t + 0.005)
-      g.gain.linearRampToValueAtTime(0, t + dur)
-      o.start(t)
-      o.stop(t + dur + 0.02)
-      t += interval
-    }
-    setTimeout(() => { try { out.disconnect() } catch (e) {} }, (interval * 4 + dur + 0.5) * 1000)
+    const baseFreq = engine.fn.lerp(300, 700, m)
+    const o = c.createOscillator()
+    o.type = 'triangle'
+    o.frequency.setValueAtTime(baseFreq, t0)
+    o.frequency.linearRampToValueAtTime(baseFreq * 0.5, t0 + 0.1)
+    o.connect(out)
+    o.start(t0)
+    o.stop(t0 + 0.12)
+    envelope(out.gain, t0, 0.002, 0.03, 0.08, 0.5)
+    o.onended = () => { try { out.disconnect() } catch (e) {} }
   }
 
   /**
@@ -215,36 +202,35 @@ content.sounds = (() => {
    */
   function buzzer(position, severity = 0.6) {
     const t0 = now()
-    const dur = 0.30 + severity * 0.18
-
+    const dur = 0.25 + severity * 0.15
     const ear = playSpatial(position, () => {
       const c = ctx()
       const out = c.createGain()
       out.gain.value = 0
 
       const o = c.createOscillator()
-      o.type = 'square'
-      o.frequency.setValueAtTime(220, t0)
-      o.frequency.linearRampToValueAtTime(140, t0 + dur)
+      o.type = 'triangle'
+      o.frequency.setValueAtTime(600 + 400 * severity, t0)
+      o.frequency.exponentialRampToValueAtTime(200, t0 + dur)
       o.connect(out)
       o.start(t0)
       o.stop(t0 + dur + 0.05)
 
-      // Slight beat: square + detuned saw on top for a bit of grit.
-      const o2 = c.createOscillator()
-      o2.type = 'sawtooth'
-      o2.frequency.setValueAtTime(225, t0)
-      o2.frequency.linearRampToValueAtTime(143, t0 + dur)
-      const g2 = c.createGain()
-      g2.gain.value = 0.35
-      o2.connect(g2).connect(out)
-      o2.start(t0)
-      o2.stop(t0 + dur + 0.05)
+      const buf = engine.buffer.whiteNoise({channels: 1, duration: dur})
+      const src = c.createBufferSource()
+      src.buffer = buf
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(3000, t0)
+      bp.frequency.linearRampToValueAtTime(500, t0 + dur)
+      bp.Q.value = 2
+      const ng = c.createGain()
+      ng.gain.value = 0
+      envelope(ng.gain, t0, 0.005, 0.02, dur - 0.025, 0.2)
+      src.connect(bp).connect(ng).connect(out)
+      src.start(t0)
 
-      const peak = engine.fn.clamp(0.5 + severity * 0.4, 0.4, 0.95)
-      out.gain.setValueAtTime(0, t0)
-      out.gain.linearRampToValueAtTime(peak, t0 + 0.01)
-      out.gain.linearRampToValueAtTime(0, t0 + dur)
+      envelope(out.gain, t0, 0.005, 0.04, dur - 0.045, engine.fn.clamp(0.3 + severity * 0.4, 0.3, 0.8))
       return out
     })
     disconnectAfter(ear.left, t0 + dur + 0.2, ear)
@@ -252,29 +238,35 @@ content.sounds = (() => {
 
   function eliminate(position) {
     const t0 = now()
-    const dur = 1.4
+    const dur = 1.0
     const ear = playSpatial(position, () => {
       const c = ctx()
       const out = c.createGain()
       out.gain.value = 0
 
-      const osc = c.createOscillator()
-      osc.type = 'sawtooth'
-      osc.frequency.setValueAtTime(440, t0)
-      osc.frequency.exponentialRampToValueAtTime(60, t0 + dur)
-      osc.connect(out)
-      osc.start(t0)
-      osc.stop(t0 + dur + 0.05)
+      const noiseBuf = engine.buffer.whiteNoise({channels: 1, duration: dur})
+      const noise = c.createBufferSource()
+      noise.buffer = noiseBuf
+      const bp = c.createBiquadFilter()
+      bp.type = 'bandpass'
+      bp.frequency.setValueAtTime(1200, t0)
+      bp.frequency.exponentialRampToValueAtTime(80, t0 + dur)
+      bp.Q.value = 1.5
+      const ng = c.createGain()
+      ng.gain.value = 0
+      envelope(ng.gain, t0, 0.01, 0.15, dur - 0.16, 0.7)
+      noise.connect(bp).connect(ng).connect(out)
+      noise.start(t0)
 
       const sub = c.createOscillator()
       sub.type = 'sine'
-      sub.frequency.setValueAtTime(80, t0)
-      sub.frequency.exponentialRampToValueAtTime(35, t0 + dur)
+      sub.frequency.setValueAtTime(120, t0)
+      sub.frequency.exponentialRampToValueAtTime(20, t0 + dur)
       sub.connect(out)
       sub.start(t0)
       sub.stop(t0 + dur + 0.05)
 
-      envelope(out.gain, t0, 0.02, 0.2, dur - 0.22, 0.9)
+      envelope(out.gain, t0, 0.01, 0.15, dur - 0.16, 0.85)
       return out
     })
     disconnectAfter(ear.left, t0 + dur + 0.2, ear)
@@ -1125,31 +1117,61 @@ content.sounds = (() => {
     disconnectAfter(ear.left, t0 + dur + 0.3, ear)
   }
 
-  function machineGun(position) {
-    const t0 = now()
-    const c = ctx()
-    const out = c.createGain()
-    out.gain.value = 0.7
-    out.connect(engine.mixer.output())
+  var machineGunVoice = null
+  var machineGunNodes = null
 
-    for (let i = 0; i < 4; i++) {
-      const t = t0 + i * 0.035
+  function startMachineGun(position) {
+    if (machineGunVoice) return
+    const c = ctx()
+    const t0 = now()
+
+    const ear = playSpatial(position, () => {
+      const out = c.createGain()
+      out.gain.value = 0
+
+      const noiseBuf = engine.buffer.whiteNoise({channels: 1, duration: 0.5})
       const noise = c.createBufferSource()
-      noise.buffer = engine.buffer.whiteNoise({channels: 1, duration: 0.08})
+      noise.buffer = noiseBuf
+      noise.loop = true
       const bp = c.createBiquadFilter()
       bp.type = 'bandpass'
-      bp.frequency.value = 1600 + i * 180
-      bp.Q.value = 6
-      const g = c.createGain()
-      g.gain.setValueAtTime(0, t)
-      g.gain.linearRampToValueAtTime(0.22, t + 0.004)
-      g.gain.linearRampToValueAtTime(0, t + 0.055)
-      noise.connect(bp).connect(g).connect(out)
-      noise.start(t)
-      noise.stop(t + 0.08)
-    }
+      bp.frequency.value = 2000
+      bp.Q.value = 3
+      const ng = c.createGain()
+      ng.gain.value = 0.35
 
-    setTimeout(() => { try { out.disconnect() } catch (e) {} }, 350)
+      const sub = c.createOscillator()
+      sub.type = 'sine'
+      sub.frequency.value = 80
+      const sg = c.createGain()
+      sg.gain.value = 0.08
+
+      noise.connect(bp).connect(ng).connect(out)
+      sub.connect(sg).connect(out)
+      noise.start()
+      sub.start()
+
+      envelope(out.gain, t0, 0.02, 0.5, 0.05, 0.6)
+      machineGunNodes = {out, noise, sub, ng, sg, bp}
+      return out
+    })
+    machineGunVoice = ear
+  }
+
+  function stopMachineGun() {
+    if (!machineGunVoice) return
+    const t = now()
+    if (machineGunNodes) {
+      try { machineGunNodes.out.gain.cancelScheduledValues(t); machineGunNodes.out.gain.linearRampToValueAtTime(0, t + 0.1) } catch (e) {}
+      setTimeout(() => {
+        try { machineGunNodes.noise.stop(); machineGunNodes.sub.stop() } catch (e) {}
+        machineGunNodes = null
+      }, 150)
+    }
+    setTimeout(() => {
+      try { machineGunVoice.destroy() } catch (e) {}
+      machineGunVoice = null
+    }, 200)
   }
 
   function missileLaunch(position) {
@@ -1262,7 +1284,8 @@ content.sounds = (() => {
     repulsorActivated,
     rocketActivated,
     rocketExpired,
-    machineGun,
+    startMachineGun,
+    stopMachineGun,
     missileLaunch,
     missileWarning,
     lockTone,

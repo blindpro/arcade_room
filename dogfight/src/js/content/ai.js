@@ -8,8 +8,8 @@ content.ai = (() => {
     let target = null
     let wanderTarget = randomPoint()
     let retargetAt = 0
-    let nextGunAt = engine.time() + Math.random()
-    let nextMissileAt = engine.time() + 2 + Math.random() * 2
+    let nextGunAt = engine.time() + 0.5 + Math.random()
+    let nextMissileAt = engine.time() + 3 + Math.random() * 3
 
     function randomPoint() {
       const b = content.arena.bounds
@@ -37,7 +37,7 @@ content.ai = (() => {
 
     function wallAvoidance() {
       const b = content.arena.bounds
-      const margin = 12
+      const margin = 10
       let ax = 0
       let ay = 0
       const dl = plane.position.x - b.minX
@@ -48,18 +48,20 @@ content.ai = (() => {
       if (dr < margin) ax -= (margin - dr) / margin
       if (db < margin) ay += (margin - db) / margin
       if (dt < margin) ay -= (margin - dt) / margin
-      return {x: ax, y: ay}
+      return {x: ax * 0.8, y: ay * 0.8}
     }
 
     function steerToward(point) {
       const dx = point.x - plane.position.x
       const dy = point.y - plane.position.y
+      const noiseX = (Math.random() - 0.5) * 2
+      const noiseY = (Math.random() - 0.5) * 2
       const len = Math.hypot(dx, dy) || 1
       const avoid = wallAvoidance()
-      const desired = Math.atan2(dy / len + avoid.y * 2.4, dx / len + avoid.x * 2.4)
+      const desired = Math.atan2(dy / len + avoid.y * 2 + noiseY * 0.3, dx / len + avoid.x * 2 + noiseX * 0.3)
       const diff = shortAngle(desired - plane.heading)
-      plane.input.steering = engine.fn.clamp(Math.sin(diff) * 2.2, -1, 1)
-      plane.input.throttle = Math.abs(diff) > 2.2 ? -0.35 : 1
+      plane.input.steering = engine.fn.clamp(Math.sin(diff) * 1.8, -1, 1)
+      plane.input.throttle = Math.abs(diff) > 2.4 ? -0.3 : 1
     }
 
     function update() {
@@ -76,8 +78,8 @@ content.ai = (() => {
         retargetAt = now + 0.4 + Math.random() * 0.4
       }
 
-      if (plane.health < 25 && target) state = 'EVADE'
-      else if (state === 'EVADE' && plane.health > 40) state = target ? 'PURSUE' : 'WANDER'
+      if (plane.health < 20 && target) state = 'EVADE'
+      else if (state === 'EVADE' && plane.health > 55) state = target ? 'PURSUE' : 'WANDER'
 
       if (state === 'EVADE' && target) {
         steerToward({
@@ -97,11 +99,11 @@ content.ai = (() => {
         const lock = game.lockInfo(plane, target)
         if (lock.inGunCone && now >= nextGunAt) {
           game.fireGuns(plane)
-          nextGunAt = now + 0.25 + Math.random() * 0.35
+          nextGunAt = now + 0.35 + Math.random() * 0.5
         }
         if (lock.locked && now >= nextMissileAt && plane.ammo.missiles > 0) {
-          game.fireMissile(plane)
-          nextMissileAt = now + 3.5 + Math.random() * 3
+          if (Math.random() < 0.6) game.fireMissile(plane)
+          nextMissileAt = now + 4 + Math.random() * 4
         }
       }
     }

@@ -31,6 +31,15 @@ app.screen.game = app.screenManager.invent({
       })
     })
 
+    window.addEventListener('keyup', (e) => {
+      if (!content.game.isRunning() || content.game.isPaused()) return
+      if (!app.screenManager.is('game')) return
+      if (e.code === 'Space') {
+        e.preventDefault()
+        content.game.stopGuns()
+      }
+    })
+
     window.addEventListener('keydown', (e) => {
       if (!content.game.isRunning() || content.game.isPaused()) return
       if (!app.screenManager.is('game')) return
@@ -62,7 +71,7 @@ app.screen.game = app.screenManager.invent({
       }
       if (e.code === 'Space') {
         e.preventDefault()
-        if (!e.repeat) content.game.fireGuns()
+        content.game.startGuns()
         return
       }
       if (e.code === 'KeyF') {
