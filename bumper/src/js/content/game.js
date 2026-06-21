@@ -50,6 +50,10 @@ content.game = (() => {
     respawnQueue = [],
     // Deathmatch time-warning marks already announced this round.
     dmWarnedSec = new Set(),
+    // Last Stand mode state.
+    killCount = 0,
+    survivalChallengerIndex = 0,
+    survivalSpawnQueue = [],
     // Local-player bullet-cooldown clock. Mirrors the host-authoritative
     // canFire gate in content.bullets, but lets us play the denial
     // sound immediately without a round-trip. Reset each round.
@@ -102,8 +106,9 @@ content.game = (() => {
   // should call this rather than comparing against `'arcade'` directly,
   // so deathmatch lights up the same systems.
   function hasItems() {
-    return mode === 'arcade' || mode === 'deathmatch'
+    return mode === 'arcade' || mode === 'deathmatch' || mode === 'survival'
   }
+  function isSurvival() { return mode === 'survival' }
 
   // Events whose payloads are forwarded to clients in each snapshot. Each
   // entry must be JSON-serializable (no Car refs — use IDs).
@@ -152,12 +157,14 @@ content.game = (() => {
     spectatorCar: () => spectatorCar,
     isRunning: () => running,
     isPaused: () => paused,
-    getScore: () => playerCar ? (playerCar.score || 0) : 0,
+    getScore: () => isSurvival() ? killCount : (playerCar ? (playerCar.score || 0) : 0),
     livingCount: () => cars.filter((c) => !c.eliminated).length,
     elapsed: () => elapsed,
     mode: () => mode,
     isArcade: () => mode === 'arcade',
     isDeathmatch: () => mode === 'deathmatch',
+    isLastStand: () => isSurvival(),
+    getKills: () => killCount,
     // True for any mode that runs the arcade item layer (currently
     // arcade + deathmatch). Use this to gate hotkeys and inventory
     // readouts; use isArcade() only for things specific to classic
@@ -208,11 +215,18 @@ content.game = (() => {
     content.sounds.eliminate(car.position)
     const killer = byCarId ? cars.find((c) => c.id === byCarId) : null
     const isDm = mode === 'deathmatch'
+    const isLs = isSurvival()
     if (car === playerCar) {
       if (isDm) {
         // No spectator hop in deathmatch — we'll be back in a few seconds.
         content.announcer.say(
           app.i18n.t('ann.youDmRespawnIn', {seconds: DEATHMATCH_RESPAWN_DELAY}),
+          'assertive',
+        )
+      } else if (isLs) {
+        // Last Stand: game over. Announce final kill count; no spectator hop.
+        content.announcer.say(
+          app.i18n.t('ann.youKilledBySurvival', {kills: killCount}),
           'assertive',
         )
       } else {
@@ -227,6 +241,7 @@ content.game = (() => {
       let text
       if (youKilled) {
         text = app.i18n.t('ann.youKilledOther', {label: car.label})
+        if (isLs) killCount++
       } else {
         text = isDm
           ? app.i18n.t('ann.otherDmDown', {label: car.label})
@@ -236,8 +251,12 @@ content.game = (() => {
       if (role !== 'client' && killer) {
         killer.score = (killer.score || 0) + 50
       }
+      // Last Stand: queue a new challenger spawn (host / single-player).
+      if (isLs && role !== 'client' && !car.forfeited) {
+        survivalSpawnQueue.push({at: engine.time() + 2.5})
+      }
       // Spectator hop only matters in modes where eliminations are final.
-      if (!isDm && car === spectatorCar) {
+      if (!isDm && !isLs && car === spectatorCar) {
         autoSpectate({announce: true})
       }
     }
@@ -436,18 +455,27 @@ content.game = (() => {
   content.events.on('roundEnd', ({winnerId, standings}) => {
     if (!running) return
     const youWon = !!(playerCar && playerCar.id === winnerId)
-    const score = playerCar ? (playerCar.score || 0) : 0
     const selfId = playerCar ? playerCar.id : null
+    let score = playerCar ? (playerCar.score || 0) : 0
+    const kills = killCount
 
-    content.sounds.roundEnd(youWon)
-    content.announcer.say(
-      app.i18n.t(youWon ? 'ann.youWonFinal' : 'ann.roundOverFinal', {score}),
-      'assertive',
-    )
+    // Last Stand: score is the kill count, not car.score.
+    if (isSurvival()) {
+      score = killCount
+      // Suppress the generic round-end announcement — the
+      // carEliminated subscriber already announced the game-over
+      // message with the kill count.
+    } else {
+      content.sounds.roundEnd(youWon)
+      content.announcer.say(
+        app.i18n.t(youWon ? 'ann.youWonFinal' : 'ann.roundOverFinal', {score}),
+        'assertive',
+      )
+    }
     // The screen's onRoundOver callback dispatches the 'over' transition,
     // which calls onExit → content.game.end({silent: true}). So we don't
     // call end() here; the screen owns the transition path.
-    if (api.onRoundOver) api.onRoundOver({youWon, score, standings, selfId, mode})
+    if (api.onRoundOver) api.onRoundOver({youWon, score, standings, selfId, mode, kills})
   })
 
   // ---- Arcade event wiring (subscribed once; no-ops if mode != arcade)
@@ -884,6 +912,7 @@ content.game = (() => {
 
     mode = requestedMode === 'arcade' ? 'arcade'
          : requestedMode === 'deathmatch' ? 'deathmatch'
+         : requestedMode === 'survival' ? 'survival'
          : 'chill'
 
     // Pick a random arena map for this round.
@@ -967,6 +996,11 @@ content.game = (() => {
     isLocalHonking = false
     selectedItem = null
 
+    // Last Stand mode state.
+    killCount = 0
+    survivalChallengerIndex = list.length
+    survivalSpawnQueue = []
+
     running = true
     heartbeatNextAt = engine.time() + 1
     lastSweepAt = engine.time()
@@ -1006,6 +1040,9 @@ content.game = (() => {
         t(key, {count: others, colorLine, durationLabel}),
         'assertive',
       )
+    } else if (isSurvival()) {
+      const key = aiCount === 1 ? 'ann.survivalRoundStart1' : 'ann.survivalRoundStartN'
+      content.announcer.say(t(key, {count: aiCount}), 'assertive')
     } else if (aiCount === 0) {
       content.announcer.say(
         mode === 'arcade' ? t('ann.sandboxArcade') : t('ann.sandboxChill'),
@@ -1054,6 +1091,9 @@ content.game = (() => {
     respawnQueue = []
     dmWarnedSec = new Set()
     roundEndsAt = 0
+    killCount = 0
+    survivalChallengerIndex = 0
+    survivalSpawnQueue = []
     // Tear down any horn voices still running (someone holding Space
     // when the round ended, or the screen is about to change).
     content.sounds.stopAllHorns()
@@ -1471,6 +1511,45 @@ content.game = (() => {
         const interval = engine.fn.lerp(0.45, 1.0, ratio)
         heartbeatNextAt = t + interval
       }
+    }
+
+    // Last Stand: drain the spawn queue and check player-eliminated
+    // round-end before the elimination-based path below.
+    if (isSurvival()) {
+      if (survivalSpawnQueue.length) {
+        const now = engine.time()
+        for (let i = survivalSpawnQueue.length - 1; i >= 0; i--) {
+          if (now >= survivalSpawnQueue[i].at) {
+            survivalSpawnQueue.splice(i, 1)
+            spawnSurvivalChallenger()
+          }
+        }
+      }
+      // End the round when the player is eliminated.
+      if (playerCar && playerCar.eliminated && cars.length > 1) {
+        const sorted = cars.slice().sort((a, b) => (b.score || 0) - (a.score || 0))
+        const winner = sorted[0] || null
+        const winnerId = winner ? winner.id : null
+        const standings = cars.slice().map((c) => ({
+          id: c.id,
+          label: c.realLabel || c.label,
+          score: c.score || 0,
+          eliminated: !!c.eliminated,
+          winner: c === winner,
+        }))
+        content.events.emit('roundEnd', {winnerId, standings})
+        return
+      }
+      // Skip the normal elimination-based round-end below.
+      // Periodic snapshot broadcast (host only).
+      if (role === 'host') {
+        snapshotAccum += delta
+        if (snapshotAccum >= snapshotInterval) {
+          snapshotAccum = 0
+          flushSnapshot()
+        }
+      }
+      return
     }
 
     // Deathmatch: drain the respawn queue and check the time-based
@@ -2061,6 +2140,39 @@ content.game = (() => {
     content.events.emit('carRespawned', {
       carId, x: dest.x, y: dest.y, heading,
     })
+  }
+
+  /**
+   * Spawn a new challenger for Last Stand mode. Called when an AI car is
+   * eliminated and a replacement is due. Creates a fresh car at a random
+   * spawn point, wires up its AI, and announces its arrival.
+   */
+  function spawnSurvivalChallenger() {
+    if (!running) return
+    survivalChallengerIndex++
+    const points = content.arena.spawnPoints(1)
+    const point = points[0]
+    const challengerN = survivalChallengerIndex
+    const label = app.i18n.t('label.challenger', {n: challengerN})
+
+    const car = content.car.create({
+      controller: 'ai',
+      label: label,
+      profileIndex: challengerN % 6,
+      position: {x: point.x, y: point.y},
+      heading: point.heading,
+      arcade: true,
+    })
+    car.score = 0
+    car.realLabel = label
+    car.ai = content.ai.create(car, api)
+    cars.push(car)
+
+    content.sounds.teleport({x: point.x, y: point.y})
+    content.announcer.say(
+      app.i18n.t('ann.survivalEnter', {label: label}),
+      'assertive',
+    )
   }
 
   return Object.assign(api, {

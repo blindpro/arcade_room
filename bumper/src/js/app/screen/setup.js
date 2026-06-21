@@ -38,13 +38,16 @@ app.screen.setup = app.screenManager.invent({
   },
   onEnter: function (e = {}) {
     // FSM merges dispatch data into the enter payload.
-    this.state.mode = e.mode === 'arcade' ? 'arcade' : 'chill'
+    this.state.mode = e.mode === 'arcade' ? 'arcade'
+                    : e.mode === 'survival' ? 'survival'
+                    : 'chill'
     const isArcade = this.state.mode === 'arcade'
+    const isSurvival = this.state.mode === 'survival'
     const root = this.rootElement
     root.querySelector('.a-setup--title').textContent =
-      app.i18n.t(isArcade ? 'setup.titleArcade' : 'setup.titleChill')
+      app.i18n.t(isArcade ? 'setup.titleArcade' : isSurvival ? 'setup.titleSurvival' : 'setup.titleChill')
     root.querySelector('.a-setup--subtitle').textContent =
-      app.i18n.t(isArcade ? 'setup.subtitleArcade' : 'setup.subtitleChill')
+      app.i18n.t(isArcade ? 'setup.subtitleArcade' : isSurvival ? 'setup.subtitleSurvival' : 'setup.subtitleChill')
   },
   onFrame: function () {
     const ui = app.controls.ui()

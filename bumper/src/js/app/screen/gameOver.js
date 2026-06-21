@@ -38,14 +38,21 @@ app.screen.gameOver = app.screenManager.invent({
     const best = e.best || 0
     const youWon = !!e.youWon
     const isDm = e.mode === 'deathmatch'
+    const isSurvival = e.mode === 'survival'
     const t = app.i18n.t
 
     root.querySelector('.a-gameOver--title').textContent =
-      t(youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
+      t(isSurvival ? 'gameOver.titleLose' : youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
     root.querySelector('.a-gameOver--result').textContent =
-      t(youWon
+      t(isSurvival
+        ? 'gameOver.resultLoseSurvival'
+        : youWon
           ? (isDm ? 'gameOver.resultWinDm' : 'gameOver.resultWin')
           : (isDm ? 'gameOver.resultLoseDm' : 'gameOver.resultLose'))
+    const scoreLabelEl = root.querySelector('.a-gameOver--scoreLabel')
+    if (scoreLabelEl) {
+      scoreLabelEl.textContent = t(isSurvival ? 'gameOver.kills' : 'gameOver.score')
+    }
     root.querySelector('.a-gameOver--scoreValue').textContent = String(score)
     root.querySelector('.a-gameOver--bestValue').textContent = String(best)
 
@@ -98,7 +105,9 @@ app.screen.gameOver = app.screenManager.invent({
       rematchBtn.parentElement.hidden = !e.multiplayer
     }
 
-    const summary = t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
+    const summary = isSurvival
+      ? t('gameOver.summarySurvival', {kills: e.kills || score, best})
+      : t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
     content.announcer.say(summary, 'assertive')
 
     // Spoken leaderboard for screen-reader users (multiplayer only).

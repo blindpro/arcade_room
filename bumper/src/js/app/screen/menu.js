@@ -5,6 +5,7 @@ app.screen.menu = app.screenManager.invent({
   transitions: {
     chill:    function () { this.change('setup', {mode: 'chill'}) },
     arcade:   function () { this.change('setup', {mode: 'arcade'}) },
+    survival:function () { this.change('setup', {mode: 'survival'}) },
     learn:    function () { this.change('learnSounds') },
     help:     function () { this.change('help') },
     multi:    function () { this.change('multiplayer') },

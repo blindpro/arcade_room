@@ -19,19 +19,21 @@ app.screen.game = app.screenManager.invent({
     this.elScore  = this.rootElement.querySelector('.a-game--scoreValue')
     this.elCars   = this.rootElement.querySelector('.a-game--carsValue')
 
-    content.game.setOnRoundOver(({youWon, score, standings, selfId, mode}) => {
+    content.game.setOnRoundOver(({youWon, score, standings, selfId, mode, kills}) => {
       // Persist personal best (single-player only — MP scores reset).
-      let best = score
+      const displayScore = mode === 'survival' ? kills : score
+      let best = displayScore
       if (!this.state.multiplayer) {
         const data = app.storage.get('bumper') || {}
-        best = Math.max(data.bestScore || 0, score)
+        best = Math.max(data.bestScore || 0, displayScore)
         app.storage.set('bumper', {...data, bestScore: best})
       }
 
       app.screenManager.dispatch('over', {
-        youWon, score, best,
+        youWon, score: displayScore, best,
         multiplayer: this.state.multiplayer,
         standings, selfId, mode,
+        kills: mode === 'survival' ? kills : undefined,
       })
     })
 
@@ -152,6 +154,7 @@ app.screen.game = app.screenManager.invent({
     // FSM merges dispatch data into the enter event payload.
     this.state.mode = e.mode === 'arcade' ? 'arcade'
                     : e.mode === 'deathmatch' ? 'deathmatch'
+                    : e.mode === 'survival' ? 'survival'
                     : 'chill'
     this.state.multiplayer = !!e.role
 
