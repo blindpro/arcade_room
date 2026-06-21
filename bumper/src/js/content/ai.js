@@ -14,13 +14,14 @@ content.ai = (() => {
   function create(car, game) {
     // Per-AI personality, randomized at construction so cars have
     // visibly different temperaments instead of all behaving identically.
-    //   aggression  — lower → longer breathers, more pickup interest
+    //   aggression  — higher → shorter breathers, more charge tendency
     //   bumpBreather— base seconds to peel off after a bump
     //   pursuerTax  — score penalty per other AI already chasing the same car
     const personality = {
-      aggression: 0.75 + Math.random() * 0.5,
-      bumpBreather: 1.1 + Math.random() * 1.4,
+      aggression: 1.0 + Math.random() * 0.8,
+      bumpBreather: 0.4 + Math.random() * 0.8,
       pursuerTax: 6 + Math.random() * 6,
+      chargeRange: 8 + Math.random() * 5,     // m — enter CHARGE within this
     }
 
     let state = 'WANDER',
@@ -32,6 +33,7 @@ content.ai = (() => {
       qPressTimer = 0,
       pickupRetargetTimer = 0,
       breatherUntil = 0,
+      chargeEndAt = 0,              // CHARGE expires after this timestamp
       // Hysteresis state for the forward/reverse throttle decision —
       // see chooseThrottleSign(). Prevents stutter when |diff| wobbles
       // around the bare cos(diff) = -0.2 threshold.
@@ -330,6 +332,15 @@ content.ai = (() => {
             const cd = (content.bullets.config && content.bullets.config.fireCooldown) || 0.4
             nextBulletAttemptAt = t + cd + Math.random() * 0.5
           }
+        } else if (car.inventory.bullets > 0 && Math.random() < 0.35) {
+          // Suppressive fire: shoot straight ahead when no clear target
+          // is in the forward cone.
+          const mgr = game.bullets && game.bullets()
+          if (mgr) {
+            mgr.fire(car, 'forward')
+            const cd = (content.bullets.config && content.bullets.config.fireCooldown) || 0.4
+            nextBulletAttemptAt = t + cd + Math.random() * 0.5
+          }
         } else {
           nextBulletAttemptAt = t + 0.25
         }
@@ -513,10 +524,11 @@ content.ai = (() => {
         qPressTimer += delta
 
         // Switch state based on health
-        if (car.health < 25 && state !== 'FLEE') {
+        if (car.health < 15 && state !== 'FLEE') {
           state = 'FLEE'
           stateTimer = 0
-        } else if (car.health >= 35 && state === 'FLEE') {
+          chargeEndAt = 0
+        } else if (car.health >= 25 && state === 'FLEE') {
           state = 'PURSUE'
           stateTimer = 0
         }
@@ -555,43 +567,66 @@ content.ai = (() => {
           wanderTarget = randomArenaPoint()
         }
 
+        const now = engine.time()
+        const distToTarget = target && !target.eliminated
+          ? Math.hypot(target.position.x - car.position.x, target.position.y - car.position.y)
+          : Infinity
+
+        // CHARGE state: when in PURSUE, target close, and health decent,
+        // the AI rushes full-throttle straight at the target with no
+        // breather. Ends after a collision or when the target moves out
+        // of range.
+        if (state === 'PURSUE' && target && !target.eliminated && distToTarget < personality.chargeRange && car.health > 35 && now >= chargeEndAt) {
+          state = 'CHARGE'
+          chargeEndAt = now + 2.5   // max 2.5s charge before re-evaluating
+        }
+        if (state === 'CHARGE') {
+          if (!target || target.eliminated || now >= chargeEndAt || distToTarget > personality.chargeRange * 1.5) {
+            state = 'PURSUE'
+          } else {
+            // Full-throttle straight at target, ignore pickups.
+            steerToward(target.position)
+            car.input.throttle = engine.fn.clamp(car.input.throttle * 1.3, 0.7, 1)
+            maybeUseItems()
+            return
+          }
+        }
+
         // Post-bump breather: if we're inside ramming range of our target,
         // schedule a short cooldown during which we peel off (or grab a
         // pickup). Stops the AI from pinning the player frame after frame.
-        // Longer in 1v1, so a solo opponent always gets some space.
-        const now = engine.time()
         if (state === 'PURSUE' && target && !target.eliminated && now >= breatherUntil) {
-          const dxt = target.position.x - car.position.x,
-            dyt = target.position.y - car.position.y
-          if (Math.hypot(dxt, dyt) < 2.5) {
+          if (distToTarget < 2.5) {
             const opponents = game.cars.reduce(
               (n, c) => n + (!c.eliminated && c.id !== car.id ? 1 : 0), 0,
             )
-            const lonelyMul = opponents <= 1 ? 1.7 : 1.0
-            breatherUntil = now + personality.bumpBreather * lonelyMul / personality.aggression
+            breatherUntil = now + personality.bumpBreather / personality.aggression
           }
         }
         const breathing = state === 'PURSUE'
           && now < breatherUntil
           && target && !target.eliminated
 
-        if (pickupTarget) {
-          // Verify pickup still exists in manager (could have been grabbed).
+        // During a breather, divert to a nearby pickup instead of
+        // aimlessly peeling away.
+        if (breathing && pickupTarget) {
           const mgr = game.pickups && game.pickups()
           const stillThere = mgr && mgr.items.some((p) => p.id === pickupTarget.id)
           if (!stillThere) pickupTarget = null
         }
-
-        if (pickupTarget) {
+        if (breathing && pickupTarget) {
           const dxp = pickupTarget.position.x - car.position.x,
             dyp = pickupTarget.position.y - car.position.y
           const dp = Math.hypot(dxp, dyp)
-          // Always go for nearby pickups; for far ones, only divert when
-          // we don't have a hot combat target. During a breather, any
-          // known pickup beats sitting and steering away.
-          if (breathing || dp < 14 || state === 'WANDER') {
-            activePoint = pickupTarget.position
-            activeIsPickup = true
+          if (dp < 14) {
+            steerToward(pickupTarget.position)
+            const d = Math.hypot(
+              pickupTarget.position.x - car.position.x,
+              pickupTarget.position.y - car.position.y,
+            )
+            if (d < 2.0) car.input.throttle *= 0.6
+            maybeUseItems()
+            return
           }
         }
 
@@ -618,8 +653,6 @@ content.ai = (() => {
         }
 
         steerToward(activePoint)
-        // Don't try to ram a pickup at full speed — slow a touch when
-        // very close so we don't overshoot.
         if (activeIsPickup) {
           const d = Math.hypot(
             activePoint.x - car.position.x,

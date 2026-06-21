@@ -37,8 +37,9 @@ app.screen.game = app.screenManager.invent({
       })
     })
 
-    // Global hotkeys for HUD readout (F1 score, F2 cars, F3 inventory,
-    // F4 health) and Q sweep. Arcade mode adds A/S/D fire and F mine.
+    // Global hotkeys for HUD readout (F1-F4, F6) and Q sweep. Arcade
+    // mode adds W forward-fire, A/S/D auto-aim fire, E cycle item,
+    // R use item, F mine.
     // Use direct keydown so they work even when the in-game focus is on
     // the section itself.
     window.addEventListener('keydown', (e) => {
@@ -110,7 +111,13 @@ app.screen.game = app.screenManager.invent({
 
       if (e.code === 'KeyW') {
         e.preventDefault()
-        content.game.announcePickups()
+        if (!player.inventory || player.inventory.bullets <= 0) {
+          content.announcer.say(app.i18n.t('game.outOfBullets'), 'polite')
+        } else if (!content.game.fireBullet('forward')) {
+          const remaining = Math.max(1, Math.ceil(content.game.bulletCooldownRemaining()))
+          const key = remaining === 1 ? 'game.bulletCooldown1' : 'game.bulletCooldownN'
+          content.announcer.say(app.i18n.t(key, {seconds: remaining}), 'polite')
+        }
         return
       }
 
@@ -129,6 +136,9 @@ app.screen.game = app.screenManager.invent({
       } else if (e.code === 'KeyE' && !e.repeat) {
         e.preventDefault()
         content.game.cycleItem()
+      } else if (e.code === 'KeyR' && !e.repeat) {
+        e.preventDefault()
+        content.game.announcePickups()
       } else if (e.code === 'Tab') {
         e.preventDefault()
         if (!content.game.useSelectedItem()) {

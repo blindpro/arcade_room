@@ -20,10 +20,10 @@
  */
 content.bullets = (() => {
   const config = {
-    speed: 14.0,                // m/s
-    maxLifetime: 2.2,           // seconds
-    directHitRadius: 0.25,
-    grazeRadius: 0.95,
+    speed: 20.0,                // m/s
+    maxLifetime: 2.0,           // seconds
+    directHitRadius: 0.4,
+    grazeRadius: 1.2,
     directDamage: 30,
     grazeDamageMin: 8,
     grazeDamageMax: 18,
@@ -170,11 +170,11 @@ content.bullets = (() => {
       if (!owner.inventory || owner.inventory.bullets <= 0) return false
       if (!canFire(owner)) return false
 
-      // All three shots auto-aim. A/D restrict candidates to the
-      // matching half-space (so "shoot right" never picks a left
-      // target); S considers any forward target.
+      // A/D restrict candidates to the matching half-space
+      // (so "shoot right" never picks a left target); S considers any
+      // forward target. 'forward' skips auto-aim and fires straight ahead.
       const side = nudge === 'left' ? 'left' : nudge === 'right' ? 'right' : null
-      const target = pickTarget(owner, game.cars, side)
+      const target = (nudge === 'forward') ? null : pickTarget(owner, game.cars, side)
       const dir = computeFireDirection(owner, target, nudge)
 
       // Spawn just in front of car so it doesn't insta-collide with self.

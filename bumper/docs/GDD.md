@@ -153,20 +153,180 @@ split — wall damage is whatever you drove into). Below
 frame a car spends in contact with a wall while moving deducts a small
 **scrape damage** (`scrapeRate = 0.4 hp/m`).
 
+### 4.6 Collision scenarios
+
+All examples assume: mass = 1, `carRestitution = 0.85`,
+`aggressorDamageShare = 0.25`, `damageScaleCar = 6.0`, `minDamage = 1.5`.
+Car radius = 1.2 m.
+
+---
+
+**Scenario A — Rear-end ram (aggressor rams stationary car)**
+
+Car A moving at 6 m/s, car B stationary. A hits B from behind.
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| `distSq` | overlap check | `< (2.4)²` → collision |
+| `vAlongN` | A's velocity along normal (B→A) | `6.0 m/s` |
+| `impulse j` | `-(1+0.85) * 6.0 / 2` | `-5.55` |
+| A impulse | `+(-5.55) * 1 * 1` | A velocity `-5.55 → remains 0.45 m/s` |
+| B impulse | `-(-5.55) * 1 * 1` | B velocity `+5.55 m/s` |
+| `damage` | `6.0 * 6.0` | `36.0` base |
+| Aggressor | `velA_onN = 6.0, velB_onN = 0.0` | A is aggressor |
+| A takes | `36.0 * 0.25` | **9 damage** |
+| B takes | `36.0 * 0.75` | **27 damage** |
+
+Result: A wins the trade 3:1 — punishes being stationary.
+
+---
+
+**Scenario B — Head-on collision**
+
+Both cars at 4 m/s toward each other.
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| `vAlongN` | `4.0 - (-4.0) = 8.0 m/s` | closing speed = 8 |
+| `impulse j` | `-(1+0.85) * 8.0 / 2` | `-7.4` |
+| Each recoils | `±7.4 * mass⁻¹` | Both reverse at 3.4 m/s |
+| `damage` | `8.0 * 6.0` | `48.0` base |
+| Aggressor | Whoever has larger vel toward other | whichever was going faster |
+| Winner takes | `48.0 * 0.25` | **12 damage** |
+| Loser takes | `48.0 * 0.75` | **36 damage** |
+
+Result: head-ons hurt both, but the faster car still wins the trade.
+
+---
+
+**Scenario C — T-bone (perpendicular)**
+
+Car A moving +x at 5 m/s, car B moving +y at 3 m/s. A hits B's left side.
+
+The contact normal points from A's center to B's center. If the cars
+overlap at roughly 45°, the normal is ~(0.7, 0.7).
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| `vAlongN` | `5*0.7 + 3*0.7 = 5.6 m/s` | |
+| `damage` | `5.6 * 6.0` | `33.6` base |
+| Vel A→B | `5*0.7 + 3*0.7 = 5.6` | |
+| Vel B→A | `-(5*0.7 + 3*0.7) = -5.6` | |
+| Aggressor | 5.6 > -5.6 | A is aggressor |
+| A takes | `33.6 * 0.25` | **8.4 damage** |
+| B takes | `33.6 * 0.75` | **25.2 damage** |
+
+Result: the faster-moving car into the side of a slower one dominates.
+
+---
+
+**Scenario D — Sideswipe (same direction, slight angle)**
+
+Car A and B both moving roughly +x, A slightly behind and angling left
+to bump B's rear-right quarter. Closing speed along normal is low
+(~1 m/s).
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| `vAlongN` | `~1.0 m/s` | |
+| `damage` | `1.0 * 6.0` | `6.0` |
+| Below minDamage? | No (6.0 ≥ 1.5) | applies |
+| Aggressor | A has larger vel toward B | A is aggressor |
+| A takes | `6.0 * 0.25` | **1.5 damage** |
+| B takes | `6.0 * 0.75` | **4.5 damage** |
+
+Result: low-speed sideswipes are cheap for the initiator.
+
+---
+
+**Scenario E — Wall collision at speed**
+
+Car hits a wall head-on at 5 m/s. `wallRestitution = 0.55`,
+`damageScaleWall = 2.5`.
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| Penetration | `pos - (wall - radius) > 0` | clamped |
+| `vAlongN` | `5.0 m/s` toward wall | |
+| Impulse | `-(1+0.55) * 5.0` | `-7.75` → velocity reflected to -2.25 |
+| `damage` | `5.0 * 2.5` | **12.5 damage** |
+
+---
+
+**Scenario F — Wall scrape**
+
+Car slides along a wall at 3 m/s tangent speed after a glancing hit.
+Scrape damage accumulates per frame.
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| Tangent speed | `≥ scrapeMinSpeed (0.6)` | scrape active |
+| Per frame | `0.4 * 3.0 * delta` | 1.2 hp/s drain |
+| Over 2 s | `1.2 * 2` | **2.4 damage** |
+
+---
+
+**Scenario G — Both cars eliminated on same frame**
+
+If A and B collide and both drop to ≤ 0 HP, `carEliminated` fires
+for both during the same `update()` loop. The round-end check in
+`content.game` (`alive.length <= 1`) runs after all collisions are
+resolved, so it correctly sees zero survivors and emits `roundEnd`
+with no winner. If only one survives, that car wins.
+
+---
+
+**Scenario H — Three-car pileup**
+
+Resolution order is the nested loop `for i, for j > i` in `update()`.
+Cars A, B, C overlapping after physics integrate:
+
+1. `resolveCarCar(A, B)` — separates A↔B, applies impulses, damage.
+2. `resolveCarCar(A, C)` — A may have moved from step 1, but we
+   re-check overlap and resolve if still touching.
+3. `resolveCarCar(B, C)` — final pair.
+
+Each pair resolves independently with its own contact normal and
+aggressor assignment. A car can take damage from multiple collisions
+in one frame (e.g. A from B and A from C). This is intentional —
+getting sandwiched is dangerous.
+
+---
+
+**Scenario I — Rocket boost ram**
+
+Car A activates rocket (`rocketSpeed = 20`, `rocketDamageMultiplier = 5`)
+and rams car B at full speed.
+
+| Step | Computation | Result |
+|------|-------------|--------|
+| `vAlongN` | `~20.0 m/s` | rocket overrides velocity |
+| Base damage | `20 * 6.0` | `120.0` |
+| With multiplier | `120.0 * 5` | **600.0** |
+| A takes (0.25) | `600.0 * 0.25` | **150.0** (likely fatal) |
+| B takes (0.75) | `600.0 * 0.75` | **450.0** (instant kill) |
+
+Rocket ram is high-risk for the aggressor too — effective as a
+last-resort trade.
+
 ---
 
 ## 5. AI
 
-A simple finite-state machine per AI car. Updated at 10 Hz.
+A simple finite-state machine per AI car. Updated at 60 Hz (every frame).
 
 States:
 
 - **WANDER** — drives toward a random arena point. Re-rolls the target every
   3–6 s or whenever a target is reached.
 - **PURSUE** — has a target enemy car. Computes a steering vector toward the
-  target and full-throttles forward.
-- **FLEE** — own health < 25. Picks the corner farthest from the nearest
-  threat and drives there.
+  target and full-throttles forward. Re-targets every 0.5 s.
+- **CHARGE** — entered from PURSUE when the target is within `chargeRange`
+  (8–13 m, per-AI personality) and health > 35. Full-throttle straight at
+  the target, no breather, ignores pickups. Lasts up to 2.5 s, exits when
+  the target moves out of range, is eliminated, or the timer expires.
+- **FLEE** — own health < 15. Drives away from the nearest threat. Exits
+  back to PURSUE when health >= 25.
 
 Target selection (re-evaluated every 0.5 s):
 

@@ -415,13 +415,15 @@ don't make sense against a single AI list.
   `app.controls.game()` returns sustained `{x, y, rotate}` for driving.
   Don't poll one expecting the other.
 - **WASD is reserved for arcade actions; driving is arrow-keys-only**
-  on the keyboard side (gamepad uses its own axes). `KeyW` triggers
-  the pickup sweep, `KeyA`/`KeyS`/`KeyD` fire bullets (left/center/right
-  nudge), `KeyF` drops a mine — all gated on arcade mode and edge-
-  triggered via window keydown in `app/screen/game.js`. Re-adding any of
-  WASD to `moveForward`/`moveBackward`/`turnLeft`/`turnRight`/`strafe*`
-  will silently fire the arcade action *and* drive the car at the same
-  time. WASD remains in `uiUp`/`uiDown`/`uiLeft`/`uiRight` for menus.
+  on the keyboard side (gamepad uses its own axes). `KeyW` fires a bullet
+  straight ahead (forward nudge — no auto-aim), `KeyA`/`KeyS`/`KeyD` fire
+  bullets (left/center/right auto-aim nudge), `KeyE` cycles inventory items,
+  `KeyR` uses the currently selected item, `KeyF` drops a mine — all gated
+  on arcade mode and edge-triggered via window keydown in
+  `app/screen/game.js`. Re-adding any of WASD to
+  `moveForward`/`moveBackward`/`turnLeft`/`turnRight`/`strafe*` will
+  silently fire the arcade action *and* drive the car at the same time.
+  WASD remains in `uiUp`/`uiDown`/`uiLeft`/`uiRight` for menus.
 - **Browser autoplay policy.** The splash screen explicitly calls
   `engine.context().resume()` and `engine.loop.resume()` on first user
   gesture. Skipping the splash will leave the AudioContext suspended.

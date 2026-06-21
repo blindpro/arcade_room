@@ -91,8 +91,9 @@ content.game = (() => {
   const DM_WARN_MARKS = [60, 30, 10]
 
   // Ordered list of cycleable item types (in selection order). Excludes
-  // shields (passive) and bullets (dedicated A/S/D keys). When the player
-  // presses E, we iterate through this list, skipping any with 0 count.
+  // shields (passive) and bullets (dedicated A/S/D/W keys). When the
+  // player presses E, we iterate through this list, skipping any with 0
+  // count. R (or Tab) uses the selected item.
   const CYCLE_ORDER = ['boost', 'teleport', 'repulsor', 'rocket', 'mine']
   // Maps cycle type to the inventory field name (which may differ).
   const INV_FIELD = {
@@ -2005,6 +2006,38 @@ content.game = (() => {
     return used
   }
 
+  /**
+   * One-key item use: cycles to the next available item and uses it
+   * immediately. Announces the result. No-op if no items are available.
+   */
+  function useNextItem() {
+    if (!hasItems() || !playerCar || playerCar.eliminated || !playerCar.inventory) return false
+    const inv = playerCar.inventory
+
+    // Build available list in cycle order.
+    const available = CYCLE_ORDER.filter((t) => {
+      const field = INV_FIELD[t]
+      return field && typeof inv[field] === 'number' && inv[field] > 0
+    })
+    if (!available.length) {
+      selectedItem = null
+      content.announcer.say(app.i18n.t('game.noItems'), 'polite')
+      return false
+    }
+
+    // If the current selection is valid, try to use it.
+    if (selectedItem && available.includes(selectedItem)) {
+      const used = useSelectedItem()
+      if (used) return true
+    }
+
+    // Advance to the next available item and use it.
+    const curIdx = selectedItem ? available.indexOf(selectedItem) : -1
+    const nextIdx = (curIdx + 1) % available.length
+    selectedItem = available[nextIdx]
+    return useSelectedItem()
+  }
+
   // Horn (hold Space). Plays in both chill and arcade. Each peer keeps
   // a spatial voice per honking car; start/stop ride the event bus so
   // every peer follows along. Cooldown is the natural 100 ms beep
@@ -2201,6 +2234,7 @@ content.game = (() => {
     activateRocket,
     cycleItem,
     useSelectedItem,
+    useNextItem,
     startHonk,
     stopHonk,
     setSpectator,
