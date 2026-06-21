@@ -113,7 +113,13 @@ content.asteroids = (() => {
   function frame(dt) {
     for (const r of list) {
       r.spinPhase += r.spinRate * dt
-      P().integrate(r, dt)
+      r.x += r.vx * dt
+      r.y += r.vy * dt
+      const fw = K().FIELD_W, fh = K().FIELD_H
+      if (r.x < 0) { r.x = -r.x; r.vx = -r.vx }
+      else if (r.x > fw) { r.x = 2 * fw - r.x; r.vx = -r.vx }
+      if (r.y < 0) { r.y = -r.y; r.vy = -r.vy }
+      else if (r.y > fh) { r.y = 2 * fh - r.y; r.vy = -r.vy }
     }
   }
 

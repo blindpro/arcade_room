@@ -2232,6 +2232,36 @@ content.audio = (() => {
     }, 500)
   }
 
+  // -------------- menu cues --------------
+  function menuNavigate() {
+    ensureStarted()
+    const c = ctxFn()
+    const t0 = now()
+    const o = c.createOscillator()
+    o.type = 'sine'
+    o.frequency.setValueAtTime(440, t0)
+    o.frequency.exponentialRampToValueAtTime(220, t0 + 0.04)
+    const env = c.createGain(); env.gain.value = 0
+    o.connect(env).connect(_state.sfxBus)
+    adsr(env.gain, t0, 0.003, 0.01, 0.04, 0.12)
+    o.start(t0); o.stop(t0 + 0.06)
+    setTimeout(() => { try { o.disconnect(); env.disconnect() } catch (e) {} }, 200)
+  }
+  function menuSelect() {
+    ensureStarted()
+    const c = ctxFn()
+    const t0 = now()
+    const o = c.createOscillator()
+    o.type = 'sine'
+    o.frequency.setValueAtTime(520, t0)
+    o.frequency.exponentialRampToValueAtTime(780, t0 + 0.10)
+    const env = c.createGain(); env.gain.value = 0
+    o.connect(env).connect(_state.sfxBus)
+    adsr(env.gain, t0, 0.004, 0.02, 0.12, 0.26)
+    o.start(t0); o.stop(t0 + 0.16)
+    setTimeout(() => { try { o.disconnect(); env.disconnect() } catch (e) {} }, 400)
+  }
+
   return {
     start: ensureStarted,
     frame,
@@ -2240,6 +2270,9 @@ content.audio = (() => {
     setTargetLock,
     setProximityBeep,
     isStarted: () => _state.started,
+    // Menu cues
+    menuNavigate,
+    menuSelect,
     // One-shots
     emitBullet,
     emitExplosion,

@@ -28,9 +28,11 @@ app.screen.menu = app.screenManager.invent({
       if (!btn) return
       const action = btn.dataset.action
       if (action === 'quit') {
+        content.audio.menuSelect()
         app.quit()
         return
       }
+      content.audio.menuSelect()
       app.screenManager.dispatch(action)
     })
   },
@@ -65,11 +67,12 @@ app.screen.menu = app.screenManager.invent({
         return
       }
       const ui = app.controls.ui()
-      if (ui.up) app.utility.focus.setPreviousFocusable(this.rootElement)
-      if (ui.down) app.utility.focus.setNextFocusable(this.rootElement)
+      if (ui.up) { content.audio.menuNavigate(); app.utility.focus.setPreviousFocusable(this.rootElement) }
+      if (ui.down) { content.audio.menuNavigate(); app.utility.focus.setNextFocusable(this.rootElement) }
       if (ui.enter || ui.space || ui.confirm) {
         const f = app.utility.focus.get(this.rootElement)
         if (f && f.dataset.action) {
+          content.audio.menuSelect()
           if (f.dataset.action === 'quit') app.quit()
           else app.screenManager.dispatch(f.dataset.action)
         }

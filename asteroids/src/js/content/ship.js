@@ -108,7 +108,16 @@ content.ship = (() => {
       }
     }
 
-    P().integrate(state, dt, true)
+    // Integrate with soft damp, then clamp to field edges (no wrap)
+    state.vx *= K().SOFT_DAMP
+    state.vy *= K().SOFT_DAMP
+    state.x += state.vx * dt
+    state.y += state.vy * dt
+    const fw = K().FIELD_W, fh = K().FIELD_H
+    if (state.x < 0) { state.x = 0; state.vx = 0 }
+    else if (state.x > fw) { state.x = fw; state.vx = 0 }
+    if (state.y < 0) { state.y = 0; state.vy = 0 }
+    else if (state.y > fh) { state.y = fh; state.vy = 0 }
   }
 
   function getPosition() { return {x: state.x, y: state.y} }
