@@ -1439,7 +1439,13 @@
       else if (action === 'help') showHelp()
       else if (action === 'host') showNameEntry('host')
       else if (action === 'join') showNameEntry('join')
-      else if (action === 'quit') window.location.href = '../../'
+      else if (action === 'quit') {
+        if (window.ElectronApi && window.ElectronApi.quit) {
+          window.ElectronApi.quit()
+        } else {
+          window.location.href = '../../'
+        }
+      }
       else if (action === 'lang') I18n.toggle()
     }
 
