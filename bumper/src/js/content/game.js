@@ -1438,6 +1438,11 @@ content.game = (() => {
           if (hasItems() && ev.aggressor === b && b.rocketUntil && engine.time() < b.rocketUntil) {
             dmg *= content.physics.config.rocketDamageMultiplier
           }
+          // AI aggressor bonus (with random variance)
+          if (ev.aggressor === b && b.controller === 'ai' && a.controller !== 'ai') {
+            const aiScale = content.physics.config.aiDamageScale
+            dmg *= aiScale * (0.6 + Math.random() * 0.8)
+          }
           content.car.applyDamage(a, dmg, b)
           dealtA = prev - a.health
         }
@@ -1446,6 +1451,11 @@ content.game = (() => {
           let dmg = ev.damage * bShare
           if (hasItems() && ev.aggressor === a && a.rocketUntil && engine.time() < a.rocketUntil) {
             dmg *= content.physics.config.rocketDamageMultiplier
+          }
+          // AI aggressor bonus (with random variance)
+          if (ev.aggressor === a && a.controller === 'ai' && b.controller !== 'ai') {
+            const aiScale = content.physics.config.aiDamageScale
+            dmg *= aiScale * (0.6 + Math.random() * 0.8)
           }
           content.car.applyDamage(b, dmg, a)
           dealtB = prev - b.health

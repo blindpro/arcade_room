@@ -18,10 +18,10 @@ content.ai = (() => {
     //   bumpBreather— base seconds to peel off after a bump
     //   pursuerTax  — score penalty per other AI already chasing the same car
     const personality = {
-      aggression: 1.0 + Math.random() * 0.8,
-      bumpBreather: 0.4 + Math.random() * 0.8,
+      aggression: 0.6 + Math.random() * 0.6,
+      bumpBreather: 0.6 + Math.random() * 0.8,
       pursuerTax: 6 + Math.random() * 6,
-      chargeRange: 8 + Math.random() * 5,     // m — enter CHARGE within this
+      chargeRange: 6 + Math.random() * 4,     // m — enter CHARGE within this
     }
 
     let state = 'WANDER',

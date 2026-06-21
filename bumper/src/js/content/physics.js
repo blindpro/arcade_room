@@ -12,14 +12,20 @@ content.physics = (() => {
     maxSpeed: 6.5,
     carRestitution: 0.85,
     wallRestitution: 0.55,
-    damageScaleCar: 6.0,
+    damageScaleCar: 4.0,
     damageScaleWall: 2.5,
-    minDamage: 3.0,
-    // Attack incentive: aggressor (the car driving harder *into* the
-    // contact normal) eats only this share of ev.damage. Victim takes
-    // the rest. 0.35 means ramming costs you about half what the rammed
-    // car takes (up from 0.25), so the AI can't endlessly trade up.
-    aggressorDamageShare: 0.35,
+    minDamage: 2.0,
+    // Attack incentive: equal split so no inherent advantage for the
+    // car that's driving harder into the contact normal. Previously 0.35
+    // which meant the aggressor (usually the AI with perfect tracking)
+    // took far less damage while dishing far more — making the AI nearly
+    // unbeatable in a head-on trade.
+    aggressorDamageShare: 0.5,
+    // AI aggressor damage bonus: multiplies damage when an AI car is the
+    // aggressor against a non-AI victim. Randomised so hits feel varied:
+    // applied as scale * (0.6 + random * 0.8) → 60-140% of base scale.
+    // 1.8 avg → AI hits ~1.8x harder than a player would in the same bump.
+    aiDamageScale: 1.8,
     scrapeRate: 0.4,            // hp/s while scraping
     scrapeMinSpeed: 0.6,
     // Speed-burst pickup: while car.boostUntil > engine.time(), the
