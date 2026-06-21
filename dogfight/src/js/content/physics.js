@@ -8,8 +8,8 @@ content.physics = (() => {
     maxSpeed: 15,
     wallRestitution: 0.35,
     wallDamageScale: 4.0,
-    ramDamageScale: 12.0,
-    ramSelfShare: 0.82,
+    ramDamageScale: 5.0,
+    ramSelfShare: 0.5,
     minDamage: 2.0,
     stallSpeed: 3.0,
   }

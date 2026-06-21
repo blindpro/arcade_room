@@ -1,0 +1,42 @@
+Feature ideas to make Dogfight more interesting
+===============================================
+
+1. Pickups / Power-ups
+   Scatter items around the arena that despawn and respawn:
+   - Health repair kits
+   - Ammo restock (missiles)
+   - Temporary shield (absorbs one hit)
+   - Speed boost pickup (shorter, stronger than the shift boost)
+   - Proximity mines (lay behind you, detonate when an enemy passes near)
+
+2. AI difficulty levels
+   Let the player choose "Easy / Normal / Hard" before starting.
+   Easy: AI turns slower, fires less often, worse aim.
+   Hard: AI leads targets, dodges missiles, uses boost.
+
+3. Different plane classes
+   Let the player pick a plane before the round:
+   - Interceptor: fast, frail, rapid-fire guns
+   - Bomber: slow, tough, heavy guns, extra missiles
+   - Scout: balanced speed, longer missile lock range
+
+4. More game modes
+   - Team deathmatch (2v2, 3v3)
+   - Last stand (waves of AI, survive as long as possible)
+   - Target practice (stationary or slow-moving drones, score chase)
+
+5. Arena hazards
+   - Moving obstacles that cross the arena
+   - Turbulence zones that push planes off course
+   - Dead zones that drain health over time
+
+6. Combo / streak system
+   Award bonus score for rapid consecutive kills or hits.
+   Announce streaks ("Double kill!", "Triple kill!") to build tension.
+
+7. Replay / best-round summary
+   After each match, show the player's stats:
+   - Kills, deaths, damage dealt/taken
+   - Accuracy (shots fired vs hits)
+   - Longest streak
+   Compare against their personal bests.

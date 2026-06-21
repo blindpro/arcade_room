@@ -62,7 +62,7 @@ content.sounds = (() => {
 
   function collision(position, severity = 0.5) {
     const t0 = now()
-    const dur = 0.5
+    const dur = 0.6
     const ear = playSpatial(position, () => {
       const c = ctx()
       const out = c.createGain()
@@ -73,27 +73,38 @@ content.sounds = (() => {
       src.buffer = buf
       const bp = c.createBiquadFilter()
       bp.type = 'bandpass'
-      bp.frequency.setValueAtTime(800 + 1200 * severity, t0)
-      bp.frequency.exponentialRampToValueAtTime(100, t0 + dur)
+      bp.frequency.setValueAtTime(1200 + 1000 * severity, t0)
+      bp.frequency.exponentialRampToValueAtTime(80, t0 + dur)
       bp.Q.value = 2
       const ng = c.createGain()
       ng.gain.value = 0
-      envelope(ng.gain, t0, 0.005, 0.05, dur - 0.055, 0.5 * severity + 0.3)
+      envelope(ng.gain, t0, 0.003, 0.08, dur - 0.083, 0.7 * severity + 0.4)
       src.connect(bp).connect(ng).connect(out)
       src.start(t0)
 
       const crunch = c.createOscillator()
       crunch.type = 'sawtooth'
-      crunch.frequency.setValueAtTime(60, t0)
-      crunch.frequency.exponentialRampToValueAtTime(20, t0 + dur * 0.6)
+      crunch.frequency.setValueAtTime(80, t0)
+      crunch.frequency.exponentialRampToValueAtTime(15, t0 + dur * 0.7)
       const cg = c.createGain()
       cg.gain.value = 0
-      envelope(cg.gain, t0, 0.005, 0.1, dur * 0.4, 0.25)
+      envelope(cg.gain, t0, 0.003, 0.12, dur * 0.5, 0.35)
       crunch.connect(cg).connect(out)
       crunch.start(t0)
       crunch.stop(t0 + dur)
 
-      envelope(out.gain, t0, 0.005, 0.08, dur - 0.085, engine.fn.clamp(0.3 + severity * 0.5, 0.3, 0.9))
+      const sub = c.createOscillator()
+      sub.type = 'sine'
+      sub.frequency.setValueAtTime(80, t0)
+      sub.frequency.exponentialRampToValueAtTime(25, t0 + dur * 0.6)
+      const sg = c.createGain()
+      sg.gain.value = 0
+      envelope(sg.gain, t0, 0.002, 0.1, dur * 0.5, 0.5 * severity + 0.2)
+      sub.connect(sg).connect(out)
+      sub.start(t0)
+      sub.stop(t0 + dur)
+
+      envelope(out.gain, t0, 0.003, 0.1, dur - 0.103, engine.fn.clamp(0.5 + severity * 0.6, 0.4, 1.0))
       return out
     })
     disconnectAfter(ear.left, t0 + dur + 0.2, ear)
@@ -238,38 +249,52 @@ content.sounds = (() => {
 
   function eliminate(position) {
     const t0 = now()
-    const dur = 1.0
+    const dur = 1.2
     const ear = playSpatial(position, () => {
       const c = ctx()
       const out = c.createGain()
       out.gain.value = 0
+
+      const impact = c.createOscillator()
+      impact.type = 'sine'
+      impact.frequency.setValueAtTime(120, t0)
+      impact.frequency.exponentialRampToValueAtTime(15, t0 + dur * 0.8)
+      const ig = c.createGain()
+      ig.gain.value = 0
+      envelope(ig.gain, t0, 0.003, 0.2, dur * 0.6, 0.8)
+      impact.connect(ig).connect(out)
+      impact.start(t0)
+      impact.stop(t0 + dur + 0.05)
 
       const noiseBuf = engine.buffer.whiteNoise({channels: 1, duration: dur})
       const noise = c.createBufferSource()
       noise.buffer = noiseBuf
       const bp = c.createBiquadFilter()
       bp.type = 'bandpass'
-      bp.frequency.setValueAtTime(1200, t0)
-      bp.frequency.exponentialRampToValueAtTime(80, t0 + dur)
+      bp.frequency.setValueAtTime(2000, t0)
+      bp.frequency.exponentialRampToValueAtTime(60, t0 + dur)
       bp.Q.value = 1.5
       const ng = c.createGain()
       ng.gain.value = 0
-      envelope(ng.gain, t0, 0.01, 0.15, dur - 0.16, 0.7)
+      envelope(ng.gain, t0, 0.005, 0.25, dur - 0.255, 0.85)
       noise.connect(bp).connect(ng).connect(out)
       noise.start(t0)
 
       const sub = c.createOscillator()
-      sub.type = 'sine'
-      sub.frequency.setValueAtTime(120, t0)
-      sub.frequency.exponentialRampToValueAtTime(20, t0 + dur)
-      sub.connect(out)
+      sub.type = 'sawtooth'
+      sub.frequency.setValueAtTime(50, t0)
+      sub.frequency.exponentialRampToValueAtTime(8, t0 + dur)
+      const sg = c.createGain()
+      sg.gain.value = 0
+      envelope(sg.gain, t0, 0.01, 0.3, dur - 0.31, 0.5)
+      sub.connect(sg).connect(out)
       sub.start(t0)
       sub.stop(t0 + dur + 0.05)
 
-      envelope(out.gain, t0, 0.01, 0.15, dur - 0.16, 0.85)
+      envelope(out.gain, t0, 0.003, 0.2, dur - 0.203, 0.9)
       return out
     })
-    disconnectAfter(ear.left, t0 + dur + 0.2, ear)
+    disconnectAfter(ear.left, t0 + dur + 0.25, ear)
   }
 
   // --- non-spatial UI / global cues ----------------------------------
@@ -540,6 +565,121 @@ content.sounds = (() => {
     o.stop(t0 + 0.22)
     envelope(out.gain, t0, 0.005, 0.04, 0.16, 0.45)
     o.onended = () => out.disconnect()
+  }
+
+  function gunsCooled() {
+    const t0 = now()
+    const c = ctx()
+    const out = c.createGain()
+    out.gain.value = 0
+    out.connect(engine.mixer.output())
+
+    const o = c.createOscillator()
+    o.type = 'triangle'
+    o.frequency.setValueAtTime(520, t0)
+    o.frequency.linearRampToValueAtTime(680, t0 + 0.1)
+    o.connect(out)
+    o.start(t0)
+    o.stop(t0 + 0.15)
+    envelope(out.gain, t0, 0.01, 0.06, 0.1, 0.18)
+    o.onended = () => { try { out.disconnect() } catch (e) {} }
+  }
+
+  function nearLock() {
+    const t0 = now()
+    const c = ctx()
+    const out = c.createGain()
+    out.gain.value = 0
+    out.connect(engine.mixer.output())
+
+    const o = c.createOscillator()
+    o.type = 'sine'
+    o.frequency.value = 440
+    o.connect(out)
+    o.start(t0)
+    o.stop(t0 + 0.12)
+    envelope(out.gain, t0, 0.008, 0.04, 0.072, 0.1)
+    o.onended = () => { try { out.disconnect() } catch (e) {} }
+  }
+
+  // --- Missile flyby voices ------------------------------------------
+
+  var missileVoices = new Map()
+
+  function createMissileVoice(id, position) {
+    if (missileVoices.has(id)) return
+    const c = ctx()
+    const t0 = now()
+
+    const ear = engine.ear.binaural.create()
+    ear.to(engine.mixer.output())
+
+    const out = c.createGain()
+    out.gain.value = 0
+
+    const noiseBuf = engine.buffer.whiteNoise({channels: 1, duration: 1.0})
+    const noise = c.createBufferSource()
+    noise.buffer = noiseBuf
+    noise.loop = true
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = 900
+    bp.Q.value = 2
+    const ng = c.createGain()
+    ng.gain.value = 0.18
+
+    const osc = c.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.value = 320
+    const og = c.createGain()
+    og.gain.value = 0.1
+
+    noise.connect(bp).connect(ng).connect(out)
+    osc.connect(og).connect(out)
+    noise.start(t0)
+    osc.start(t0)
+
+    out.gain.setValueAtTime(0, t0)
+    out.gain.linearRampToValueAtTime(0.25, t0 + 0.15)
+
+    ear.from(out)
+
+    missileVoices.set(id, {ear, out, noise, osc})
+    updateMissileVoice(id, position)
+    return id
+  }
+
+  function updateMissileVoice(id, position) {
+    const v = missileVoices.get(id)
+    if (!v) return
+    const listener = engine.position.getVector()
+    const lq = engine.position.getQuaternion()
+    const yaw = 2 * Math.atan2(lq.z, lq.w)
+    const cos = Math.cos(-yaw), sin = Math.sin(-yaw)
+    v.ear.update({
+      x: (position.x - listener.x) * cos - (position.y - listener.y) * sin,
+      y: (position.x - listener.x) * sin + (position.y - listener.y) * cos,
+      z: 0,
+    })
+  }
+
+  function destroyMissileVoice(id) {
+    const v = missileVoices.get(id)
+    if (!v) return
+    missileVoices.delete(id)
+    try {
+      v.out.gain.linearRampToValueAtTime(0, ctx().currentTime + 0.1)
+      setTimeout(() => {
+        try { v.noise.stop() } catch (e) {}
+        try { v.osc.stop() } catch (e) {}
+        try { v.out.disconnect() } catch (e) {}
+        try { v.ear.destroy() } catch (e) {}
+      }, 150)
+    } catch (e) {}
+  }
+
+  function destroyAllMissileVoices() {
+    for (const id of [...missileVoices.keys()]) destroyMissileVoice(id)
   }
 
   // --- Arcade-mode sounds --------------------------------------------
@@ -1117,61 +1257,62 @@ content.sounds = (() => {
     disconnectAfter(ear.left, t0 + dur + 0.3, ear)
   }
 
-  var machineGunVoice = null
-  var machineGunNodes = null
+  var machineGunInterval = null
+  var machineGunLastPos = {x: 0, y: 0}
 
-  function startMachineGun(position) {
-    if (machineGunVoice) return
-    const c = ctx()
+  function gunCrack(position) {
     const t0 = now()
-
+    const dur = 0.05
     const ear = playSpatial(position, () => {
+      const c = ctx()
       const out = c.createGain()
       out.gain.value = 0
 
-      const noiseBuf = engine.buffer.whiteNoise({channels: 1, duration: 0.5})
-      const noise = c.createBufferSource()
-      noise.buffer = noiseBuf
-      noise.loop = true
-      const bp = c.createBiquadFilter()
-      bp.type = 'bandpass'
-      bp.frequency.value = 2000
-      bp.Q.value = 3
+      const buf = engine.buffer.whiteNoise({channels: 1, duration: dur + 0.1})
+      const src = c.createBufferSource()
+      src.buffer = buf
+      const hp = c.createBiquadFilter()
+      hp.type = 'highpass'
+      hp.frequency.value = 1200
       const ng = c.createGain()
-      ng.gain.value = 0.35
+      ng.gain.value = 0
+      envelope(ng.gain, t0, 0.001, 0.005, dur - 0.006, 0.35)
+      src.connect(hp).connect(ng).connect(out)
+      src.start(t0)
+      src.stop(t0 + dur + 0.05)
 
-      const sub = c.createOscillator()
-      sub.type = 'sine'
-      sub.frequency.value = 80
-      const sg = c.createGain()
-      sg.gain.value = 0.08
+      const thump = c.createOscillator()
+      thump.type = 'sine'
+      thump.frequency.setValueAtTime(250, t0)
+      thump.frequency.exponentialRampToValueAtTime(60, t0 + dur)
+      const tg = c.createGain()
+      tg.gain.value = 0
+      envelope(tg.gain, t0, 0.001, 0.008, dur - 0.009, 0.2)
+      thump.connect(tg).connect(out)
+      thump.start(t0)
+      thump.stop(t0 + dur + 0.05)
 
-      noise.connect(bp).connect(ng).connect(out)
-      sub.connect(sg).connect(out)
-      noise.start()
-      sub.start()
-
-      envelope(out.gain, t0, 0.02, 0.5, 0.05, 0.6)
-      machineGunNodes = {out, noise, sub, ng, sg, bp}
+      envelope(out.gain, t0, 0.001, 0.008, dur - 0.009, 0.4)
       return out
     })
-    machineGunVoice = ear
+    disconnectAfter(ear.left, t0 + dur + 0.2, ear)
+  }
+
+  function startMachineGun(position) {
+    machineGunLastPos.x = position.x
+    machineGunLastPos.y = position.y
+    if (machineGunInterval) return
+    machineGunInterval = setInterval(() => {
+      gunCrack(machineGunLastPos)
+    }, 180)
+    gunCrack(machineGunLastPos)
   }
 
   function stopMachineGun() {
-    if (!machineGunVoice) return
-    const t = now()
-    if (machineGunNodes) {
-      try { machineGunNodes.out.gain.cancelScheduledValues(t); machineGunNodes.out.gain.linearRampToValueAtTime(0, t + 0.1) } catch (e) {}
-      setTimeout(() => {
-        try { machineGunNodes.noise.stop(); machineGunNodes.sub.stop() } catch (e) {}
-        machineGunNodes = null
-      }, 150)
+    if (machineGunInterval) {
+      clearInterval(machineGunInterval)
+      machineGunInterval = null
     }
-    setTimeout(() => {
-      try { machineGunVoice.destroy() } catch (e) {}
-      machineGunVoice = null
-    }, 200)
   }
 
   function missileLaunch(position) {
@@ -1233,8 +1374,10 @@ content.sounds = (() => {
     setTimeout(() => { try { out.disconnect() } catch (e) {} }, 700)
   }
 
-  function lockTone(strength = 0.5) {
-    const s = engine.fn.clamp(strength, 0, 1)
+  var lockToneVoice = null
+
+  function startLockTone() {
+    if (lockToneVoice) return
     const c = ctx()
     const t0 = now()
     const out = c.createGain()
@@ -1243,12 +1386,24 @@ content.sounds = (() => {
 
     const o = c.createOscillator()
     o.type = 'sine'
-    o.frequency.value = engine.fn.lerp(760, 1500, s)
+    o.frequency.value = 880
     o.connect(out)
-    o.start(t0)
-    o.stop(t0 + 0.08)
-    envelope(out.gain, t0, 0.004, 0.025, 0.055, engine.fn.lerp(0.08, 0.18, s))
-    o.onended = () => { try { out.disconnect() } catch (e) {} }
+    o.start()
+
+    out.gain.linearRampToValueAtTime(0.12, t0 + 0.05)
+    lockToneVoice = {out, o}
+  }
+
+  function stopLockTone() {
+    if (!lockToneVoice) return
+    const t = ctx().currentTime
+    lockToneVoice.out.gain.cancelScheduledValues(t)
+    lockToneVoice.out.gain.linearRampToValueAtTime(0, t + 0.05)
+    setTimeout(() => {
+      try { lockToneVoice.o.stop() } catch (e) {}
+      try { lockToneVoice.out.disconnect() } catch (e) {}
+      lockToneVoice = null
+    }, 100)
   }
 
   return {
@@ -1269,6 +1424,12 @@ content.sounds = (() => {
     roundStart,
     roundEnd,
     heartbeat,
+    gunsCooled,
+    nearLock,
+    createMissileVoice,
+    updateMissileVoice,
+    destroyMissileVoice,
+    destroyAllMissileVoices,
     pickupHealth,
     pickupShield,
     pickupBullets,
@@ -1288,7 +1449,8 @@ content.sounds = (() => {
     stopMachineGun,
     missileLaunch,
     missileWarning,
-    lockTone,
+    startLockTone,
+    stopLockTone,
     pickupRepulsor,
     pickupRocket,
   }

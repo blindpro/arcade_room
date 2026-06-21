@@ -78,6 +78,10 @@ app.screen.game = app.screenManager.invent({
         e.preventDefault()
         if (!e.repeat) content.game.fireMissile()
       }
+      if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
+        e.preventDefault()
+        if (!e.repeat) content.game.activateBoost()
+      }
     })
   },
   onEnter: function (e = {}) {

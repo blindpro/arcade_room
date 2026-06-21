@@ -142,6 +142,8 @@ app.i18n = (() => {
       'ann.target': 'Nearest target: {line}.',
       'ann.gunsOverheated': 'Guns overheated.',
       'ann.gunsCooled': 'Guns cooled.',
+      'ann.boostEngaged': 'Boost engaged.',
+      'ann.boostCooldown': 'Boost on cooldown.',
 
       'label.you': 'You',
       'label.ai': 'Bandit {n}',

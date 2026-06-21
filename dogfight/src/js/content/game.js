@@ -1,6 +1,6 @@
 content.game = (() => {
   const config = {
-    gunRange: 18,
+    gunRange: 17,
     gunCone: 0.20,
     gunDamage: 8,
     gunCooldown: 0.18,
@@ -33,6 +33,10 @@ content.game = (() => {
   const GUN_HEAT_MAX = 100
   const GUN_HEAT_RATE = 50
   const GUN_COOL_RATE = 35
+  let boostCooldownAt = 0
+  const BOOST_DURATION = 0.6
+  const BOOST_COOLDOWN = 5
+  const BOOST_IMPULSE = 12
 
   function t(key, params) {
     return app.i18n ? app.i18n.t(key, params) : key
@@ -62,10 +66,10 @@ content.game = (() => {
         profileIndex: i,
         position: {x: spawns[i].x, y: spawns[i].y},
         heading: spawns[i].heading,
-        health: 150,
+        health: 180,
         radius: 1.15,
       })
-      plane.throttle = isPlayer ? 0.45 : 0.65
+      plane.throttle = isPlayer ? 0.45 : 0.5
       api.cars.push(plane)
       if (isPlayer) playerCar = plane
     }
@@ -95,6 +99,7 @@ content.game = (() => {
     gunsFiring = false
     gunHeat = 0
     content.sounds.stopMachineGun()
+    content.sounds.destroyAllMissileVoices()
     if (targeting) {
       targeting.destroy()
       targeting = null
@@ -136,7 +141,10 @@ content.game = (() => {
     } else {
       if (gunHeat > 0) {
         gunHeat = Math.max(0, gunHeat - GUN_COOL_RATE * delta)
-        if (gunHeat <= 0) content.announcer.say(t('ann.gunsCooled'), 'polite')
+        if (gunHeat <= 0) {
+          content.announcer.say(t('ann.gunsCooled'), 'polite')
+          content.sounds.gunsCooled()
+        }
       }
     }
   }
@@ -149,6 +157,40 @@ content.game = (() => {
   function stopGuns() {
     gunsFiring = false
     content.sounds.stopMachineGun()
+  }
+
+  function activateBoost() {
+    if (!running || !playerCar || playerCar.eliminated) return false
+    const now = engine.time()
+    if (now < boostCooldownAt) {
+      content.announcer.say(t('ann.boostCooldown'), 'polite')
+      return false
+    }
+    const hx = Math.cos(playerCar.heading)
+    const hy = Math.sin(playerCar.heading)
+    playerCar.velocity.x += hx * BOOST_IMPULSE
+    playerCar.velocity.y += hy * BOOST_IMPULSE
+    playerCar.boostUntil = now + BOOST_DURATION
+    boostCooldownAt = now + BOOST_COOLDOWN
+    content.sounds.boostActivated(playerCar.position)
+    content.announcer.say(t('ann.boostEngaged'), 'assertive')
+    return true
+  }
+
+  function updateBoost(delta) {
+    if (!playerCar || playerCar.eliminated) return
+    const now = engine.time()
+    if (playerCar.boostUntil > now) {
+      const hx = Math.cos(playerCar.heading)
+      const hy = Math.sin(playerCar.heading)
+      playerCar.velocity.x += hx * config.gunCooldown * 8 * delta
+      playerCar.velocity.y += hy * config.gunCooldown * 8 * delta
+    }
+  }
+
+  function isBoostReady() {
+    if (!playerCar || playerCar.eliminated) return false
+    return engine.time() >= boostCooldownAt
   }
 
   function update(delta) {
@@ -164,10 +206,11 @@ content.game = (() => {
 
     resolveCollisions()
     updateGuns(delta)
-    updateMissiles(delta)
     updateAudioStage()
+    updateMissiles(delta)
     if (targeting) targeting.update()
     updateLockTone()
+    updateBoost(delta)
     checkRoundEnd()
   }
 
@@ -335,15 +378,18 @@ content.game = (() => {
 
     owner.ammo.missiles--
     owner.ammo.nextMissileAt = now + config.missileCooldown
+    const missileId = `m-${Math.random().toString(36).slice(2)}`
+    const missilePos = {x: owner.position.x, y: owner.position.y}
     missiles.push({
-      id: `m-${Math.random().toString(36).slice(2)}`,
+      id: missileId,
       owner,
       target: lock.target,
-      position: {x: owner.position.x, y: owner.position.y},
+      position: missilePos,
       heading: owner.heading,
       bornAt: now,
       warnedAt: 0,
     })
+    content.sounds.createMissileVoice(missileId, missilePos)
     content.sounds.missileLaunch(owner.position)
     if (owner === playerCar) {
       content.announcer.say(t('ann.missileFired', {count: owner.ammo.missiles}), 'assertive')
@@ -358,8 +404,14 @@ content.game = (() => {
     const now = engine.time()
     const live = []
     for (const missile of missiles) {
-      if (!missile.owner || missile.owner.eliminated || !missile.target || missile.target.eliminated) continue
-      if (now - missile.bornAt > config.missileLifetime) continue
+      if (!missile.owner || missile.owner.eliminated || !missile.target || missile.target.eliminated) {
+        content.sounds.destroyMissileVoice(missile.id)
+        continue
+      }
+      if (now - missile.bornAt > config.missileLifetime) {
+        content.sounds.destroyMissileVoice(missile.id)
+        continue
+      }
 
       const dx = missile.target.position.x - missile.position.x
       const dy = missile.target.position.y - missile.position.y
@@ -370,6 +422,8 @@ content.game = (() => {
       missile.position.x += Math.cos(missile.heading) * config.missileSpeed * delta
       missile.position.y += Math.sin(missile.heading) * config.missileSpeed * delta
 
+      content.sounds.updateMissileVoice(missile.id, missile.position)
+
       const dist = Math.hypot(missile.target.position.x - missile.position.x, missile.target.position.y - missile.position.y)
       if (missile.target === playerCar && now - missile.warnedAt > 1.2) {
         missile.warnedAt = now
@@ -377,10 +431,14 @@ content.game = (() => {
       }
       if (dist <= missile.target.radius + config.missileHitRadius) {
         content.sounds.explosion(missile.position, 1)
+        content.sounds.destroyMissileVoice(missile.id)
         damagePlane(missile.target, config.missileDamage, missile.owner, 'missile')
         continue
       }
       live.push(missile)
+    }
+    for (const missile of missiles) {
+      if (!live.includes(missile)) content.sounds.destroyMissileVoice(missile.id)
     }
     missiles = live
   }
@@ -406,23 +464,36 @@ content.game = (() => {
     }
   }
 
+  var lockActive = false
+  var prevLockedTarget = null
+
   function updateLockTone() {
-    if (!playerCar || playerCar.eliminated) return
+    if (!playerCar || playerCar.eliminated) {
+      if (lockActive) { lockActive = false; content.sounds.stopLockTone() }
+      return
+    }
     const lock = bestLock(playerCar)
-    if (!lock || !lock.info.locked) {
-      lastLockedId = null
+    if (!lock) {
+      if (lockActive) { lockActive = false; content.sounds.stopLockTone() }
+      prevLockedTarget = null
       return
     }
     const now = engine.time()
-    if (lastLockedId !== lock.target.id) {
-      lastLockedId = lock.target.id
-      content.announcer.say(t('ann.missileLock', {label: lock.target.label}), 'polite')
-    }
-    const closeness = 1 - engine.fn.clamp(lock.info.diff / config.missileCone, 0, 1)
-    const interval = engine.fn.lerp(0.45, 0.09, closeness)
-    if (now >= nextLockToneAt) {
-      content.sounds.lockTone(closeness)
-      nextLockToneAt = now + interval
+    if (lock.info.locked) {
+      if (!lockActive) {
+        lockActive = true
+        content.sounds.startLockTone()
+      }
+      if (prevLockedTarget !== lock.target.id) {
+        prevLockedTarget = lock.target.id
+        content.announcer.say(t('ann.missileLock', {label: lock.target.label}), 'polite')
+      }
+    } else {
+      if (lockActive) { lockActive = false; content.sounds.stopLockTone() }
+      if (lock.info.inGunCone && now >= nextLockToneAt) {
+        content.sounds.nearLock()
+        nextLockToneAt = now + 0.35
+      }
     }
   }
 
@@ -514,6 +585,8 @@ content.game = (() => {
     stopGuns,
     fireGuns,
     fireMissile,
+    activateBoost,
+    isBoostReady,
     lockInfo,
     player: () => playerCar,
     listenerCar,

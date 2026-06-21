@@ -61,7 +61,7 @@ content.ai = (() => {
       const desired = Math.atan2(dy / len + avoid.y * 2 + noiseY * 0.3, dx / len + avoid.x * 2 + noiseX * 0.3)
       const diff = shortAngle(desired - plane.heading)
       plane.input.steering = engine.fn.clamp(Math.sin(diff) * 1.8, -1, 1)
-      plane.input.throttle = Math.abs(diff) > 2.4 ? -0.3 : 1
+      plane.input.throttle = Math.abs(diff) > 2.4 ? -0.3 : 0.7
     }
 
     function update() {
@@ -78,8 +78,8 @@ content.ai = (() => {
         retargetAt = now + 0.4 + Math.random() * 0.4
       }
 
-      if (plane.health < 20 && target) state = 'EVADE'
-      else if (state === 'EVADE' && plane.health > 55) state = target ? 'PURSUE' : 'WANDER'
+      if (plane.health < 45 && target) state = 'EVADE'
+      else if (state === 'EVADE' && plane.health > 80) state = target ? 'PURSUE' : 'WANDER'
 
       if (state === 'EVADE' && target) {
         steerToward({
@@ -99,11 +99,11 @@ content.ai = (() => {
         const lock = game.lockInfo(plane, target)
         if (lock.inGunCone && now >= nextGunAt) {
           game.fireGuns(plane)
-          nextGunAt = now + 0.35 + Math.random() * 0.5
+          nextGunAt = now + 0.2 + Math.random() * 0.25
         }
         if (lock.locked && now >= nextMissileAt && plane.ammo.missiles > 0) {
-          if (Math.random() < 0.6) game.fireMissile(plane)
-          nextMissileAt = now + 4 + Math.random() * 4
+          if (Math.random() < 0.8) game.fireMissile(plane)
+          nextMissileAt = now + 3 + Math.random() * 3
         }
       }
     }
