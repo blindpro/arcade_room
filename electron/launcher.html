@@ -165,6 +165,56 @@
   function uiBack()  { uiTick(500, 0.22, 0.07) }
 
   // ---------------------------------------------------------------------------
+  // Background music — quiet synthesized drone
+  // ---------------------------------------------------------------------------
+  var musicNodes = null
+
+  function startMusic() {
+    if (musicNodes) return
+    var c = getCtx()
+    if (c.state === 'suspended') return
+
+    var master = c.createGain()
+    master.gain.value = 0.04
+    master.connect(c.destination)
+
+    // Low drone
+    var osc1 = c.createOscillator()
+    osc1.type = 'sine'
+    osc1.frequency.value = 55
+    osc1.connect(master)
+
+    // Fifth above
+    var osc2 = c.createOscillator()
+    osc2.type = 'sine'
+    osc2.frequency.value = 82.5
+    osc2.connect(master)
+
+    // Slow LFO for gentle movement
+    var lfo = c.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 0.15
+    var lfoGain = c.createGain()
+    lfoGain.gain.value = 10
+    lfo.connect(lfoGain)
+    lfoGain.connect(osc2.frequency)
+
+    osc1.start()
+    osc2.start()
+    lfo.start()
+
+    musicNodes = [master, osc1, osc2, lfo, lfoGain]
+  }
+
+  function stopMusic() {
+    if (!musicNodes) return
+    for (var i = 1; i < musicNodes.length; i++) {
+      try { musicNodes[i].stop() } catch (_e) {}
+    }
+    musicNodes = null
+  }
+
+  // ---------------------------------------------------------------------------
   // Game list
   // ---------------------------------------------------------------------------
   var games = (window.ElectronApi && window.ElectronApi.listGames)
@@ -221,12 +271,33 @@
     }
   })
 
+  // Start background music on first user gesture
+  document.addEventListener('click', function resumeMusic() {
+    startMusic()
+    document.removeEventListener('click', resumeMusic)
+  }, {once: true})
+
   // ---------------------------------------------------------------------------
   // Keyboard navigation
   // ---------------------------------------------------------------------------
   document.addEventListener('keydown', function (e) {
     var launcher = document.querySelector('.a-launcher')
     if (!launcher || !launcher.contains(document.activeElement)) return
+
+    // First-letter navigation: press a letter/digit to jump to the first
+    // game whose name starts with that character.
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      var ch = e.key.toLowerCase()
+      var buttons = getButtons()
+      for (var i = 0; i < buttons.length; i++) {
+        var txt = buttons[i].textContent.toLowerCase().trim()
+        if (txt.charAt(0) === ch) {
+          e.preventDefault()
+          buttons[i].focus()
+          return
+        }
+      }
+    }
 
     if (e.key === 'ArrowDown' || e.key === 'ArrowRight') {
       e.preventDefault()

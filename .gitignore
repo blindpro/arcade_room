@@ -25,3 +25,6 @@ Thumbs.db
 .idea/
 .vscode/
 .aider*
+
+# Reserved Windows device name created by external tooling
+nul
