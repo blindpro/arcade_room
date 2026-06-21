@@ -96,7 +96,9 @@ content.ai = (() => {
         return
       }
 
-      const targetX = getDelayedX()
+      const rawTarget = getDelayedX()
+      const noise = (Math.random() - 0.5) * content.table.AI_TARGET_NOISE
+      const targetX = rawTarget + noise
       const targetStep = Math.max(0, Math.min(
         content.table.NUM_STEPS - 1,
         Math.floor(targetX)
