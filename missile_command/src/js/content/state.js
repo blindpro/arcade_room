@@ -4,7 +4,7 @@ content.state = (() => {
   return {
     // Score / progression
     score: 0,
-    nextBonusAt: 10000,    // single rolling extra-city threshold
+    nextBonusAt: 10000,
     wave: 0,
 
     // FSM phase: see content.game STATE_*
@@ -17,7 +17,7 @@ content.state = (() => {
     // Wave-clear stash (for the bonus formula)
     surviving: {missiles: 0, cities: 0},
 
-    // Reset to a fresh game (called from menu → start).
+    // Reset to a fresh game (called from menu -> start).
     resetForNewGame() {
       this.score = 0
       this.nextBonusAt = 10000

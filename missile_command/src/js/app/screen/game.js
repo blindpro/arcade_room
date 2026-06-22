@@ -13,7 +13,7 @@ app.screen.game = app.screenManager.invent({
     citiesEl: null,
     ammoEl: null,
     fKey: {F1: false, F2: false, F3: false, F4: false},
-    fireKey: {KeyZ: false, KeyX: false, KeyC: false, Space: false},
+    fireKey: {KeyA: false, KeyS: false, KeyD: false, Space: false},
     pauseKey: false,
     helpKey: false,
   },
@@ -25,9 +25,6 @@ app.screen.game = app.screenManager.invent({
     this.state.ammoEl   = root.querySelector('.a-game--ammo-value')
     this.refreshHud()
 
-    // Eat browser default for F1, F3, F5 globally — F1 opens Help, F3
-    // opens Find, F5 reloads. F2 and F4 are usually safe but include for
-    // symmetry. F11 is left alone so users can fullscreen.
     window.addEventListener('keydown', (e) => {
       if (e.key === 'F1' || e.key === 'F2' || e.key === 'F3' || e.key === 'F4' || e.key === 'F5') {
         if (app.screenManager.is('game')) e.preventDefault()
@@ -53,15 +50,12 @@ app.screen.game = app.screenManager.invent({
     content.events.on('battery-depleted', (e) => {
       app.announce.polite(app.i18n.tPool('ann.depleted', {battery: app.i18n.t(e.labelKey)}))
       this.refreshHud()
-      // If all batteries are out, escalate
       if (content.batteries.totalAmmo() === 0) {
         app.announce.assertive(app.i18n.t('ann.allDepleted'))
       }
     })
     content.events.on('battery-fire', () => this.refreshHud())
     content.events.on('game-over', (e) => {
-      // pendingGameOver delay: hold ~1.6s so the final swoop / blast can
-      // finish before the screen transition.
       setTimeout(() => app.screenManager.dispatch('gameOver'), 1600)
       app.announce.assertive(app.i18n.t('ann.gameOver', {score: e.score, wave: e.wave}))
     })
@@ -69,8 +63,7 @@ app.screen.game = app.screenManager.invent({
   onEnter: function () {
     content.audio.start()
     content.audio.setStaticListener(content.world.LISTENER_YAW)
-    content.crosshair.attach()
-    content.crosshair.reset()
+    content.batteries.init()
     this.refreshHud()
     try { app.onlineScores.openSession().catch(() => {}) } catch (e) {}
     app.announce.polite(app.i18n.t('ann.score', {
@@ -79,15 +72,13 @@ app.screen.game = app.screenManager.invent({
       cities: content.cities.aliveCount(),
     }))
     this.state.fKey = {F1: false, F2: false, F3: false, F4: false}
-    this.state.fireKey = {KeyZ: false, KeyX: false, KeyC: false, Space: false}
+    this.state.fireKey = {KeyA: false, KeyS: false, KeyD: false, Space: false}
     this.state.pauseKey = false
     this.state.helpKey = false
   },
   onExit: function () {
-    content.crosshair.silenceAll()
-    content.crosshair.detach()
+    content.batteries.silenceAll()
     if (content.audio && content.audio.silenceAll) content.audio.silenceAll()
-    // Stop every persistent threat voice and clear in-flight projectiles.
     content.threats.clearAll()
     content.outgoing.clear()
     content.blasts.clear()
@@ -98,27 +89,25 @@ app.screen.game = app.screenManager.invent({
 
       const k = engine.input.keyboard
 
-      // F1–F4 status hotkeys (rising-edge)
       this._fEdge('F1', k.is('F1'), () => this.announceScore())
       this._fEdge('F2', k.is('F2'), () => this.announceCities())
       this._fEdge('F3', k.is('F3'), () => this.announceAmmo())
       this._fEdge('F4', k.is('F4'), () => this.announceWave())
 
-      // Battery fire (rising edge)
-      this._fireEdge('KeyZ', k.is('KeyZ'), 0)
-      this._fireEdge('KeyX', k.is('KeyX'), 1)
-      this._fireEdge('KeyC', k.is('KeyC'), 2)
-      // Space → nearest battery with ammo
+      // Battery fire: A = left (0), S = center (1), D = right (2)
+      this._fireEdge('KeyA', k.is('KeyA'), 0)
+      this._fireEdge('KeyS', k.is('KeyS'), 1)
+      this._fireEdge('KeyD', k.is('KeyD'), 2)
+      // Space -> center battery (index 1)
       const spaceDown = k.is('Space')
       if (spaceDown && !this.state.fireKey.Space) {
-        const cx = content.crosshair.getPosition().x
-        const idx = content.batteries.nearestWithAmmo(cx)
-        if (idx >= 0) this._fireBattery(idx)
+        const idx = 1
+        const b = content.batteries.get(idx)
+        if (b && b.ammo > 0) this._fireBattery(idx)
         else content.audio.emitDepletion()
       }
       this.state.fireKey.Space = spaceDown
 
-      // Pause: P or Esc (capture via app.controls.ui for Esc, raw for P).
       const pDown = k.is('KeyP')
       if (pDown && !this.state.pauseKey) {
         this.state.pauseKey = true
@@ -135,7 +124,6 @@ app.screen.game = app.screenManager.invent({
         return
       }
 
-      // Tick the game.
       const delta = (e && e.delta) || 1/60
       content.game.update(delta)
       content.audio.frameCities()
@@ -153,11 +141,8 @@ app.screen.game = app.screenManager.invent({
     this.state.fireKey[key] = isDown
   },
   _fireBattery: function (i) {
-    const c = content.crosshair.getPosition()
-    const fired = content.batteries.fire(i, c.x, c.y)
+    const fired = content.batteries.fire(i)
     if (!fired) {
-      // Out of ammo or cooldown — emit a tiny depletion blip (only on
-      // empty, not cooldown, so we don't spam).
       const b = content.batteries.get(i)
       if (b && b.ammo === 0) content.audio.emitDepletion()
     }

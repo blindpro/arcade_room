@@ -1,49 +1,20 @@
-// Missile Command bindings: arrow keys (or WASD) for crosshair X/Y;
-// Z X C to fire from L/C/R battery (handled directly in game-screen
-// onFrame); Space fires from nearest battery with ammo. Esc/P pauses.
+// Missile Command bindings (overhaul): A / S / D / Space fire batteries
+// directly. No crosshair movement — the game is zone-based.
 //
-// keyboard.js returns:
-//   state.x from forward/backward (ArrowUp/Down or W/S)
-//   state.y from strafe (ArrowLeft/Right or A/D)
-//   state.rotate from turn (unused here)
-// crosshair.js maps state.x → crosshair.y and state.y → crosshair.x.
+// A = fire left battery
+// S = fire center battery
+// D = fire right battery
+// Space = fire center battery (alternative)
+// Esc/P = pause
 app.controls.mappings = {
-  // Crosshair Y axis
-  moveAxis: [
-    {type: 'gamepad', key: 1},
-  ],
-  moveBackward: [
-    {type: 'keyboard', key: 'ArrowDown'},
-    {type: 'keyboard', key: 'KeyS'},
-    {type: 'keyboard', key: 'Numpad5'},
-    {type: 'gamepad', key: 6},
-  ],
-  moveForward: [
-    {type: 'keyboard', key: 'ArrowUp'},
-    {type: 'keyboard', key: 'KeyW'},
-    {type: 'keyboard', key: 'Numpad8'},
-    {type: 'gamepad', key: 7},
-  ],
-
-  // Crosshair X axis
-  strafeAxis: [
-    {type: 'gamepad', key: 0},
-  ],
-  strafeLeft: [
-    {type: 'keyboard', key: 'ArrowLeft'},
-    {type: 'keyboard', key: 'KeyA'},
-    {type: 'keyboard', key: 'Numpad4'},
-  ],
-  strafeRight: [
-    {type: 'keyboard', key: 'ArrowRight'},
-    {type: 'keyboard', key: 'KeyD'},
-    {type: 'keyboard', key: 'Numpad6'},
-  ],
-
-  // Unused, but defined to keep app.controls.update() happy.
-  turnAxis: [
-    {type: 'gamepad', key: 2},
-  ],
+  // Movement axes — unused in overhaul but keep minimal defs for controls.
+  moveAxis: [],
+  moveBackward: [],
+  moveForward: [],
+  strafeAxis: [],
+  strafeLeft: [],
+  strafeRight: [],
+  turnAxis: [],
   turnLeft: [],
   turnRight: [],
 
@@ -53,25 +24,21 @@ app.controls.mappings = {
   uiDown: [
     {type: 'keyboard', key: 'ArrowDown'},
     {type: 'keyboard', key: 'KeyS'},
-    {type: 'keyboard', key: 'Numpad5'},
     {type: 'gamepad', key: 13},
   ],
   uiLeft: [
     {type: 'keyboard', key: 'ArrowLeft'},
     {type: 'keyboard', key: 'KeyA'},
-    {type: 'keyboard', key: 'Numpad4'},
     {type: 'gamepad', key: 14},
   ],
   uiRight: [
     {type: 'keyboard', key: 'ArrowRight'},
     {type: 'keyboard', key: 'KeyD'},
-    {type: 'keyboard', key: 'Numpad6'},
     {type: 'gamepad', key: 15},
   ],
   uiUp: [
     {type: 'keyboard', key: 'ArrowUp'},
     {type: 'keyboard', key: 'KeyW'},
-    {type: 'keyboard', key: 'Numpad8'},
     {type: 'gamepad', key: 12},
   ],
   back: [

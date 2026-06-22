@@ -33,8 +33,9 @@ app.screen.learn = app.screenManager.invent({
       {key: 'cityValencia',  label: 'learn.cityValencia',  play: () => this.previewCity(3)},
       {key: 'cityZaragoza',  label: 'learn.cityZaragoza',  play: () => this.previewCity(4)},
       {key: 'cityBilbao',    label: 'learn.cityBilbao',    play: () => this.previewCity(5)},
-      {key: 'crosshairPing', label: 'learn.crosshairPing', play: () => this.previewCrosshairPing()},
-      {key: 'lockTone',      label: 'learn.lockTone',      play: () => this.previewLockTone()},
+      {key: 'lockToneL', label: 'learn.lockToneL', play: () => this.previewLockTone(180, -1)},
+      {key: 'lockToneC', label: 'learn.lockToneC', play: () => this.previewLockTone(240, 0)},
+      {key: 'lockToneR', label: 'learn.lockToneR', play: () => this.previewLockTone(320, 1)},
       {key: 'thunkL', label: 'learn.thunkL', play: () => content.audio.batteryThunk('L')},
       {key: 'thunkC', label: 'learn.thunkC', play: () => content.audio.batteryThunk('C')},
       {key: 'thunkR', label: 'learn.thunkR', play: () => content.audio.batteryThunk('R')},
@@ -210,48 +211,24 @@ app.screen.learn = app.screenManager.invent({
     prop.setGainImmediate(0.7)
     setTimeout(() => prop.setGainImmediate(0), 1800)
   },
-  previewCrosshairPing: function () {
+  previewLockTone: function (pitch, pan) {
     const v = content.audio.makeProp({
       build: (out) => {
-        const ctl = content.audio.buildCrosshairPing(out)
+        const ctl = content.audio.buildBatteryLockTone(out, {pitch, panPos: pan})
         this._lastCtl = ctl
         return ctl.stop
       },
-      x: 0, y: 0.5, gain: 1.0,
-    })
-    this.state.activeVoice = v
-    this.state.activeVoiceEnd = engine.time() + 2.8
-    let t = 0
-    const id = setInterval(() => {
-      t += 0.06
-      if (!this.state.activeVoice || !this._lastCtl) { clearInterval(id); return }
-      const yc = (Math.sin(t * 1.4) + 1) * 0.5
-      v.setPosition(0, yc); v._update()
-      this._lastCtl.setFreq(660 + 1320 * yc)
-      this._lastCtl.pulse(0.12, 0.18)
-      if (t > 2.6) clearInterval(id)
-    }, 230)
-  },
-  previewLockTone: function () {
-    const v = content.audio.makeProp({
-      build: (out) => {
-        const ctl = content.audio.buildLockTone(out)
-        this._lastCtl = ctl
-        return ctl.stop
-      },
-      x: 0, y: 0.5, gain: 1.0,
+      x: pan, y: 0.45, gain: 1.0,
     })
     this.state.activeVoice = v
     this.state.activeVoiceEnd = engine.time() + 3.6
-    // Sweep both gain and tremolo from 0 to 1 across 3 seconds, simulating
-    // the crosshair sliding in toward a perfect lock. By t=3s the wobble
-    // should be unmistakable (deep amplitude tremolo + pitch vibrato).
     let t = 0
     const id = setInterval(() => {
       t += 0.06
       if (!this.state.activeVoice || !this._lastCtl) { clearInterval(id); return }
       const k = Math.min(1, t / 3.0)
-      this._lastCtl.setGain(0.28 * k)
+      v.setGain(0.28 * k)
+      v._update()
       this._lastCtl.setTremolo(k * k)
       if (t > 3.6) clearInterval(id)
     }, 60)

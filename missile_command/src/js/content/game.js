@@ -1,12 +1,8 @@
-// Top-level game FSM and scoring. The game-screen onFrame calls
-// content.game.update(delta); this module updates batteries, outgoing,
-// blasts, threats, wave, and the crosshair, plus advances phase
-// transitions.
 content.game = (() => {
-  const STATE_INTRO       = 'intro'        // brief delay before first wave starts
-  const STATE_READY       = 'ready'        // tiny "wave N" beat
+  const STATE_INTRO       = 'intro'
+  const STATE_READY       = 'ready'
   const STATE_PLAY        = 'play'
-  const STATE_WAVE_CLEAR  = 'waveClear'    // delay so audio finishes
+  const STATE_WAVE_CLEAR  = 'waveClear'
   const STATE_GAME_OVER   = 'gameOver'
 
   const S = () => content.state
@@ -27,7 +23,6 @@ content.game = (() => {
   function _beginWave() {
     S().wave += 1
     content.wave.start(S().wave)
-    // Refill ammo at the start of every wave.
     content.batteries.init()
     S().phase = STATE_READY
     S().phaseTimer = 1.0
@@ -62,23 +57,19 @@ content.game = (() => {
         break
 
       case STATE_PLAY:
-        content.crosshair.tick(delta)
         content.batteries.tick(delta)
         content.outgoing.tick(delta)
         content.blasts.tick(delta)
         content.threats.tick(delta)
         content.wave.tick(delta)
 
-        // Loss: all six cities gone.
         if (content.cities.aliveCount() === 0) {
-          // Clear remaining threats audibly.
           content.threats.clearAll()
           content.outgoing.clear()
           S().phase = STATE_WAVE_CLEAR
-          S().phaseTimer = 1.6 // let final swoop / blasts finish before transition
+          S().phaseTimer = 1.6
           content.events.emit('all-cities-lost')
         }
-        // Wave clear (no enemies left).
         else if (content.wave.isCleared()) {
           const survMissiles = content.batteries.totalAmmo()
           const survCities = content.cities.aliveCount()
@@ -102,13 +93,10 @@ content.game = (() => {
         break
 
       case STATE_GAME_OVER:
-        // Held until screen transitions out.
         break
     }
   }
 
-  // Wiring: when threats are killed by blast, score them. Pacman-style
-  // wiring lives here so scoring rules are next to the FSM.
   content.events.on('threat-killed', (e) => {
     let pts = 25
     if (e.kind === 'splitter') pts = 75

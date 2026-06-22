@@ -1,7 +1,15 @@
-// Player-fired missiles in flight. The whistle sound is owned by audio.js
-// (one-shot sweep); this module just integrates position over the
-// configured duration and triggers a blast at the destination.
+// Player-fired missiles in flight. Each battery fires to a fixed zone
+// center altitude (no crosshair). The whistle is owned by audio.js; this
+// module integrates position and triggers a blast at destination.
 content.outgoing = (() => {
+  const DETONATION_Y = 0.45
+
+  const ZONE_TARGETS = {
+    L: {x: -0.65, y: DETONATION_Y},
+    C: {x:  0.00, y: DETONATION_Y},
+    R: {x:  0.65, y: DETONATION_Y},
+  }
+
   const list = []
 
   function spawn(shot) {
@@ -14,7 +22,6 @@ content.outgoing = (() => {
       const s = list[i]
       s.elapsed += dt
       if (s.elapsed >= s.duration) {
-        // Detonate at destination.
         content.blasts.spawn({x: s.endX, y: s.endY})
         list.splice(i, 1)
       }
@@ -24,6 +31,7 @@ content.outgoing = (() => {
   function clear() { list.length = 0 }
   function count() { return list.length }
   function getAll() { return list }
+  function getZoneTarget(batteryId) { return ZONE_TARGETS[batteryId] || ZONE_TARGETS.C }
 
-  return {spawn, tick, clear, count, getAll}
+  return {spawn, tick, clear, count, getAll, getZoneTarget, DETONATION_Y}
 })()

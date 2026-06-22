@@ -6,15 +6,15 @@ content.wave = (() => {
   // the table cap.
   const TABLE = [
     null,
-    {count: 8,  splitterRate: 0.00, bomberRate: 0.00, speedMul: 1.00, duration: 30},
-    {count: 10, splitterRate: 0.10, bomberRate: 0.00, speedMul: 1.05, duration: 29},
-    {count: 12, splitterRate: 0.20, bomberRate: 0.00, speedMul: 1.10, duration: 28},
-    {count: 14, splitterRate: 0.25, bomberRate: 0.10, speedMul: 1.20, duration: 26},
-    {count: 16, splitterRate: 0.30, bomberRate: 0.15, speedMul: 1.30, duration: 25},
-    {count: 18, splitterRate: 0.35, bomberRate: 0.20, speedMul: 1.40, duration: 24},
-    {count: 20, splitterRate: 0.40, bomberRate: 0.20, speedMul: 1.50, duration: 23},
-    {count: 22, splitterRate: 0.45, bomberRate: 0.25, speedMul: 1.65, duration: 22},
-    {count: 24, splitterRate: 0.50, bomberRate: 0.25, speedMul: 1.80, duration: 22},
+    {count: 9,  splitterRate: 0.00, bomberRate: 0.00, speedMul: 1.05, duration: 28},
+    {count: 12, splitterRate: 0.10, bomberRate: 0.00, speedMul: 1.10, duration: 26},
+    {count: 14, splitterRate: 0.20, bomberRate: 0.05, speedMul: 1.20, duration: 24},
+    {count: 17, splitterRate: 0.25, bomberRate: 0.10, speedMul: 1.35, duration: 22},
+    {count: 20, splitterRate: 0.30, bomberRate: 0.15, speedMul: 1.50, duration: 21},
+    {count: 23, splitterRate: 0.40, bomberRate: 0.20, speedMul: 1.65, duration: 20},
+    {count: 26, splitterRate: 0.45, bomberRate: 0.20, speedMul: 1.80, duration: 19},
+    {count: 29, splitterRate: 0.50, bomberRate: 0.25, speedMul: 2.00, duration: 18},
+    {count: 32, splitterRate: 0.55, bomberRate: 0.30, speedMul: 2.20, duration: 17},
   ]
 
   function paramsForWave(n) {
@@ -22,11 +22,11 @@ content.wave = (() => {
     if (n < TABLE.length) return TABLE[n]
     // 10+
     return {
-      count: 26 + 2 * (n - 10),
-      splitterRate: 0.55,
-      bomberRate: 0.30,
-      speedMul: 2.00,
-      duration: 22,
+      count: 35 + 4 * (n - 10),
+      splitterRate: 0.60,
+      bomberRate: 0.35,
+      speedMul: 2.40,
+      duration: 16,
     }
   }
 
