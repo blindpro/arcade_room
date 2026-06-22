@@ -21,7 +21,7 @@ content.ai = (() => {
       aggression: 0.6 + Math.random() * 0.6,
       bumpBreather: 0.6 + Math.random() * 0.8,
       pursuerTax: 6 + Math.random() * 6,
-      chargeRange: 6 + Math.random() * 4,     // m — enter CHARGE within this
+      chargeRange: 3 + Math.random() * 2,     // m — enter CHARGE within this
     }
 
     let state = 'WANDER',
@@ -242,7 +242,7 @@ content.ai = (() => {
       } else if (cosDiff < -0.34) {
         reversingForFacing = true
       }
-      return reversingForFacing ? -0.25 : 1
+      return reversingForFacing ? -0.25 : 0.7
     }
 
     function easeThrottleInAvoidance(avoid) {
@@ -266,7 +266,8 @@ content.ai = (() => {
       // Avoidance scaled so the AI still steers clear of walls without
       // sharp swerves that look like dodging (avoid magnitude 1 → push
       // 1.2x the unit goal vector).
-      const desired = Math.atan2(goalY + avoid.y * 1.2, goalX + avoid.x * 1.2)
+	  const aimError = (Math.random() - 0.5) * 0.5
+      const desired = Math.atan2(goalY + avoid.y * 1.2, goalX + avoid.x * 1.2)+aimError
       const diff = shortAngle(desired - car.heading)
       const steer = Math.sin(diff) * 2 + antiparallelBias(diff, avoid)
       car.input.steering = engine.fn.clamp(steer, -1, 1)
@@ -292,7 +293,7 @@ content.ai = (() => {
       const avoidMag = Math.hypot(avoid.x, avoid.y)
       car.input.throttle = avoidMag > 0.25
         ? Math.max(0.45, 1 - avoidMag * 0.7)
-        : 1
+        : 0.8
       emergencyWallReverse()
       compensateReverseSteering()
     }
@@ -579,7 +580,7 @@ content.ai = (() => {
         // of range.
         if (state === 'PURSUE' && target && !target.eliminated && distToTarget < personality.chargeRange && car.health > 35 && now >= chargeEndAt) {
           state = 'CHARGE'
-          chargeEndAt = now + 2.5   // max 2.5s charge before re-evaluating
+          chargeEndAt = now + 3.5   // max 3.5s charge before re-evaluating
         }
         if (state === 'CHARGE') {
           if (!target || target.eliminated || now >= chargeEndAt || distToTarget > personality.chargeRange * 1.5) {
@@ -602,7 +603,8 @@ content.ai = (() => {
             const opponents = game.cars.reduce(
               (n, c) => n + (!c.eliminated && c.id !== car.id ? 1 : 0), 0,
             )
-            breatherUntil = now + personality.bumpBreather / personality.aggression
+			breatherUntil = now + (personality.bumpBreather * 0.75) / personality.aggression
+//            breatherUntil = now + personality.bumpBreather / personality.aggression
           }
         }
         const breathing = state === 'PURSUE'
