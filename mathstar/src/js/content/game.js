@@ -168,7 +168,7 @@ content.game = (() => {
     let pick
     const r = Math.random()
     if (r < 0.45) pick = MODULATIONS[0]
-    else          pick = MODULATIONS[1 + Math.floor(Math.random() * (MODULATIONS.length - 1))]
+    else          pick = MX().pick(MODULATIONS.slice(1))
     const newRoot = (((baseRoot + pick.by) % 12) + 12) % 12
     let modKey = pick.key
     if (flipMode) modKey = newMode === 'minor' ? 'mod.toMinor' : 'mod.toMajor'

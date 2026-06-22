@@ -2,12 +2,12 @@
 // center altitude (no crosshair). The whistle is owned by audio.js; this
 // module integrates position and triggers a blast at destination.
 content.outgoing = (() => {
-  const DETONATION_Y = 0.45
+  const K = () => content.constants
 
   const ZONE_TARGETS = {
-    L: {x: -0.65, y: DETONATION_Y},
-    C: {x:  0.00, y: DETONATION_Y},
-    R: {x:  0.65, y: DETONATION_Y},
+    L: {x: -0.65, y: K().DETONATION_Y},
+    C: {x:  0.00, y: K().DETONATION_Y},
+    R: {x:  0.65, y: K().DETONATION_Y},
   }
 
   const list = []
@@ -33,5 +33,5 @@ content.outgoing = (() => {
   function getAll() { return list }
   function getZoneTarget(batteryId) { return ZONE_TARGETS[batteryId] || ZONE_TARGETS.C }
 
-  return {spawn, tick, clear, count, getAll, getZoneTarget, DETONATION_Y}
+  return {spawn, tick, clear, count, getAll, getZoneTarget}
 })()

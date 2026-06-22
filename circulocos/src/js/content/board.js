@@ -12,6 +12,7 @@
 // The audio layer emits direction cues at compass offsets, so jumps map straight
 // onto north / east / south / west.
 content.board = (() => {
+  const M = () => content.math
   let size = 5
   let cells = []
   let pegCount = 0
@@ -125,8 +126,7 @@ content.board = (() => {
         guard++
         const cands = reverseCandidates()
         if (!cands.length) break
-        const k = Math.floor(Math.random() * cands.length)
-        const r = cands[k]
+        const r = M().pick(cands)
         cells[idx(r.x, r.y)] = 0
         cells[idx(r.mx, r.my)] = 1
         cells[idx(r.fx, r.fy)] = 1

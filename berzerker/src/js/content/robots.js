@@ -3,6 +3,7 @@
 // greedy step toward the player). Killing yourself on a wall is a
 // frequent and authentic Berzerk death for both the player and robots.
 content.robots = (() => {
+  const M = () => content.math
   const A = () => content.audio
   const E = () => content.events
   const R = () => content.room
@@ -199,8 +200,8 @@ content.robots = (() => {
     let attempts = 0
     while (placed < count && attempts < tries) {
       attempts++
-      const cx = 2 + Math.floor(Math.random() * (R().cols() - 4))
-      const cy = 2 + Math.floor(Math.random() * (R().rows() - 4))
+      const cx = 2 + M().randInt(0, R().cols() - 5)
+      const cy = 2 + M().randInt(0, R().rows() - 5)
       // Reject if on a wall, near spawn, or near another robot.
       if (R().isWall(cx, cy)) continue
       const sp = R().spawn()
@@ -225,7 +226,7 @@ content.robots = (() => {
     }
     // Squad spawn bark — one robot announces.
     if (robots.length) {
-      const r = robots[Math.floor(Math.random() * robots.length)]
+      const r = M().pick(robots)
       VOICE().bark('spawn', r)
     }
     // Hold off the periodic-taunt timer so the spawn bark doesn't get
@@ -245,7 +246,7 @@ content.robots = (() => {
       nextTauntAt = t + 6
       return
     }
-    const r = live[Math.floor(Math.random() * live.length)]
+    const r = M().pick(live)
     VOICE().bark('taunt', r)
     nextTauntAt = t + 6 + Math.random() * 6
   }

@@ -10,6 +10,7 @@
 // module owns state and emits events; the screen turns them into audio +
 // announcements. No DOM/audio refs, so it runs headless under /tmp/coil-sim.js.
 content.game = (() => {
+  const M = () => content.math
   const K = () => content.constants
 
   const state = {
@@ -73,7 +74,7 @@ content.game = (() => {
     const open = []
     for (let y = 1; y < H() - 1; y++) for (let x = 1; x < W() - 1; x++) if (!occupied(x, y)) open.push({x, y})
     if (!open.length) { food = null; return }
-    food = open[Math.floor(Math.random() * open.length)]
+    food = M().pick(open)
   }
 
   // ---- input ----

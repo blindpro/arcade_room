@@ -26,6 +26,7 @@
  * subscribers; client receives it in each snapshot.
  */
 content.game = (() => {
+  const M = () => content.math
   let cars = [],
     playerCar = null,
     // Audio listener pivot. Defaults to playerCar; switched by the
@@ -498,7 +499,7 @@ content.game = (() => {
       case 'health':  dealt = content.car.heal(car, 25); break
       case 'shield':  if (car.inventory) car.inventory.shields++; break
       case 'bullets':
-        granted = 3 + Math.floor(Math.random() * 4)
+        granted = 3 + M().randInt(0, 3)
         if (car.inventory) car.inventory.bullets += granted
         break
       case 'mine':    if (car.inventory) car.inventory.mines++; break

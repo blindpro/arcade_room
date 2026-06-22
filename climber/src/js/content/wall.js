@@ -14,6 +14,7 @@
  * Cross-module references via lazy getters per CLAUDE.md gotcha.
  */
 content.wall = (() => {
+  const M = () => content.math
   const _state = {
     building: 1,
     height: 100,           // floors per building
@@ -67,7 +68,7 @@ content.wall = (() => {
   function scheduleClose(bodyFloor, t) {
     if (bodyFloor >= _state.height - 1) return
     const side = Math.random() < 0.5 ? 'left' : 'right'
-    const floor = Math.min(_state.height - 1, bodyFloor + 1 + Math.floor(Math.random() * 4))
+    const floor = Math.min(_state.height - 1, bodyFloor + 1 + M().randInt(0, 3))
     const k = key(side, floor)
     const g = _state.grips.get(k)
     if (g && g.state !== 'open') return

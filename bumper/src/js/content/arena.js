@@ -5,6 +5,7 @@
  * and `content.arena.config`, which reflect the currently active map.
  */
 content.arena = (() => {
+  const M = () => content.math
   // ---- Map presets ----------------------------------------------------
   const MAPS = {
     standard: {width: 100, height: 70,  label: 'Standard'},
@@ -44,7 +45,7 @@ content.arena = (() => {
       currentName = name
     } else {
       const keys = MAP_NAMES
-      currentName = keys[Math.floor(Math.random() * keys.length)]
+      currentName = M().pick(keys)
     }
     currentConfig = MAPS[currentName]
     updateBounds()

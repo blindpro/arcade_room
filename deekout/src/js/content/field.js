@@ -4,6 +4,7 @@
 // little wall-approach tracking, reset each level via reset().
 content.field = (() => {
   const C = () => content.constants
+  const M = () => content.math
 
   // Wall-approach state.
   let lastZone = -1     // 0..3 escalating proximity zone; -1 = clear
@@ -127,8 +128,8 @@ content.field = (() => {
     const span = (g.max - margin) - lo + 1
     const p = content.state.player()
     for (let attempt = 0; attempt < 60; attempt++) {
-      const col = lo + Math.floor(Math.random() * span)
-      const row = lo + Math.floor(Math.random() * span)
+      const col = M().randInt(lo, lo + span - 1)
+      const row = M().randInt(lo, lo + span - 1)
       if (!test(col, row)) continue
       if (p && minFromPlayer > 0 && Math.hypot(col - p.col, row - p.row) < minFromPlayer) continue
       return {col, row}

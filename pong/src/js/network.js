@@ -1,4 +1,5 @@
 const network = (() => {
+  const M = () => content.math
   // Self-hosted coturn on the VPS that serves oriolgomez.com — shared by
   // all the games in this repo (see ../template/CLAUDE.md). Five-line
   // block intentionally; if the server moves or creds rotate, this is
@@ -47,7 +48,7 @@ const network = (() => {
 
   function genCode() {
     const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ'
-    return Array.from({length: 4}, () => chars[Math.floor(Math.random() * chars.length)]).join('')
+    return Array.from({length: 4}, () => M().pick(chars)).join('')
   }
 
   function handleMessage(peerId, msg) {

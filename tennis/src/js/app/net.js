@@ -23,6 +23,7 @@
  * games hosted on the same PeerJS broker.
  */
 app.net = (() => {
+  const M = () => content.math
   // ICE / TURN config. Keep these five lines as the single source of
   // truth — server moves and credential rotation should require one
   // diff here, not a sweep across the file.
@@ -69,7 +70,7 @@ app.net = (() => {
   function generateCode() {
     let code = ''
     for (let i = 0; i < CODE_LENGTH; i++) {
-      code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)]
+      code += M().pick(CODE_CHARSET)
     }
     return code
   }

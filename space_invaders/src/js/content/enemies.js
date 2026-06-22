@@ -20,41 +20,7 @@ content.enemies = (() => {
   const A = () => content.audio
   const S = () => content.state
   const W = () => content.weapons
-
-  // Approach time at z = 1 → 0, in seconds. Per class.
-  const APPROACH_TIME = {
-    scout:      12.0,
-    bomber:     17.0,
-    battleship: 24.0,
-    civilian:   16.0,
-  }
-  // Lateral drift speed (Δx/sec)
-  const DRIFT = {
-    scout:      0.45,
-    bomber:     0.18,
-    battleship: 0.10,
-    civilian:   0.22,
-  }
-  // Pulse rate at far (z=1) and close (z=0.05), in Hz. Linear interpolation.
-  const PULSE_RATE = {
-    scout:      {far: 1.4, near: 6.5},
-    bomber:     {far: 0.9, near: 4.5},
-    battleship: {far: 0.6, near: 3.5},
-    civilian:   {far: 1.0, near: 4.0},
-  }
-  // HP pool per class (right weapon does 1.0 damage; wrong does 0.5; bounce 0).
-  const HP = {
-    scout:      1.0,
-    bomber:     1.0,
-    battleship: 1.4,   // battleships need *one* right-weapon shot OR three wrong-weapon shots
-    civilian:   1.0,
-  }
-  // Score base per class (right weapon × 1.5 applied at scoring time).
-  const BASE_SCORE = {
-    scout:      100,
-    bomber:     250,
-    battleship: 500,
-  }
+  const K = () => content.constants
 
   // ----------------------------- spawning -----------------------------
   function spawn({kind, x, chainIndex}) {
@@ -65,10 +31,10 @@ content.enemies = (() => {
     const enemy = {
       id,
       kind,
-      x: x != null ? x : sign * (0.30 + Math.random() * 0.55),
+      x: x != null ? x : sign * (K().spawnXMin + Math.random() * K().spawnXRange),
       z: 1.0,
-      dxPerSec: (Math.random() < 0.5 ? -1 : 1) * DRIFT[kind] * (0.7 + Math.random() * 0.6),
-      hp: HP[kind],
+      dxPerSec: (Math.random() < 0.5 ? -1 : 1) * K().driftSpeed[kind] * (K().driftJitterMin + Math.random() * K().driftJitterRange),
+      hp: K().hp[kind],
       chainIndex: chainIndex || 0,
       pulsePhase: Math.random(),    // start out of phase across ships
       spawnedAt: engine.time(),
@@ -85,8 +51,8 @@ content.enemies = (() => {
     const list = s.enemies
     for (let i = list.length - 1; i >= 0; i--) {
       const e = list[i]
-      // approach: z decreases linearly from 1 to 0 over APPROACH_TIME[kind]
-      const dz = dt / APPROACH_TIME[e.kind]
+      // approach: z decreases linearly from 1 to 0 over approachTime[kind]
+      const dz = dt / K().approachTime[e.kind]
       e.z -= dz
       // lateral drift, bounce off ±1
       e.x += e.dxPerSec * dt
@@ -94,7 +60,7 @@ content.enemies = (() => {
       if (e.x < -1.0) { e.x = -1.0; e.dxPerSec = Math.abs(e.dxPerSec) }
       // pulse cue: phase advances at a rate that ramps with closeness
       const closeness = 1 - Math.max(0, Math.min(1, e.z))
-      const pr = PULSE_RATE[e.kind]
+      const pr = K().pulseRate[e.kind]
       const rate = pr.far + (pr.near - pr.far) * closeness
       e.pulsePhase += rate * dt
       while (e.pulsePhase >= 1) {
@@ -122,8 +88,8 @@ content.enemies = (() => {
     s.waveShipsReached += 1
     // Hostile ships hit the player. Distinguish shield-absorb vs life-lost
     // so the audio + announcer match the actual outcome.
-    if (s.energy >= 25) {
-      s.energy -= 25
+    if (s.energy >= K().shieldThreshold) {
+      s.energy -= K().shieldCost
       A().enqueue({type: 'shieldHit', x: e.x, id: e.id})
       try {
         app.announce.assertive(app.i18n.t('ann.shieldHeld', {energy: s.energy | 0}))
@@ -131,7 +97,7 @@ content.enemies = (() => {
     } else {
       // Breach: full impact, life lost, energy reset to 50.
       A().enqueue({type: 'breach', x: e.x, id: e.id})
-      s.energy = 50
+      s.energy = K().breachEnergy
       s.lives -= 1
       content.scoring.onLifeLost()
       if (s.lives <= 0) {
@@ -165,7 +131,7 @@ content.enemies = (() => {
     const radius = W().hitRadius(weapon)
     for (const e of s.enemies) {
       const dx = Math.abs(e.x - aim)
-      const r = radius * (1 + (1 - e.z) * 1.2)  // closer = easier
+      const r = radius * (1 + (1 - e.z) * K().hitRadiusZFactor)  // closer = easier
       if (dx <= r && dx < bestDist) {
         bestDist = dx
         best = e
@@ -219,8 +185,5 @@ content.enemies = (() => {
     removeEnemy,
     nextChainShip,
     bumpWaveCleared,
-    BASE_SCORE,
-    HP,
-    APPROACH_TIME,
   }
 })()

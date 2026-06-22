@@ -9,6 +9,7 @@
  * the slide at the current moment.
  */
 content.game = (() => {
+  const M = () => content.math
   const A = () => content.audio
 
   // Frequency helpers
@@ -63,12 +64,12 @@ content.game = (() => {
   function pickTarget(level) {
     if (level === 1) {
       // Random discrete note from C2 to C4 inclusive
-      const n = TARGET_LOW_SEMI + Math.floor(Math.random() * (TARGET_MID_SEMI - TARGET_LOW_SEMI + 1))
+      const n = M().randInt(TARGET_LOW_SEMI, TARGET_MID_SEMI)
       return {semitone: n, freq: semitoneToFreq(n), discrete: true}
     }
     if (level === 2) {
       // Random discrete note from C2 to C5 inclusive
-      const n = TARGET_LOW_SEMI + Math.floor(Math.random() * (TARGET_HIGH_SEMI - TARGET_LOW_SEMI + 1))
+      const n = M().randInt(TARGET_LOW_SEMI, TARGET_HIGH_SEMI)
       return {semitone: n, freq: semitoneToFreq(n), discrete: true}
     }
     // Level 3+: continuous, any pitch from C2..C5

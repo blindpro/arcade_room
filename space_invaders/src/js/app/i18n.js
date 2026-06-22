@@ -10,6 +10,7 @@
  * leans dramatic/cinematic.
  */
 app.i18n = (() => {
+  const M = () => content.math
   const FALLBACK = 'en'
   const STORAGE_KEY = 'si.lang'
 
@@ -577,7 +578,7 @@ app.i18n = (() => {
       || (FLAVOR[FALLBACK] && FLAVOR[FALLBACK][category])
       || []
     if (!pool.length) return ''
-    return pool[Math.floor(Math.random() * pool.length)]
+    return M().pick(pool)
   }
 
   current = detect()

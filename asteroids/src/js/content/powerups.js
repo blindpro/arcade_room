@@ -20,6 +20,7 @@
 // the ship (works during invulnerability too — pickups should never
 // punish the player for being mid-respawn).
 content.powerups = (() => {
+  const M = () => content.math
   const P = () => content.physics
 
   // --- design constants ---
@@ -84,7 +85,7 @@ content.powerups = (() => {
       learnKey: 'learn.pwrScoreBonus',
       onPickup(_s, ctx) {
         const wave = Math.max(1, (content.game.state.wave | 0))
-        const points = (500 + Math.floor(Math.random() * 2001)) * wave
+        const points = (500 + M().randInt(0, 2000)) * wave
         content.game.awardPoints(points)
         content.events.emit('powerup-bonus', {points, wave})
         ctx.bonusPoints = points

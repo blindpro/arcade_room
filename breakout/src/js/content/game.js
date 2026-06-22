@@ -1,22 +1,65 @@
 content.game = (() => {
-  const WIDTH = 100
-  const HEIGHT = 120
-  const PADDLE_Y = 110
-  const PADDLE_H = 3
-  const BALL_R = 1.25
-  const COLS = 10
-  const ROWS = 7
-  const BRICK_GAP = 0.8
-  const BRICK_TOP = 12
-  const BRICK_LEFT = 5
-  const BRICK_W = (WIDTH - BRICK_LEFT * 2 - BRICK_GAP * (COLS - 1)) / COLS
-  const BRICK_H = 4.8
-  const BASE_SPEED = 48
-  const MAX_SPEED = 74
-  const PADDLE_SPEED = 72
-  const POWERUP_VY = 18
-  const POWERUP_DURATION = 13
-  const SLOW_SCALE = 0.72
+  const M = () => content.math
+  const cfg = {
+    // Field
+    width: 100,
+    height: 120,
+    // Paddle
+    paddleY: 110,
+    paddleH: 3,
+    paddleSpeed: 72,
+    paddleMaxAngle: 0.39,
+    paddleSpeedBoost: 1.018,
+    paddleCatchThreshold: 0.42,
+    paddleOverlapEpsilon: 0.01,
+    catchWidth: 27,
+    normalWidth: 17,
+    // Ball
+    ballR: 1.25,
+    baseSpeed: 48,
+    maxSpeed: 74,
+    speedPerLevel: 4,
+    slowScale: 0.72,
+    launchAngleSpread: 0.28,
+    substepRatio: 0.7,
+    multiBallAngleA: 0.72,
+    multiBallAngleB: 0.28,
+    // Bricks
+    cols: 10,
+    rows: 7,
+    brickGap: 0.8,
+    brickTop: 12,
+    brickLeft: 5,
+    brickH: 4.8,
+    brickScoreNormal: 10,
+    brickScoreHard: 20,
+    brickScoreClear: 40,
+    brickScoreRowBonus: 5,
+    // Powerups
+    powerupVy: 18,
+    powerupDuration: 13,
+    powerupSpawnChance: 0.16,
+    powerupCatchMargin: 2,
+    powerupCullMargin: 6,
+    maxLives: 9,
+    spawnClampMargin: 4,
+    spawnYMin: 6,
+    // Laser
+    laserCooldown: 0.46,
+    laserOffset: 5,
+    shotSpeed: 92,
+    shotCullTop: -4,
+    // Physics
+    dtCeiling: 0.05,
+    overlapEpsilon: 0.01,
+    maxShots: 2,
+    // Ping
+    pingVerticalPct: [0.34, 0.68],
+    pingHorizontalPct: [0.38, 0.62],
+    pingPaddleAlignment: 0.24,
+  }
+  const BRICK_W = (cfg.width - cfg.brickLeft * 2 - cfg.brickGap * (cfg.cols - 1)) / cfg.cols
+  const { width: WIDTH, height: HEIGHT, paddleY: PADDLE_Y, paddleH: PADDLE_H, ballR: BALL_R, cols: COLS, rows: ROWS, brickGap: BRICK_GAP, brickTop: BRICK_TOP, brickLeft: BRICK_LEFT, brickH: BRICK_H, baseSpeed: BASE_SPEED, maxSpeed: MAX_SPEED, paddleSpeed: PADDLE_SPEED, powerupVy: POWERUP_VY, powerupDuration: POWERUP_DURATION, slowScale: SLOW_SCALE } = cfg
 
   const POWERUPS = ['wide', 'slow', 'catch', 'laser', 'multi', 'life']
   const POWERUP_LABEL = {
@@ -60,7 +103,7 @@ content.game = (() => {
   }
 
   function clamp(v, min, max) { return Math.max(min, Math.min(max, v)) }
-  function randomChoice(list) { return list[Math.floor(Math.random() * list.length)] }
+  function randomChoice(list) { return M().pick(list) }
   function paddleWidth() { return state.effects.wide ? 27 : 17 }
   function activeBall() { return state.balls.find((b) => !b.lost) || null }
   function speedForLevel() { return Math.min(MAX_SPEED, BASE_SPEED + (state.level - 1) * 4) }
@@ -165,7 +208,7 @@ content.game = (() => {
       return
     }
     state.mode = 'playing'
-    const angle = -Math.PI / 2 + (Math.random() < 0.5 ? -0.28 : 0.28)
+    const angle = -Math.PI / 2 + (Math.random() < 0.5 ? -cfg.launchAngleSpread : cfg.launchAngleSpread)
     state.balls[0] = makeBall(false, angle)
     content.audio.setListenerX(state.paddleX)
     content.audio.updateBall(state.balls[0])
@@ -194,7 +237,7 @@ content.game = (() => {
     const key = POWERUP_LABEL[kind]
     if (key) app.announce.polite(app.i18n.t(key))
     if (kind === 'life') {
-      state.lives = Math.min(9, state.lives + 1)
+      state.lives = Math.min(cfg.maxLives, state.lives + 1)
       return
     }
     if (kind === 'multi') {
@@ -203,15 +246,15 @@ content.game = (() => {
       state.balls.push({
         x: source.x,
         y: source.y,
-        vx: Math.cos(-Math.PI * 0.72) * speed,
-        vy: Math.sin(-Math.PI * 0.72) * speed,
+        vx: Math.cos(-Math.PI * cfg.multiBallAngleA) * speed,
+        vy: Math.sin(-Math.PI * cfg.multiBallAngleA) * speed,
         stuck: false,
         lost: false,
       }, {
         x: source.x,
         y: source.y,
-        vx: Math.cos(-Math.PI * 0.28) * speed,
-        vy: Math.sin(-Math.PI * 0.28) * speed,
+        vx: Math.cos(-Math.PI * cfg.multiBallAngleB) * speed,
+        vy: Math.sin(-Math.PI * cfg.multiBallAngleB) * speed,
         stuck: false,
         lost: false,
       })
@@ -243,16 +286,15 @@ content.game = (() => {
     state.powerups.push({
       id: state.nextPowerupId++,
       kind: chosen,
-      x: clamp(x == null ? state.paddleX : x, 4, WIDTH - 4),
-      y: clamp(y == null ? BRICK_TOP + ROWS * (BRICK_H + BRICK_GAP) : y, 6, PADDLE_Y - 8),
+      x: clamp(x == null ? state.paddleX : x, cfg.spawnClampMargin, WIDTH - cfg.spawnClampMargin),
+      y: clamp(y == null ? BRICK_TOP + ROWS * (BRICK_H + BRICK_GAP) : y, cfg.spawnYMin, PADDLE_Y - 8),
       vy: POWERUP_VY,
     })
     announcePowerupAppearance(chosen)
   }
 
   function maybeSpawnPowerup(brick) {
-    const chance = 0.16
-    if (Math.random() > chance) return
+    if (Math.random() > cfg.powerupSpawnChance) return
     spawnPowerup(randomChoice(POWERUPS), brick.x + brick.w / 2, brick.y + brick.h / 2)
   }
 
@@ -282,11 +324,11 @@ content.game = (() => {
 
   function destroyOrDamageBrick(brick) {
     brick.hp -= 1
-    state.score += brick.hard ? 20 : 10
+    state.score += brick.hard ? cfg.brickScoreHard : cfg.brickScoreNormal
     content.audio.brick(brick.x + brick.w / 2, brick.row, brick.hp > 0 || brick.hard)
     if (brick.hp > 0) return
     state.bricks = state.bricks.filter((b) => b !== brick)
-    state.score += 40 + (ROWS - brick.row) * 5
+    state.score += cfg.brickScoreClear + (ROWS - brick.row) * cfg.brickScoreRowBonus
     maybeSpawnPowerup(brick)
     if (!state.bricks.length) {
       app.announce.assertive(app.i18n.t('ann.clear'))
@@ -296,12 +338,12 @@ content.game = (() => {
 
   function resolveBrickOverlap(ball, brick, normal) {
     if (normal === 'x') {
-      if (ball.x < brick.x + brick.w / 2) ball.x = brick.x - BALL_R - 0.01
-      else ball.x = brick.x + brick.w + BALL_R + 0.01
+      if (ball.x < brick.x + brick.w / 2) ball.x = brick.x - BALL_R - cfg.overlapEpsilon
+      else ball.x = brick.x + brick.w + BALL_R + cfg.overlapEpsilon
     } else if (ball.y < brick.y + brick.h / 2) {
-      ball.y = brick.y - BALL_R - 0.01
+      ball.y = brick.y - BALL_R - cfg.overlapEpsilon
     } else {
-      ball.y = brick.y + brick.h + BALL_R + 0.01
+      ball.y = brick.y + brick.h + BALL_R + cfg.overlapEpsilon
     }
   }
 
@@ -309,14 +351,14 @@ content.game = (() => {
     const halfW = paddleWidth() / 2
     const offset = clamp((ball.x - state.paddleX) / halfW, -1, 1)
     const scale = slowScale()
-    const speed = clamp(Math.hypot(ball.vx, ball.vy) * 1.018, speedForLevel() * scale, MAX_SPEED * scale)
-    const maxAngle = Math.PI * 0.39
+    const speed = clamp(Math.hypot(ball.vx, ball.vy) * cfg.paddleSpeedBoost, speedForLevel() * scale, MAX_SPEED * scale)
+    const maxAngle = Math.PI * cfg.paddleMaxAngle
     const angle = -Math.PI / 2 + offset * maxAngle
     ball.vx = Math.cos(angle) * speed
     ball.vy = Math.sin(angle) * speed
-    ball.y = PADDLE_Y - PADDLE_H / 2 - BALL_R - 0.01
+    ball.y = PADDLE_Y - PADDLE_H / 2 - BALL_R - cfg.paddleOverlapEpsilon
     content.audio.paddle(ball.x, offset)
-    if (state.effects.catch && Math.abs(offset) < 0.42) {
+    if (state.effects.catch && Math.abs(offset) < cfg.paddleCatchThreshold) {
       ball.stuck = true
       ball.stuckOffset = ball.x - state.paddleX
       state.mode = 'caught'
@@ -380,10 +422,10 @@ content.game = (() => {
     const halfW = paddleWidth() / 2
     for (const p of state.powerups) {
       p.y += p.vy * dt
-      if (p.y >= PADDLE_Y - 3 && p.y <= PADDLE_Y + 4 && Math.abs(p.x - state.paddleX) <= halfW + 2) {
+      if (p.y >= PADDLE_Y - 3 && p.y <= PADDLE_Y + 4 && Math.abs(p.x - state.paddleX) <= halfW + cfg.powerupCatchMargin) {
         p.caught = true
         activatePowerup(p.kind, p.x)
-      } else if (p.y > HEIGHT + 6) {
+      } else if (p.y > HEIGHT + cfg.powerupCullMargin) {
         p.caught = true
       }
     }
@@ -411,18 +453,19 @@ content.game = (() => {
   }
 
   function updateShots(dt) {
-    if (state.effects.laser && state.shots.length < 2) {
+    if (state.effects.laser && state.shots.length < cfg.maxShots) {
       state._laserCooldown = (state._laserCooldown || 0) - dt
       if (state._laserCooldown <= 0) {
-        state._laserCooldown = 0.46
-        state.shots.push({x: state.paddleX - 5, y: PADDLE_Y - 3}, {x: state.paddleX + 5, y: PADDLE_Y - 3})
-        content.audio.laser(state.paddleX - 5, -1)
-        content.audio.laser(state.paddleX + 5, 1)
+        state._laserCooldown = cfg.laserCooldown
+        const off = cfg.laserOffset
+        state.shots.push({x: state.paddleX - off, y: PADDLE_Y - 3}, {x: state.paddleX + off, y: PADDLE_Y - 3})
+        content.audio.laser(state.paddleX - off, -1)
+        content.audio.laser(state.paddleX + off, 1)
       }
     }
     for (const shot of state.shots) {
       if (state.levelCleared) break
-      shot.y -= 92 * dt
+      shot.y -= cfg.shotSpeed * dt
       for (const brick of state.bricks) {
         if (shot.hit) break
         if (shot.x >= brick.x && shot.x <= brick.x + brick.w && shot.y >= brick.y && shot.y <= brick.y + brick.h) {
@@ -431,12 +474,12 @@ content.game = (() => {
         }
       }
     }
-    state.shots = state.shots.filter((s) => !s.hit && s.y > -4)
+    state.shots = state.shots.filter((s) => !s.hit && s.y > cfg.shotCullTop)
   }
 
   function tick(dt, input) {
     if (!state.active) return
-    dt = Math.min(0.05, Math.max(0, dt || 0))
+    dt = Math.min(cfg.dtCeiling, Math.max(0, dt || 0))
     updatePaddle(input || {}, dt)
     content.audio.setListenerX(state.paddleX)
     updateEffects(dt)
@@ -452,7 +495,7 @@ content.game = (() => {
       return
     }
     const maxSpeed = state.balls.reduce((m, b) => Math.max(m, Math.hypot(b.vx, b.vy)), 1)
-    const steps = Math.max(1, Math.ceil(maxSpeed * dt / (BALL_R * 0.7)))
+    const steps = Math.max(1, Math.ceil(maxSpeed * dt / (BALL_R * cfg.substepRatio)))
     const stepDt = dt / steps
     for (let i = 0; i < steps; i += 1) {
       for (const b of state.balls.slice()) stepBall(b, stepDt)
@@ -486,10 +529,10 @@ content.game = (() => {
   function ping() {
     const b = activeBall()
     if (!b) return
-    const vertical = b.y < HEIGHT * 0.34 ? 'ann.top' : b.y < HEIGHT * 0.68 ? 'ann.middle' : 'ann.bottom'
-    const horizontal = b.x < WIDTH * 0.38 ? 'ann.left' : b.x > WIDTH * 0.62 ? 'ann.right' : 'ann.center'
+    const vertical = b.y < HEIGHT * cfg.pingVerticalPct[0] ? 'ann.top' : b.y < HEIGHT * cfg.pingVerticalPct[1] ? 'ann.middle' : 'ann.bottom'
+    const horizontal = b.x < WIDTH * cfg.pingHorizontalPct[0] ? 'ann.left' : b.x > WIDTH * cfg.pingHorizontalPct[1] ? 'ann.right' : 'ann.center'
     const delta = state.paddleX - b.x
-    const paddle = Math.abs(delta) < paddleWidth() * 0.24 ? 'ann.paddleAligned' : delta < 0 ? 'ann.paddleLeft' : 'ann.paddleRight'
+    const paddle = Math.abs(delta) < paddleWidth() * cfg.pingPaddleAlignment ? 'ann.paddleAligned' : delta < 0 ? 'ann.paddleLeft' : 'ann.paddleRight'
     app.announce.polite(app.i18n.t('ann.ping', {
       vertical: app.i18n.t(vertical),
       horizontal: app.i18n.t(horizontal),

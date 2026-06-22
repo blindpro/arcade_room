@@ -20,6 +20,7 @@
  */
 content.fires = (() => {
   const A = () => content.audio
+  const M = () => content.math
 
   const BUILDING_COUNT = 7
   // Front-arc spacing: -75° to +75° in equal steps.
@@ -181,7 +182,7 @@ content.fires = (() => {
     // Prefer buildings with no fire and not lost; fall back to lowest intensity.
     const candidates = buildings.filter((b) => !b.lostFlag && b.intensity < 0.05)
     if (!candidates.length) return null
-    const b = candidates[Math.floor(Math.random() * candidates.length)]
+    const b = M().pick(candidates)
     b.intensity = Math.max(b.intensity, intensity)
     return b
   }

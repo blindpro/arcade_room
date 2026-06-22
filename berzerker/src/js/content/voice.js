@@ -10,6 +10,7 @@
 // voice module is locale-agnostic; it just speaks whatever the i18n key
 // resolves to in the current locale.
 content.voice = (() => {
+  const M = () => content.math
   const A = () => content.audio
   const ctxFn = () => engine.context()
 
@@ -405,7 +406,7 @@ content.voice = (() => {
   function pickPool(category) {
     const pool = app.i18n.t('robotbarks.pools.' + category)
     if (!Array.isArray(pool) || pool.length === 0) return null
-    return pool[Math.floor(Math.random() * pool.length)]
+    return M().pick(pool)
   }
 
   function barkRandom(category, sx, sy, opts) {

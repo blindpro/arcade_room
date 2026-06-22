@@ -8,9 +8,7 @@
   HUD.init()
   Render.init()
 
-  const TOTAL_LAPS = 3
-  const NET_INPUT_HZ = 20          // client → host
-  const NET_SNAP_HZ = 15           // host → clients
+  const C = Config
 
   let car = Car.create()
   let ais = AI.createAll()
@@ -34,8 +32,6 @@
   let pendingShoot = null
   // Single-player: periodic check to inject more AI when the player has
   // lapped the entire field and is effectively alone on the track.
-  const SP_BOT_CHECK = 2.0
-  const SP_BOT_MAX = 6
   let spBotCheckT = 0
 
   function isOnline() { return !!online }
@@ -44,7 +40,7 @@
   // Shaped to work with existing Render.drawOpponent(), HUD.computePosition(),
   // and Audio.updateAiVoices() — so remote players slot straight into the
   // `ais` array with no special case.
-  const LANES = [-0.55, 0.55, -0.2, 0.35, -0.4, 0.1]
+
   function makeRemotePlayer(id, name, slot) {
     return {
       id,
@@ -52,18 +48,18 @@
       slot,
       color: Net.pickColor(slot),
       index: slot % 3,                    // audio voice slot (0..2)
-      x: LANES[slot % LANES.length],
+      x: C.AI_LANES[slot % C.AI_LANES.length],
       z: 0,                               // monotonic absolute (like AI)
       zWrap: 0,                           // wrapped 0..Track.length (for host collision test)
       lap: 1,
-      speed: 115,
+      speed: C.AI_DEFAULT_SPEED,
       health: Car.HEALTH_MAX,
       bullets: 0,
       boosting: false,
       offroad: false,
       finished: false,
       finishTime: 0,
-      baseLane: LANES[slot % LANES.length],
+      baseLane: C.AI_LANES[slot % C.AI_LANES.length],
       _slowT: 0,
     }
   }
@@ -81,8 +77,8 @@
   // the network snapshot alongside human players. Bots don't shoot or collect
   // pickups; they drive the track and can be shot/bumped like any target.
   function makeBot(slot) {
-    const baseLane = LANES[slot % LANES.length]
-    const startZ = 250 + (slot - 1) * 200    // stagger ahead of player
+    const baseLane = C.AI_LANES[slot % C.AI_LANES.length]
+    const startZ = C.BOT_START_Z_BASE + (slot - 1) * C.BOT_START_Z_STAGGER
     return {
       id: `bot-${slot}`,
       name: `CPU ${slot}`,
@@ -94,7 +90,7 @@
       z: startZ,
       zWrap: startZ % Track.length,
       lap: 1,
-      speed: 115,
+      speed: C.AI_DEFAULT_SPEED,
       bullets: 0,
       health: Car.HEALTH_MAX,
       boosting: false,
@@ -140,14 +136,14 @@
         online.bots = []
       }
       // Starting positions
-      car.x = LANES[online.selfSlot % LANES.length]
-      car.z = 40 * (online.selfSlot)
+      car.x = C.AI_LANES[online.selfSlot % C.AI_LANES.length]
+      car.z = C.ONLINE_START_Z_MUL * online.selfSlot
       for (const p of online.players.values()) {
-        p.x = LANES[p.slot % LANES.length]
-        p.z = 40 * p.slot
+        p.x = C.AI_LANES[p.slot % C.AI_LANES.length]
+        p.z = C.ONLINE_START_Z_MUL * p.slot
         p.zWrap = p.z % Track.length
         p.lap = 1
-        p.speed = 115
+        p.speed = C.AI_DEFAULT_SPEED
         p.health = Car.HEALTH_MAX
         p.bullets = 0
         p.finished = false
@@ -176,10 +172,10 @@
 
   function onPickupCollected(p) {
     if (p.type === 'health') {
-      car.health = Math.min(Car.HEALTH_MAX, car.health + 30)
+      car.health = Math.min(Car.HEALTH_MAX, car.health + C.PICKUP_HEALTH_AMOUNT)
       HUD.announce(I18n.t('ann.healthPack'))
     } else if (p.type === 'shooter') {
-      car.bullets += 3
+      car.bullets += C.PICKUP_BULLET_AMOUNT
       HUD.announce(I18n.t('ann.shooter', { n: car.bullets }))
     } else {
       // Item pickups (nitro / mine / decoy) fill a single slot. If the slot
@@ -201,7 +197,7 @@
     const item = car.item
     car.item = null
     if (item === 'nitro') {
-      car.nitroT = 2.0
+      car.nitroT = C.PICKUP_NITRO_DURATION
       Audio.playItemActivate('nitro')
       HUD.announce(I18n.t('ann.nitro'), true)
     } else if (item === 'mine') {
@@ -246,7 +242,7 @@
       // Deduct locally (optimistic), queue send; host applies & broadcasts.
       car.bullets -= 1
       pendingShoot = direction
-      const panInit = direction === 'left' ? -0.7 : direction === 'right' ? 0.7 : 0
+      const panInit = direction === 'left' ? C.FIRE_PAN_LEFT : direction === 'right' ? C.FIRE_PAN_RIGHT : C.FIRE_PAN_FORWARD
       Audio.playBulletFire(panInit)
       HUD.announce(I18n.t('ann.fired', { dir: I18n.t('dir.' + direction), n: car.bullets }))
       if (online.role === 'host') {
@@ -290,13 +286,13 @@
     Audio.playDoom()
     const place = HUD.computePosition(car, ais)
     const racers = ais.length + 1
-    const lap = Math.min(car.lap, TOTAL_LAPS)
+    const lap = Math.min(car.lap, C.TOTAL_LAPS)
     const lapPct = (car.z / Track.length) * 100
     HUD.showGameOver({
       position: place,
       totalRacers: racers,
       lap,
-      totalLaps: TOTAL_LAPS,
+      totalLaps: C.TOTAL_LAPS,
       lapPct,
       time: raceTime,
       topSpeed,
@@ -304,7 +300,7 @@
     HUD.announce(
       I18n.t('gameover.announce', {
         ordinal: HUD.ordinal(place),
-        lap, totalLaps: TOTAL_LAPS,
+        lap, totalLaps: C.TOTAL_LAPS,
         pct: Math.round(lapPct),
       }),
       true
@@ -336,7 +332,7 @@
       HUD.announce(I18n.t('ann.position', { n: pos, total: ais.length + 1 }), true)
     }
     if (Input.wasPressed('F2')) {
-      HUD.announce(I18n.t('ann.lapStatus', { n: Math.min(car.lap, TOTAL_LAPS), total: TOTAL_LAPS }), true)
+      HUD.announce(I18n.t('ann.lapStatus', { n: Math.min(car.lap, C.TOTAL_LAPS), total: C.TOTAL_LAPS }), true)
     }
     if (Input.wasPressed('F3')) {
       HUD.announce(I18n.t('ann.speedStatus', { kmh: Math.round(car.speed * 3.6), gear: car.gear }), true)
@@ -396,9 +392,9 @@
     // Local car's abs z & x are the listener. Pan by lateral delta.
     const pa = (car.lap - 1) * Track.length + car.z
     const dz = szAbs - pa
-    const prox = Math.max(0, 1 - Math.abs(dz) / 2500)
+    const prox = Math.max(0, 1 - Math.abs(dz) / C.AUDIO_PROXIMITY_DENOM)
     // Directional offset
-    const dirPan = dir === 'left' ? -0.3 : dir === 'right' ? 0.3 : 0
+    const dirPan = dir === 'left' ? C.FIRE_DIR_PAN_LEFT : dir === 'right' ? C.FIRE_DIR_PAN_RIGHT : 0
     let pan = (sxAbs - car.x) + dirPan
     pan = Math.max(-1, Math.min(1, pan))
     Audio.playBulletFire(pan * prox)
@@ -407,7 +403,7 @@
   function applyHitAudio(targetX, targetZabs) {
     const pa = (car.lap - 1) * Track.length + car.z
     const dz = targetZabs - pa
-    const prox = Math.max(0, 1 - Math.abs(dz) / 2500)
+    const prox = Math.max(0, 1 - Math.abs(dz) / C.AUDIO_PROXIMITY_DENOM)
     const pan = Math.max(-1, Math.min(1, (targetX - car.x) * prox))
     Audio.playExplosion(pan)
   }
@@ -415,7 +411,7 @@
   function applyMissAudio(bx, bzAbs) {
     const pa = (car.lap - 1) * Track.length + car.z
     const dz = bzAbs - pa
-    const prox = Math.max(0, 1 - Math.abs(dz) / 2500)
+    const prox = Math.max(0, 1 - Math.abs(dz) / C.AUDIO_PROXIMITY_DENOM)
     const pan = Math.max(-1, Math.min(1, (bx - car.x) * prox))
     Audio.playMiss(pan)
   }
@@ -463,9 +459,9 @@
     } else if (ev === 'hit') {
       applyHitAudio(msg.tx, msg.tzAbs)
       if (msg.targetId === online.selfId) {
-        const dmg = msg.quality > 0.7 ? 35 : msg.quality > 0.35 ? 18 : 10
+        const dmg = msg.quality > C.DAMAGE_THRESHOLD_DIRECT ? C.DAMAGE_DIRECT : msg.quality > C.DAMAGE_THRESHOLD_HIT ? C.DAMAGE_HIT : C.DAMAGE_CLIP
         car.health = Math.max(0, car.health - dmg)
-        HUD.announce(I18n.t(msg.quality > 0.7 ? 'ann.directHit' : msg.quality > 0.35 ? 'ann.hit' : 'ann.clipped'), true)
+        HUD.announce(I18n.t(msg.quality > C.DAMAGE_THRESHOLD_DIRECT ? 'ann.directHit' : msg.quality > C.DAMAGE_THRESHOLD_HIT ? 'ann.hit' : 'ann.clipped'), true)
       }
     } else if (ev === 'miss') {
       applyMissAudio(msg.x, msg.zAbs)
@@ -473,10 +469,10 @@
       Audio.playPickup(msg.type)
       if (msg.targetId === online.selfId) {
         if (msg.type === 'health') {
-          car.health = Math.min(Car.HEALTH_MAX, car.health + 30)
+          car.health = Math.min(Car.HEALTH_MAX, car.health + C.PICKUP_HEALTH_AMOUNT)
           HUD.announce(I18n.t('ann.healthPack'))
         } else if (msg.type === 'shooter') {
-          car.bullets += 3
+          car.bullets += C.PICKUP_BULLET_AMOUNT
           HUD.announce(I18n.t('ann.shooter', { n: car.bullets }))
         } else {
           // Item pickup — fill slot if free
@@ -493,11 +489,11 @@
       // apply damage + slow + loud blast.
       const pa = (car.lap - 1) * Track.length + car.z
       const pan = Math.max(-1, Math.min(1, (msg.x - car.x)))
-      const prox = Math.max(0, 1 - Math.abs(msg.zAbs - pa) / 2500)
+      const prox = Math.max(0, 1 - Math.abs(msg.zAbs - pa) / C.AUDIO_PROXIMITY_DENOM)
       Audio.playMineExplosion(pan * prox)
       if (msg.victimId === online.selfId) {
-        car.health = Math.max(0, car.health - 35)
-        car.speed = Math.max(60, car.speed * 0.4)
+        car.health = Math.max(0, car.health - C.MINE_DAMAGE)
+        car.speed = Math.max(C.MINE_SPEED_MIN, car.speed * C.MINE_SPEED_MUL)
         HUD.announce(I18n.t('ann.mineTriggered'), true)
       }
     } else if (ev === 'decoy') {
@@ -511,8 +507,8 @@
       // Play collision sound; if we're one of the two, take a bit of damage
       if (msg.a === online.selfId || msg.b === online.selfId) {
         if (!car._hitCooldown || car._hitCooldown <= 0) {
-          car.health -= 6
-          car._hitCooldown = 0.5
+          car.health -= C.BUMP_DAMAGE
+          car._hitCooldown = C.BUMP_COOLDOWN
         }
         Audio.playHit()
       }
@@ -520,7 +516,7 @@
       if (msg.id === online.selfId) {
         // Host says we finished — enter finish phase if not already
         if (phase === 'race') {
-          car.lap = TOTAL_LAPS + 1
+          car.lap = C.TOTAL_LAPS + 1
           finishRace()
         }
       }
@@ -636,8 +632,8 @@
     Pickups.updateHost(dt, car, playerStubs, (pickup, who) => {
       const targetId = who.local ? online.selfId : who.id
       if (who.local) {
-        if (pickup.type === 'health') car.health = Math.min(Car.HEALTH_MAX, car.health + 30)
-        else car.bullets += 3
+        if (pickup.type === 'health') car.health = Math.min(Car.HEALTH_MAX, car.health + C.PICKUP_HEALTH_AMOUNT)
+        else car.bullets += C.PICKUP_BULLET_AMOUNT
         HUD.announce(pickup.type === 'health' ? I18n.t('ann.healthPack') : I18n.t('ann.shooter', { n: car.bullets }))
       }
       Audio.playPickup(pickup.type)
@@ -656,14 +652,14 @@
       })()
       Audio.playMineExplosion(pan)
       if (victimId === 'host') {
-        car.health = Math.max(0, car.health - 35)
-        car.speed = Math.max(60, car.speed * 0.4)
+        car.health = Math.max(0, car.health - C.MINE_DAMAGE)
+        car.speed = Math.max(C.MINE_SPEED_MIN, car.speed * C.MINE_SPEED_MUL)
         HUD.announce(I18n.t('ann.mineTriggered'), true)
       } else {
         const botVictim = bots.find(b => b.id === victimId)
         if (botVictim) {
-          botVictim.health = Math.max(0, botVictim.health - 35)
-          botVictim.speed = Math.max(60, botVictim.speed * 0.4)
+          botVictim.health = Math.max(0, botVictim.health - C.MINE_DAMAGE)
+          botVictim.speed = Math.max(C.MINE_SPEED_MIN, botVictim.speed * C.MINE_SPEED_MUL)
         }
       }
       const broadcastVictim = victimId === 'host' ? online.selfId : victimId
@@ -674,25 +670,25 @@
       onHit: (_b, targetId, quality) => {
         let tx = 0, tzAbs = 0
         if (targetId === 'host') {
-          const dmg = quality > 0.7 ? 35 : quality > 0.35 ? 18 : 10
+          const dmg = quality > C.DAMAGE_THRESHOLD_DIRECT ? C.DAMAGE_DIRECT : quality > C.DAMAGE_THRESHOLD_HIT ? C.DAMAGE_HIT : C.DAMAGE_CLIP
           car.health = Math.max(0, car.health - dmg)
           tx = car.x; tzAbs = selfAbs
-          if (quality > 0.7) HUD.announce(I18n.t('ann.directHitTaken'), true)
+          if (quality > C.DAMAGE_THRESHOLD_DIRECT) HUD.announce(I18n.t('ann.directHitTaken'), true)
           else HUD.announce(I18n.t('ann.hitTaken'), true)
         } else {
           const p = online.players.get(targetId)
           if (p) {
             // Human targets: visual flash only; health comes back via client report.
-            p._slowT = 2.0 - quality * 1.2
+            p._slowT = C.SLOW_T_BASE - quality * C.SLOW_T_RANGE
             tx = p.x; tzAbs = p.z
           } else {
             // Bot target — host owns their state, apply damage + slow directly.
             const bot = bots.find(x => x.id === targetId)
             if (bot) {
-              const dmg = quality > 0.7 ? 35 : quality > 0.35 ? 18 : 10
+              const dmg = quality > C.DAMAGE_THRESHOLD_DIRECT ? C.DAMAGE_DIRECT : quality > C.DAMAGE_THRESHOLD_HIT ? C.DAMAGE_HIT : C.DAMAGE_CLIP
               bot.health = Math.max(0, bot.health - dmg)
-              bot.speed = Math.max(60, bot.speed * (0.35 + (1 - quality) * 0.5))
-              bot._slowT = 2.0 - quality * 1.2
+              bot.speed = Math.max(C.BOT_SPEED_MIN, bot.speed * (C.BOT_SPEED_SLOW_BASE + (1 - quality) * C.BOT_SPEED_SLOW_RANGE))
+              bot._slowT = C.SLOW_T_BASE - quality * C.SLOW_T_RANGE
               tx = bot.x; tzAbs = bot.z
             }
           }
@@ -710,14 +706,14 @@
     // Host-car vs. every other racer (human + bot) — bumps.
     for (const other of ais) {
       const dz = Math.abs(other.z - selfAbs)
-      if (dz < 50 && Math.abs(other.x - car.x) < 0.22) {
+      if (dz < C.BUMP_Z_TOL && Math.abs(other.x - car.x) < C.BUMP_X_TOL) {
         const dir = Math.sign(car.x - other.x) || (Math.random() > 0.5 ? 1 : -1)
-        car.x += dir * 0.015
-        car.speed *= 0.985
-        other.speed *= 0.99
+        car.x += dir * C.BUMP_PUSH
+        car.speed *= C.BUMP_SELF_SPEED_MUL
+        other.speed *= C.BUMP_OTHER_SPEED_MUL
         if (!car._hitCooldown || car._hitCooldown <= 0) {
-          car.health -= 6
-          car._hitCooldown = 0.5
+          car.health -= C.BUMP_DAMAGE
+          car._hitCooldown = C.BUMP_COOLDOWN
           Audio.playHit()
           HUD.announce(I18n.t('ann.impact'))
         }
@@ -728,7 +724,7 @@
 
     // Finish / gameover triggers — humans get events, bots handled locally.
     for (const p of online.players.values()) {
-      if (!p.finished && p.lap > TOTAL_LAPS) {
+      if (!p.finished && p.lap > C.TOTAL_LAPS) {
         p.finished = true
         p.finishTime = raceTime
         Net.broadcast({ t: 'event', ev: 'finish', id: p.id })
@@ -739,7 +735,7 @@
       }
     }
     for (const b of bots) {
-      if (!b.finished && b.lap > TOTAL_LAPS) {
+      if (!b.finished && b.lap > C.TOTAL_LAPS) {
         b.finished = true
         b.finishTime = raceTime
       }
@@ -756,7 +752,7 @@
     const now = performance.now()
     let dt = (now - lastT.t) / 1000
     lastT.t = now
-    if (dt > 0.1) dt = 0.1
+    if (dt > C.DT_CEIL) dt = C.DT_CEIL
     if (dt < 0) dt = 0
 
     if (phase === 'splash' || phase === 'lobby') {
@@ -768,7 +764,7 @@
       if (prev < 2 && countdown >= 2) { HUD.announce(I18n.t('ann.one'), true); Audio.playCountdown(1) }
       if (prev < 3 && countdown >= 3) { Audio.playCountdown(0); beginRace() }
       Render.render(car, ais, Pickups.getList(), Bullets.getList())
-      HUD.update(car, ais, TOTAL_LAPS)
+      HUD.update(car, ais, C.TOTAL_LAPS)
       Audio.update(car, dt, ais)
     } else if (phase === 'race') {
       raceTime += dt
@@ -806,11 +802,11 @@
       const wrapped = prevZ > car.z + Track.length / 2
       if (wrapped) {
         car.lap++
-        if (car.lap > TOTAL_LAPS) {
+        if (car.lap > C.TOTAL_LAPS) {
           finishRace()
         } else {
           Audio.playLap()
-          HUD.announce(I18n.t('ann.lapDone', { n: car.lap, total: TOTAL_LAPS }))
+          HUD.announce(I18n.t('ann.lapDone', { n: car.lap, total: C.TOTAL_LAPS }))
         }
       }
 
@@ -828,16 +824,16 @@
 
         for (const ai of ais) {
           const dz = Track.wrap((ai.z % Track.length) - car.z)
-          const near = dz < 50 || dz > Track.length - 50
+          const near = dz < C.BUMP_Z_TOL || dz > Track.length - C.BUMP_Z_TOL
           if (!near) continue
-          if (Math.abs(ai.x - car.x) < 0.22) {
+          if (Math.abs(ai.x - car.x) < C.BUMP_X_TOL) {
             const dir = Math.sign(car.x - ai.x) || (Math.random() > 0.5 ? 1 : -1)
-            car.x += dir * 0.015
-            car.speed *= 0.985
-            ai.speed *= 0.99
+            car.x += dir * C.BUMP_PUSH
+            car.speed *= C.BUMP_SELF_SPEED_MUL
+            ai.speed *= C.BUMP_OTHER_SPEED_MUL
             if (!car._hitCooldown || car._hitCooldown <= 0) {
-              car.health -= 6
-              car._hitCooldown = 0.5
+              car.health -= C.BUMP_DAMAGE
+              car._hitCooldown = C.BUMP_COOLDOWN
               Audio.playHit()
               const side = (ai.x - car.x) < 0 ? 'left' : 'right'
               HUD.announce(I18n.t('ann.impactSide', { side: I18n.t('side.' + side) }))
@@ -849,8 +845,8 @@
         Pickups.update(dt, car, onPickupCollected)
         Bullets.update(dt, car, ais,
           (_hitAi, quality) => {
-            if (quality > 0.7) HUD.announce(I18n.t('ann.directHit'))
-            else if (quality > 0.35) HUD.announce(I18n.t('ann.hit'))
+            if (quality > C.DAMAGE_THRESHOLD_DIRECT) HUD.announce(I18n.t('ann.directHit'))
+            else if (quality > C.DAMAGE_THRESHOLD_HIT) HUD.announce(I18n.t('ann.hit'))
             else HUD.announce(I18n.t('ann.clipped'))
           },
           (b) => {
@@ -859,8 +855,8 @@
         )
         Mines.update(dt, car, (_mine, victim) => {
           if (victim === 'local') {
-            car.health = Math.max(0, car.health - 35)
-            car.speed = Math.max(60, car.speed * 0.4)
+            car.health = Math.max(0, car.health - C.MINE_DAMAGE)
+            car.speed = Math.max(C.MINE_SPEED_MIN, car.speed * C.MINE_SPEED_MUL)
             Audio.playMineExplosion(0)
             HUD.announce(I18n.t('ann.mineTriggered'), true)
           }
@@ -868,7 +864,7 @@
 
         // Player laps everyone → spawn a fresh bot ahead so the race isn't empty.
         spBotCheckT += dt
-        if (spBotCheckT >= SP_BOT_CHECK && ais.length < SP_BOT_MAX) {
+        if (spBotCheckT >= C.SP_BOT_CHECK_INTERVAL && ais.length < C.SP_BOT_MAX) {
           spBotCheckT = 0
           const playerAbsZ = (car.lap - 1) * Track.length + car.z
           // Find the AI with the highest absolute z
@@ -878,13 +874,13 @@
           // "Super ahead" = about half a track length past every AI. The
           // empty-track feeling kicks in well before a full lap; spawning at
           // half-a-lap keeps the field lively without waiting forever.
-          if (gap > Track.length * 0.5) {
+          if (gap > Track.length * C.SP_BOT_GAP_THRESHOLD) {
             const idx = ais.length
-            const newZ = playerAbsZ + 500 + Math.random() * 300
+            const newZ = playerAbsZ + C.SP_BOT_SPAWN_AHEAD + Math.random() * C.SP_BOT_SPAWN_RANGE
             const newAi = AI.create(idx, {
               startZ: newZ,
-              baseLane: AI.LANES ? AI.LANES[idx % 6] : ([-0.55, 0.55, -0.2, 0.35, -0.4, 0.1])[idx % 6],
-              speed: 180,
+              baseLane: C.AI_LANES[idx % C.AI_LANES.length],
+              speed: C.SP_BOT_SPEED,
               trackLength: Track.length,
             })
             ais.push(newAi)
@@ -906,17 +902,17 @@
 
         if (online.role === 'host') {
           hostSimStep(dt)
-          // Broadcast snap at NET_SNAP_HZ
+          // Broadcast snap at C.NET_SNAP_HZ
           netSnapAcc += dt
-          const period = 1 / NET_SNAP_HZ
+          const period = 1 / C.NET_SNAP_HZ
           if (netSnapAcc >= period) {
             netSnapAcc -= period
             hostBroadcastSnap()
           }
         } else {
-          // Client: throttle input sends to NET_INPUT_HZ
+          // Client: throttle input sends to C.NET_INPUT_HZ
           netInputAcc += dt
-          const period = 1 / NET_INPUT_HZ
+          const period = 1 / C.NET_INPUT_HZ
           if (netInputAcc >= period) {
             netInputAcc -= period
             sendClientInput()
@@ -929,21 +925,21 @@
 
       announceCooldown -= dt
       if (announceCooldown <= 0) {
-        announceCooldown = 12
+        announceCooldown = C.ANNOUNCE_COOLDOWN
       }
 
       Render.render(car, ais, Pickups.getList(), Bullets.getList())
-      HUD.update(car, ais, TOTAL_LAPS)
+      HUD.update(car, ais, C.TOTAL_LAPS)
       Audio.update(car, dt, ais)
       handleAnnounceKeys(car, ais)
     } else if (phase === 'finish') {
       Render.render(car, ais, Pickups.getList(), Bullets.getList())
-      HUD.update(car, ais, TOTAL_LAPS)
+      HUD.update(car, ais, C.TOTAL_LAPS)
       Audio.update(car, dt, ais)
       handleAnnounceKeys(car, ais)
     } else if (phase === 'gameover') {
       Render.render(car, ais, Pickups.getList(), Bullets.getList())
-      HUD.update(car, ais, TOTAL_LAPS)
+      HUD.update(car, ais, C.TOTAL_LAPS)
     }
 
     requestAnimationFrame(tick)

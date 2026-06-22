@@ -21,6 +21,7 @@
  *   - debugCripplFoe()  — bound to the `9` hotkey; drops foe HP to 10.
  */
 content.game = (() => {
+  const M = () => content.math
   const F = () => content.fighter
   const A = () => content.audio
   const C = () => content.combat
@@ -48,7 +49,7 @@ content.game = (() => {
   let playerCharacterId = 'roxy'
 
   function tnow() { return engine.time() }
-  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
+  function pick(arr) { return M().pick(arr) }
 
   function startMatch(charId) {
     if (charId) playerCharacterId = charId

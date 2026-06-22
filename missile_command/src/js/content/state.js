@@ -1,10 +1,11 @@
 // Authoritative game state. Every other module mutates this through
 // content.game's transitions (or reads it directly).
 content.state = (() => {
+  const K = () => content.constants
   return {
     // Score / progression
     score: 0,
-    nextBonusAt: 10000,
+    nextBonusAt: K().BONUS_THRESHOLD_INCREMENT,
     wave: 0,
 
     // FSM phase: see content.game STATE_*
@@ -20,7 +21,7 @@ content.state = (() => {
     // Reset to a fresh game (called from menu -> start).
     resetForNewGame() {
       this.score = 0
-      this.nextBonusAt = 10000
+      this.nextBonusAt = K().BONUS_THRESHOLD_INCREMENT
       this.wave = 0
       this.phase = 'idle'
       this.phaseTimer = 0

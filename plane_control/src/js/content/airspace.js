@@ -2,6 +2,7 @@
 // boundary keep-in (planes bank back rather than ever leaving radar). Pure
 // geometry — no audio, no state mutation beyond what callers pass in.
 content.airspace = (() => {
+  const M = () => content.math
   const C = () => content.constants
 
   function inBounds(col, row) {
@@ -69,7 +70,7 @@ content.airspace = (() => {
   // (toward the tower, ±spread) so new arrivals fly into the airspace.
   function randomEntry() {
     const g = C().GRID
-    const edge = Math.floor(Math.random() * 4)
+    const edge = M().randInt(0, 3)
     let col, row
     const span = () => g.min + Math.random() * (g.max - g.min)
     if (edge === 0) { col = span(); row = g.min }        // north edge

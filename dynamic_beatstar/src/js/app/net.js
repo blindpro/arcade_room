@@ -14,6 +14,7 @@
  * about lobby plumbing (`hello`, `lobby`, `kick`, `ping`, `pong`, `leave`).
  */
 app.net = (() => {
+  const M = () => content.math
   // -------------------------------------------------------------------
   // ICE / TURN config — change here if the server moves or creds rotate.
   // STUN-only is enough for direct peer-to-peer; TURN is the fallback
@@ -78,7 +79,7 @@ app.net = (() => {
   function generateCode() {
     let code = ''
     for (let i = 0; i < CODE_LENGTH; i++) {
-      code += CODE_CHARSET[Math.floor(Math.random() * CODE_CHARSET.length)]
+      code += M().pick(CODE_CHARSET)
     }
     return code
   }

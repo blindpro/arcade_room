@@ -10,6 +10,7 @@
 // of that, a continuous proximity-buzz voice opens its filter as Otto
 // nears, layering an analog panic cue.
 content.otto = (() => {
+  const M = () => content.math
   const A = () => content.audio
   const E = () => content.events
   const P = () => content.player
@@ -86,7 +87,7 @@ content.otto = (() => {
       const sp = content.room.spawn()
       const cols = content.room.cols(), rows = content.room.rows()
       // Place him at one edge, far from spawn, so he has to travel.
-      const side = Math.floor(Math.random() * 4)
+      const side = M().randInt(0, 3)
       if (side === 0) { state.x = 1.5; state.y = 1.5 }
       else if (side === 1) { state.x = cols - 1.5; state.y = 1.5 }
       else if (side === 2) { state.x = 1.5; state.y = rows - 1.5 }
@@ -125,7 +126,7 @@ content.otto = (() => {
       {x: 2, y: 2}, {x: cols - 2, y: 2},
       {x: 2, y: rows - 2}, {x: cols - 2, y: rows - 2},
     ]
-    const c = corners[Math.floor(Math.random() * corners.length)]
+    const c = M().pick(corners)
     state.x = c.x; state.y = c.y
     state.bouncePhase = 0
     state.halfPhase = 0

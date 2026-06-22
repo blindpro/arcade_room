@@ -1,4 +1,5 @@
 content.game = (() => {
+  const M = () => content.math
   const C = () => content.constants
 
   const state = {
@@ -88,7 +89,7 @@ content.game = (() => {
     const enemy = {
       id: state.nextId++,
       kind: enemyKind,
-      lane: laneWrap(lane == null ? state.playerLane + Math.floor(Math.random() * C().LANE_COUNT) : lane),
+      lane: laneWrap(lane == null ? state.playerLane + M().randInt(0, C().LANE_COUNT - 1) : lane),
       depth: depth == null ? 1 : clamp01(depth),
       hp: enemyKind === 'spark' ? 1 : enemyKind === 'tanker' ? 2 : 1,
       speed: enemySpeed(enemyKind),

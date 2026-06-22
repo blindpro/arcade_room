@@ -1,4 +1,5 @@
 content.game = (() => {
+  const K = () => content.constants
   const STATE_INTRO       = 'intro'
   const STATE_READY       = 'ready'
   const STATE_PLAY        = 'play'
@@ -17,7 +18,7 @@ content.game = (() => {
     content.wave.reset()
     S().wave = 0
     S().phase = STATE_INTRO
-    S().phaseTimer = 1.4
+    S().phaseTimer = K().INTRO_TIMER
   }
 
   function _beginWave() {
@@ -25,7 +26,7 @@ content.game = (() => {
     content.wave.start(S().wave)
     content.batteries.init()
     S().phase = STATE_READY
-    S().phaseTimer = 1.0
+    S().phaseTimer = K().READY_TIMER
     content.events.emit('wave-start', {wave: S().wave})
   }
 
@@ -33,7 +34,7 @@ content.game = (() => {
     const before = S().score
     S().score += n
     while (S().score >= S().nextBonusAt) {
-      S().nextBonusAt += 10000
+      S().nextBonusAt += K().BONUS_THRESHOLD_INCREMENT
       const idx = content.cities.firstDestroyedIndex()
       if (idx >= 0) content.cities.restore(idx)
     }
@@ -67,7 +68,7 @@ content.game = (() => {
           content.threats.clearAll()
           content.outgoing.clear()
           S().phase = STATE_WAVE_CLEAR
-          S().phaseTimer = 1.6
+          S().phaseTimer = K().ALL_CITIES_LOST_TIMER
           content.events.emit('all-cities-lost')
         }
         else if (content.wave.isCleared()) {
@@ -77,7 +78,7 @@ content.game = (() => {
           addScore(bonus)
           content.events.emit('wave-clear', {wave: S().wave, bonus, missiles: survMissiles, cities: survCities})
           S().phase = STATE_WAVE_CLEAR
-          S().phaseTimer = 2.0
+          S().phaseTimer = K().WAVE_CLEAR_TIMER
         }
         break
 
@@ -98,10 +99,10 @@ content.game = (() => {
   }
 
   content.events.on('threat-killed', (e) => {
-    let pts = 25
-    if (e.kind === 'splitter') pts = 75
-    else if (e.kind === 'bomber') pts = 100
-    else if (e.kind === 'bomb') pts = 50
+    let pts = K().SCORE_ICBM
+    if (e.kind === 'splitter') pts = K().SCORE_SPLITTER
+    else if (e.kind === 'bomber') pts = K().SCORE_BOMBER
+    else if (e.kind === 'bomb') pts = K().SCORE_BOMB
     addScore(pts)
   })
 

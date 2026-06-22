@@ -1,17 +1,11 @@
 content.batteries = (() => {
-  const AMMO_PER_BATTERY = 10
-  const COOLDOWN_DURATION = 0.7
-  const SHOT_DURATION = 0.8
-  const DETONATION_Y = 0.45
+  const K = () => content.constants
 
   const LOCK_ZONES = {
-    L: {pitch: 180, x: -0.65, y: DETONATION_Y},
-    C: {pitch: 240, x:  0.00, y: DETONATION_Y},
-    R: {pitch: 320, x:  0.65, y: DETONATION_Y},
+    L: {pitch: 180, x: -0.65, y: K().DETONATION_Y},
+    C: {pitch: 240, x:  0.00, y: K().DETONATION_Y},
+    R: {pitch: 320, x:  0.65, y: K().DETONATION_Y},
   }
-
-  const LOCK_RADIUS = 0.40
-  const LOCK_TREM_START = 0.25
 
   const list = []
 
@@ -27,7 +21,7 @@ content.batteries = (() => {
         id: p.id,
         x: p.x,
         labelKey: p.labelKey,
-        ammo: AMMO_PER_BATTERY,
+        ammo: K().AMMO_PER_BATTERY,
         cooldown: 0,
         zoneInfo: z,
         _lockVoice: null,
@@ -74,12 +68,12 @@ content.batteries = (() => {
     if (b.ammo <= 0) return null
 
     b.ammo--
-    b.cooldown = COOLDOWN_DURATION
+    b.cooldown = K().COOLDOWN_DURATION
 
     const z = b.zoneInfo
 
     content.audio.batteryThunk(b.id)
-    content.audio.emitOutgoingWhistle(b.x, 0, z.x, z.y, SHOT_DURATION, b.id)
+    content.audio.emitOutgoingWhistle(b.x, 0, z.x, z.y, K().SHOT_DURATION, b.id)
 
     const shot = {
       batteryIndex: i,
@@ -87,7 +81,7 @@ content.batteries = (() => {
       startY: 0,
       endX: z.x,
       endY: z.y,
-      duration: SHOT_DURATION,
+      duration: K().SHOT_DURATION,
       elapsed: 0,
     }
     content.outgoing.spawn(shot)
@@ -121,10 +115,10 @@ content.batteries = (() => {
       let gain = 0
       let tremDepth = 0
       if (d < Infinity) {
-        const norm = content.world.clamp(d / LOCK_RADIUS, 0, 1)
-        gain = (1 - norm) * 0.28
-        if (d < LOCK_TREM_START) {
-          const k = 1 - (d / LOCK_TREM_START)
+        const norm = content.world.clamp(d / K().LOCK_RADIUS, 0, 1)
+        gain = (1 - norm) * K().LOCK_TONE_GAIN
+        if (d < K().LOCK_TREM_START) {
+          const k = 1 - (d / K().LOCK_TREM_START)
           tremDepth = k * k
         }
       }
@@ -165,6 +159,6 @@ content.batteries = (() => {
 
   return {
     init, fire, totalAmmo, tick, getAll, get,
-    silenceAll, AMMO_PER_BATTERY,
+    silenceAll, LOCK_ZONES,
   }
 })()

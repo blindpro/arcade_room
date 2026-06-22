@@ -19,11 +19,9 @@
 content.weapons = (() => {
   const A = () => content.audio
   const S = () => content.state
+  const K = () => content.constants
 
   const WEAPON_LIST = ['pulse', 'beam', 'missile']
-
-  const ENERGY_COST = {pulse: 5, beam: 10, missile: 15}
-  const HIT_RADIUS  = {pulse: 0.18, beam: 0.10, missile: 0.30}
   const NAME_KEY    = {pulse: 'game.weaponPulse', beam: 'game.weaponBeam', missile: 'game.weaponMissile'}
 
   // weapon → ship-kind → matchup
@@ -40,15 +38,14 @@ content.weapons = (() => {
   // Throttle the bounce-hint announcement so the polite region doesn't
   // pile up if the player spam-fires the wrong weapon.
   let _lastBounceHint = 0
-  const BOUNCE_HINT_INTERVAL = 1.5  // seconds
 
   function matchup(weapon, kind) {
     const row = MATCHUP[weapon]
     if (!row) return 'right'
     return row[kind] || 'right'
   }
-  function hitRadius(weapon) { return HIT_RADIUS[weapon] || 0.18 }
-  function energyCost(weapon) { return ENERGY_COST[weapon] || 8 }
+  function hitRadius(weapon) { return K().hitRadius[weapon] || 0.18 }
+  function energyCost(weapon) { return K().energyCost[weapon] || 8 }
   function nameKey(weapon) { return NAME_KEY[weapon] || 'game.weaponPulse' }
   function unlocked(weapon) {
     const s = S().get()
@@ -120,7 +117,7 @@ content.weapons = (() => {
     if (result === 'bounce') {
       A().enqueue({type: 'bounce', aim: s.aim})
       const t = engine.time()
-      if (t - _lastBounceHint >= BOUNCE_HINT_INTERVAL) {
+      if (t - _lastBounceHint >= K().bounceHintInterval) {
         _lastBounceHint = t
         try {
           const right = RIGHT_WEAPON_FOR_KIND[target.kind] || 'pulse'

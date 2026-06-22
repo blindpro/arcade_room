@@ -1,6 +1,7 @@
 // Four ghosts with classic AI: Blinky (chaser), Pinky (ambush),
 // Inky (vector relative to Blinky), Clyde (chase/scatter by distance).
 content.ghosts = (() => {
+  const M = () => content.math
   // Calibrated so 100% on the arcade scale = 8.0 t/s, matching Pac-Man's base.
   // L5+ ghost normal speed = 0.95 × base = 7.6 t/s.
   const SPEED_BASE = 8.0
@@ -291,7 +292,7 @@ content.ghosts = (() => {
       return
     }
     if (g.mode === 'frightened') {
-      g.dir = valid[Math.floor(Math.random() * valid.length)]
+      g.dir = M().pick(valid)
       return
     }
     // Pick the one closest to target

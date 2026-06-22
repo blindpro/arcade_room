@@ -2,31 +2,17 @@
 // shuffled queue of N spawn events spaced over the wave duration, with
 // per-spawn jitter.
 content.wave = (() => {
-  // Per-wave parameters. Indexed by wave number (1-based); waves above
-  // the table cap.
-  const TABLE = [
-    null,
-    {count: 9,  splitterRate: 0.00, bomberRate: 0.00, speedMul: 1.05, duration: 28},
-    {count: 12, splitterRate: 0.10, bomberRate: 0.00, speedMul: 1.10, duration: 26},
-    {count: 14, splitterRate: 0.20, bomberRate: 0.05, speedMul: 1.20, duration: 24},
-    {count: 17, splitterRate: 0.25, bomberRate: 0.10, speedMul: 1.35, duration: 22},
-    {count: 20, splitterRate: 0.30, bomberRate: 0.15, speedMul: 1.50, duration: 21},
-    {count: 23, splitterRate: 0.40, bomberRate: 0.20, speedMul: 1.65, duration: 20},
-    {count: 26, splitterRate: 0.45, bomberRate: 0.20, speedMul: 1.80, duration: 19},
-    {count: 29, splitterRate: 0.50, bomberRate: 0.25, speedMul: 2.00, duration: 18},
-    {count: 32, splitterRate: 0.55, bomberRate: 0.30, speedMul: 2.20, duration: 17},
-  ]
+  const K = () => content.constants
 
   function paramsForWave(n) {
     if (n < 1) n = 1
-    if (n < TABLE.length) return TABLE[n]
-    // 10+
+    if (n < K().WAVE_TABLE.length) return K().WAVE_TABLE[n]
     return {
-      count: 35 + 4 * (n - 10),
-      splitterRate: 0.60,
-      bomberRate: 0.35,
-      speedMul: 2.40,
-      duration: 16,
+      count: K().WAVE_BEYOND_COUNT_BASE + K().WAVE_BEYOND_COUNT_PER * (n - K().WAVE_TABLE.length),
+      splitterRate: K().WAVE_BEYOND_SPLITTER_RATE,
+      bomberRate: K().WAVE_BEYOND_BOMBER_RATE,
+      speedMul: K().WAVE_BEYOND_SPEED_MUL,
+      duration: K().WAVE_BEYOND_DURATION,
     }
   }
 
@@ -47,7 +33,7 @@ content.wave = (() => {
     active = true
 
     const interval = p.duration / p.count
-    let t = 0.5  // brief grace before first spawn
+    let t = K().FIRST_SPAWN_GRACE
     for (let i = 0; i < p.count; i++) {
       const r = Math.random()
       let kind = 'icbm'
@@ -64,19 +50,19 @@ content.wave = (() => {
   function _spawn(kind, speedMul) {
     if (kind === 'bomber') {
       const fromLeft = Math.random() < 0.5
-      const startX = fromLeft ? -1.1 : 1.1
-      const speed = (0.18 + Math.random() * 0.06) * speedMul
+      const startX = fromLeft ? -K().BOMBER_BOUNDS : K().BOMBER_BOUNDS
+      const speed = (K().BOMBER_SPEED_BASE + Math.random() * K().BOMBER_SPEED_RANGE) * speedMul
       content.threats.spawn({
         kind: 'bomber',
         x: startX,
-        y: 0.7 + Math.random() * 0.2,
+        y: K().BOMBER_SPAWN_Y_BASE + Math.random() * K().BOMBER_SPAWN_Y_RANGE,
         vx: fromLeft ? speed : -speed,
         vy: 0,
       })
     } else {
-      const startX = (Math.random() * 1.6) - 0.8
-      const targetX = (Math.random() * 1.6) - 0.8
-      const baseDescent = 0.18 * speedMul * (kind === 'splitter' ? 0.92 : 1.0)
+      const startX = (Math.random() * 2 * K().SPAWN_X_RANGE) - K().SPAWN_X_RANGE
+      const targetX = (Math.random() * 2 * K().SPAWN_X_RANGE) - K().SPAWN_X_RANGE
+      const baseDescent = -K().ICBM_VY * speedMul * (kind === 'splitter' ? K().SPLITTER_SPEED_MUL : 1.0)
       const flightTime = 1.0 / baseDescent
       const vx = (targetX - startX) / flightTime
       content.threats.spawn({
@@ -109,9 +95,8 @@ content.wave = (() => {
   function isActive() { return active }
   function remaining() { return queue.length + content.threats.aliveCount() }
 
-  // Wave-clear bonus: surviving missiles × 5 + surviving cities × 100.
   function bonus(survivingMissiles, survivingCities) {
-    return survivingMissiles * 5 + survivingCities * 100
+    return survivingMissiles * K().MISSILE_BONUS_MUL + survivingCities * K().CITY_BONUS_MUL
   }
 
   function reset() {

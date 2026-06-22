@@ -1,4 +1,5 @@
 content.powerup = (() => {
+  const M = () => content.math
   const TYPES = ['widePaddle', 'shield', 'strongSwing', 'freeze', 'curve', 'bouncyWalls']
 
   const balls = { player: null, ai: null }
@@ -10,7 +11,7 @@ content.powerup = (() => {
   }
 
   function spawnBall(owner) {
-    const type = TYPES[Math.floor(Math.random() * TYPES.length)]
+    const type = M().pick(TYPES)
     const fromLeft = Math.random() < 0.5
     balls[owner] = {
       x: fromLeft ? -0.5 : content.table.WIDTH + 0.5,

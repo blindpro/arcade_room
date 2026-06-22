@@ -17,9 +17,7 @@
  * arrives.
  */
 content.state = (() => {
-  const STARTING_LIVES = 3
-  const STARTING_ENERGY = 100
-  const MAX_ENERGY = 100
+  const K = () => content.constants
 
   let _session = null
   let _enemyIdCounter = 0
@@ -28,11 +26,11 @@ content.state = (() => {
     return {
       wave: 0,                      // current wave number (1-based once started)
       score: 0,
-      lives: STARTING_LIVES,
-      energy: STARTING_ENERGY,
+      lives: K().startingLives,
+      energy: K().startingEnergy,
       kills: 0,
       civiliansLost: 0,
-      maxEnergy: MAX_ENERGY,
+      maxEnergy: K().maxEnergy,
 
       // Aim / fire state
       aim: 0,                       // [-1, 1] stereo position
@@ -78,8 +76,8 @@ content.state = (() => {
 
       // Score thresholds for life extends — increasing intervals
       // 20k, 60k, 120k, 200k, 300k, ...
-      nextExtendAt: 20000,
-      nextExtendStep: 40000,        // increment to next threshold
+      nextExtendAt: K().firstExtendAt,
+      nextExtendStep: K().extendStep,        // increment to next threshold
 
       // Audible state machines
       lowEnergyOn: false,
@@ -119,6 +117,6 @@ content.state = (() => {
     get,
     nextEnemyId,
     isAlive,
-    MAX_ENERGY,
+    getMaxEnergy: () => K().maxEnergy,
   }
 })()

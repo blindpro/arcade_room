@@ -6,6 +6,7 @@
 content.experiment = (() => {
   const C = () => content.constants
   const S = () => content.state
+  const M = () => content.math
 
   const PIECE_RADIUS = 1.2
   const OIL_RADIUS = 0.7
@@ -151,7 +152,7 @@ content.experiment = (() => {
     const car = S().career()
     if (direction === 'asc') {
       const pool = [C().INV.NEUTRALIZER, C().INV.COLLECTOR, C().INV.FUSION]
-      grantInventory(pool[Math.floor(Math.random() * pool.length)])
+      grantInventory(M().pick(pool))
     } else {
       car.inventory.S += 5
       content.announcer.info(app.i18n.t('ann.gotItem', {item: app.i18n.t('item.coinSpawn')}))

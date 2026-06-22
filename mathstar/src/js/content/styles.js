@@ -36,6 +36,7 @@
 //   leadOctaveBias      -1 | 0 | +1 — pull the lead an octave down/up.
 //   pad                 pad volume multiplier (0 = off, 1 = full)
 content.styles = (() => {
+  const M = () => content.math
   const STYLES = {
     // vibe: smoky. Late-night jazz — the original lounge + jazz folded into
     // one strong identity. Walking upright bass, brushed kit, ornamented
@@ -461,7 +462,7 @@ content.styles = (() => {
   function pickFor(prevId) {
     const all = Object.keys(STYLES)
     const pool = prevId && all.length > 1 ? all.filter((id) => id !== prevId) : all
-    return STYLES[pool[Math.floor(Math.random() * pool.length)]]
+    return STYLES[M().pick(pool)]
   }
 
   // Choose a meter from the style's palette. Below level 3 stick with
@@ -471,14 +472,14 @@ content.styles = (() => {
     const palette = style.meterPalette
     if (level < 3 || palette.length === 1) return palette[0]
     if (level < 6) return Math.random() < 0.7 ? palette[0] : palette[1 % palette.length]
-    return palette[Math.floor(Math.random() * palette.length)]
+    return M().pick(palette)
   }
 
   function pickProgression(style, mode) {
     const list = (mode === 'minor' && style.minorProgressions)
       ? style.minorProgressions
       : style.progressions
-    return list[Math.floor(Math.random() * list.length)].slice()
+    return M().pick(list).slice()
   }
 
   // Subdivision probability table. Returns {q, e, s} that sum to 1 —

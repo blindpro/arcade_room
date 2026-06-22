@@ -2,21 +2,19 @@
 // On spawn, queue an audible bloom and start a damage timer that scans
 // content.threats for hits while the radius is open.
 content.blasts = (() => {
-  const EXPAND_TIME = 0.35
-  const HOLD_TIME   = 0.25
-  const CONTRACT_TIME = 0.55
-  const TOTAL = EXPAND_TIME + HOLD_TIME + CONTRACT_TIME
-  const MAX_RADIUS = 0.22  // world units
+  const K = () => content.constants
 
   const list = []
   let nextId = 1
 
+  const _TOTAL = () => K().BLAST_EXPAND_TIME + K().BLAST_HOLD_TIME + K().BLAST_CONTRACT_TIME
+
   function radiusFor(elapsed) {
-    if (elapsed < EXPAND_TIME) return MAX_RADIUS * (elapsed / EXPAND_TIME)
-    if (elapsed < EXPAND_TIME + HOLD_TIME) return MAX_RADIUS
-    if (elapsed < TOTAL) {
-      const k = (elapsed - EXPAND_TIME - HOLD_TIME) / CONTRACT_TIME
-      return MAX_RADIUS * (1 - k)
+    if (elapsed < K().BLAST_EXPAND_TIME) return K().BLAST_MAX_RADIUS * (elapsed / K().BLAST_EXPAND_TIME)
+    if (elapsed < K().BLAST_EXPAND_TIME + K().BLAST_HOLD_TIME) return K().BLAST_MAX_RADIUS
+    if (elapsed < _TOTAL()) {
+      const k = (elapsed - K().BLAST_EXPAND_TIME - K().BLAST_HOLD_TIME) / K().BLAST_CONTRACT_TIME
+      return K().BLAST_MAX_RADIUS * (1 - k)
     }
     return 0
   }
@@ -26,13 +24,13 @@ content.blasts = (() => {
       id: nextId++,
       x, y,
       elapsed: 0,
-      total: TOTAL,
+      total: _TOTAL(),
       // Track threats already killed by this blast so a single threat
       // doesn't get scored twice while the radius is held open.
       killedIds: new Set(),
     }
     list.push(b)
-    content.audio.emitBlast(x, y, TOTAL)
+    content.audio.emitBlast(x, y, _TOTAL())
     content.events.emit('blast-spawn', {x, y})
     return b
   }
@@ -58,5 +56,5 @@ content.blasts = (() => {
   function count() { return list.length }
   function getAll() { return list }
 
-  return {spawn, tick, clear, count, getAll, MAX_RADIUS, TOTAL}
+  return {spawn, tick, clear, count, getAll}
 })()

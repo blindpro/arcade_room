@@ -28,6 +28,7 @@
  */
 content.screams = (() => {
   const A = () => content.audio
+  const M = () => content.math
 
   // --- Per-type voice config ---------------------------------------------
   // f0Range:   pitch peak at start of scream (Hz)
@@ -285,7 +286,7 @@ content.screams = (() => {
     const t0 = c.currentTime + (opts.delay || 0)
 
     // Pick vowel and contour for this voice.
-    const vowel = cfg.vowels[Math.floor(Math.random() * cfg.vowels.length)]
+    const vowel = M().pick(cfg.vowels)
     const contour = pickContour(intensity, opts)
 
     // Pitch & dur shaped by intensity (panic → higher pitch, longer scream).
@@ -535,7 +536,7 @@ content.screams = (() => {
   // `intensity` (0..1) shapes how unhinged each voice is.
   function emitPanic(x, y, pop, intensity = 0.4) {
     if (popTotal(pop) <= 0) return
-    const count = 2 + Math.floor(Math.random() * 3 + intensity * 2) // 2..6
+    const count = 2 + M().randInt(0, 2) + intensity * 2 // 2..6
     for (let i = 0; i < count; i++) {
       const t = pickType(pop)
       if (!t) break
@@ -562,7 +563,7 @@ content.screams = (() => {
     }
     if (!all.length) return
     for (let i = all.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
+      const j = M().randInt(0, i)
       ;[all[i], all[j]] = [all[j], all[i]]
     }
     const span = Math.min(1.8, 0.3 + all.length * 0.18)

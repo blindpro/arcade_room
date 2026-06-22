@@ -6,6 +6,7 @@
 // Coordinate convention: x = column (east+), y = row, y increasing SOUTH (down).
 // North = y-1. A move toward 'n' slides tones up toward row 0.
 content.board = (() => {
+  const M = () => content.math
   let N = 4
   let grid = []   // length N*N, row-major
 
@@ -16,7 +17,7 @@ content.board = (() => {
   function spawn() {
     const e = emptyCells()
     if (!e.length) return null
-    const i = e[Math.floor(Math.random() * e.length)]
+    const i = M().pick(e)
     const v = Math.random() < content.constants.FOUR_PROB ? 4 : 2
     grid[i] = v
     return {x: i % N, y: Math.floor(i / N), value: v}

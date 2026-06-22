@@ -12,8 +12,7 @@
 // the listener 90° away from where it should face. The test screen plays
 // ticks at canonical four-quadrant positions to verify by ear.
 content.world = (() => {
-  const SCALE = 8         // metres per world unit
-  const LISTENER_YAW = 0  // audio-front already aligned with world +y via worldToAudio
+  const K = () => content.constants
 
   // Six cities — three to the left of center, three to the right. Spread
   // across [-0.85, +0.85] with a gap in the middle for the center battery.
@@ -42,7 +41,7 @@ content.world = (() => {
     // syngen-style (+x_audio = forward, +y_audio = left). Front of listener
     // is high sky, so audio.x ∝ y. Audio.y is screen-x with sign flipped to
     // account for syngen's +y = LEFT convention.
-    return {x: y * SCALE, y: -x * SCALE, z: 0}
+    return {x: y * K().SCALE, y: -x * K().SCALE, z: 0}
   }
 
   // Build a vector from a world position to the listener, in audio frame.
@@ -50,8 +49,8 @@ content.world = (() => {
     const lp = engine.position.getVector()
     const lq = engine.position.getQuaternion().conjugate()
     return engine.tool.vector3d.create({
-      x:  y * SCALE - lp.x,
-      y: -x * SCALE - lp.y,
+      x:  y * K().SCALE - lp.x,
+      y: -x * K().SCALE - lp.y,
       z: 0,
     }).rotateQuaternion(lq)
   }
@@ -62,10 +61,10 @@ content.world = (() => {
   // remains correct even if a screen sets a different forward direction.
   function behindness(srcX, srcY) {
     const lp = engine.position.getVector()
-    const dx = (srcY * SCALE) - lp.x
-    const dy = -(srcX * SCALE) - lp.y
+    const dx = (srcY * K().SCALE) - lp.x
+    const dy = -(srcX * K().SCALE) - lp.y
     if (dx === 0 && dy === 0) return 0
-    const yaw = content.world._lastYaw != null ? content.world._lastYaw : LISTENER_YAW
+    const yaw = content.world._lastYaw != null ? content.world._lastYaw : K().LISTENER_YAW
     let rel = Math.atan2(dy, dx) - yaw
     while (rel > Math.PI) rel -= 2 * Math.PI
     while (rel < -Math.PI) rel += 2 * Math.PI
@@ -80,8 +79,8 @@ content.world = (() => {
   }
 
   return {
-    SCALE,
-    LISTENER_YAW,
+    get LISTENER_YAW() { return K().LISTENER_YAW },
+    get SCALE() { return K().SCALE },
     CITY_POSITIONS,
     BATTERY_POSITIONS,
     clamp,
@@ -89,6 +88,6 @@ content.world = (() => {
     relativeVector,
     behindness,
     distance,
-    _lastYaw: LISTENER_YAW,
+    _lastYaw: K().LISTENER_YAW,
   }
 })()

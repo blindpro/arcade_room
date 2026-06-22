@@ -27,11 +27,7 @@ content.game = (() => {
   const E = () => content.enemies
   const Sc = () => content.scoring
   const W = () => content.weapons
-
-  const REGEN_LOCKOUT = 0.4   // seconds since last shot before regen kicks in
-  const REGEN_RATE    = 13    // energy/sec — full refill from 0 takes ~7.7s
-  const LOW_ENERGY_ON  = 30
-  const LOW_ENERGY_OFF = 50
+  const K = () => content.constants
 
   let _lastTickTime = 0
   let _running = false
@@ -45,7 +41,7 @@ content.game = (() => {
     A().startAimVoice()
     _lastTickTime = engine.time()
     _running = true
-    _scheduleNextWave(2.0)  // 2-second pre-game lull
+    _scheduleNextWave(K().preGameLull)  // pre-game lull
     try {
       app.announce.polite(app.i18n.t('menu.title'))
     } catch (e) {}
@@ -132,26 +128,26 @@ content.game = (() => {
   // Wave composition: returns a list of {kind, atTime} entries.
   // Spawn cadence ramps with wave; class mix ramps as classes unlock.
   function _composeWave(wave) {
-    const t0 = engine.time() + 0.7   // small lead-in after the wave-start sting
+    const t0 = engine.time() + K().stingLeadIn   // small lead-in after the wave-start sting
     const out = []
     // Base counts (ramped by wave)
     const base = 6 + wave * 2          // total contacts
-    const total = Math.min(24, base)
+    const total = Math.min(K().maxContacts, base)
     // Spawn interval shrinks with wave
-    const interval = Math.max(0.75, 1.4 - 0.06 * wave)
+    const interval = Math.max(K().spawnIntervalMin, K().spawnIntervalBase - K().spawnIntervalPerWave * wave)
 
     // Friendlies fraction (mechanic 6)
-    const friendFrac = wave >= 4 ? Math.min(0.20, 0.10 + 0.015 * (wave - 4)) : 0
+    const friendFrac = wave >= K().friendFracWaveMin ? Math.min(K().friendFracMax, K().friendFracBase + K().friendFracPerWave * (wave - K().friendFracWaveMin)) : 0
 
     // Class-mix weights based on what's unlocked
     const weights = []
-    weights.push({kind: 'scout', w: 1.0})
-    if (wave >= 2) weights.push({kind: 'bomber', w: 0.9})
-    if (wave >= 3) weights.push({kind: 'battleship', w: 0.6})
+    weights.push({kind: 'scout', w: K().classWeightScout})
+    if (wave >= 2) weights.push({kind: 'bomber', w: K().classWeightBomber})
+    if (wave >= 3) weights.push({kind: 'battleship', w: K().classWeightBattleship})
 
     // Chain-tagged count: 5 ships per wave from wave 5 onward — the full
     // CE3K motif. We don't grow past 5; the motif ends on sol.
-    const chainCount = wave >= 5 ? 5 : 0
+    const chainCount = wave >= K().chainCountFromWave ? K().chainCount : 0
     let chainAssigned = 0
 
     for (let i = 0; i < total; i++) {
@@ -169,7 +165,7 @@ content.game = (() => {
       }
       out.push({
         kind,
-        atTime: t0 + i * interval * (0.85 + Math.random() * 0.30),
+        atTime: t0 + i * interval * (K().spawnJitterMin + Math.random() * K().spawnJitterRange),
         chainIndex,
       })
     }
@@ -208,9 +204,9 @@ content.game = (() => {
     // Aim edge — only re-announce after 1.2s away from the same edge so
     // sweeping back and forth across the boundary doesn't spam.
     let edge = 'centre'
-    if (s.aim >= 0.95) edge = 'right'
-    else if (s.aim <= -0.95) edge = 'left'
-    if (edge !== s.lastAimEdge && t - s.lastAimEdgeAt >= 1.2) {
+    if (s.aim >= K().edgeThreshold) edge = 'right'
+    else if (s.aim <= -K().edgeThreshold) edge = 'left'
+    if (edge !== s.lastAimEdge && t - s.lastAimEdgeAt >= K().edgeReannounceThrottle) {
       s.lastAimEdge = edge
       s.lastAimEdgeAt = t
       if (edge === 'left')       { try { app.announce.polite(app.i18n.t('ann.aimEdgeLeft')) } catch (e) {} }
@@ -252,7 +248,7 @@ content.game = (() => {
     if (!s || s.pendingGameOver) return
     s.pendingGameOver = true
     s.gameOverReasonKey = reasonKey || 'ann.gameOver'
-    s.gameOverAt = engine.time() + 1.2  // let the breach/death sting finish
+    s.gameOverAt = engine.time() + K().gameOverDelay  // let the breach/death sting finish
   }
 
   function tick() {
@@ -261,8 +257,8 @@ content.game = (() => {
     const t = engine.time()
     let dt = t - _lastTickTime
     _lastTickTime = t
-    if (dt <= 0) dt = 1 / 60
-    if (dt > 0.25) dt = 0.25
+    if (dt <= 0) dt = K().minDt
+    if (dt > K().maxDt) dt = K().maxDt
 
     // Fire request — resolve before spawn / movement so the player can
     // hit ships at their current position.
@@ -295,19 +291,19 @@ content.game = (() => {
     } : null)
 
     // Energy regen — only while not firing for ≥ REGEN_LOCKOUT seconds
-    if (t - s.lastFireTime >= REGEN_LOCKOUT && s.energy < s.maxEnergy) {
-      s.energy = Math.min(s.maxEnergy, s.energy + REGEN_RATE * dt)
+    if (t - s.lastFireTime >= K().energyRegenLockout && s.energy < s.maxEnergy) {
+      s.energy = Math.min(s.maxEnergy, s.energy + K().energyRegenRate * dt)
     }
 
     // Low-energy buzz: hysteresis at 30% ↔ 50%
-    if (!s.lowEnergyOn && s.energy < LOW_ENERGY_ON) {
+    if (!s.lowEnergyOn && s.energy < K().lowEnergyOn) {
       s.lowEnergyOn = true
       A().setLowEnergy(true)
       if (!s.criticalAnnounced) {
         s.criticalAnnounced = true
         try { app.announce.assertive(app.i18n.t('ann.energyCritical')) } catch (e) {}
       }
-    } else if (s.lowEnergyOn && s.energy > LOW_ENERGY_OFF) {
+    } else if (s.lowEnergyOn && s.energy > K().lowEnergyOff) {
       s.lowEnergyOn = false
       A().setLowEnergy(false)
       A().enqueue({type: 'shieldRefill'})
@@ -315,7 +311,7 @@ content.game = (() => {
     }
     // Reset critical-armed once energy fully recovers, so a future descent
     // can re-trigger the critical assertive.
-    if (s.criticalAnnounced && s.energy >= 80) s.criticalAnnounced = false
+    if (s.criticalAnnounced && s.energy >= K().criticalResetThreshold) s.criticalAnnounced = false
 
     // Auto-announce: energy bucket crossings + chain advance + aim edge.
     _autoAnnounce(s, t)
@@ -330,7 +326,7 @@ content.game = (() => {
     if (s.waveTotalSpawns > 0 && s.waveSpawnQueue.length === 0 && s.enemies.length === 0) {
       const clean = Sc().awardWaveClear(s.wave)
       A().enqueue({type: clean ? 'waveClear' : 'waveSurvived'})
-      _scheduleNextWave(3.0)
+      _scheduleNextWave(K().interWaveLull)
     }
 
     // Game-over delay

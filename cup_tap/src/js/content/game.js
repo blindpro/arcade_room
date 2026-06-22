@@ -14,6 +14,7 @@
  * getters so module load order doesn't matter (see CLAUDE.md gotcha).
  */
 content.game = (() => {
+  const M = () => content.math
   const LANES = 4
   const PLAYER_WALK_SPEED = 5.5     // cells / s
   const POUR_FILL_SECONDS = 0.55    // time at the kegs to fully fill a mug
@@ -68,7 +69,7 @@ content.game = (() => {
 
   function start() {
     _state = makeFreshState()
-    _state.runId = (Date.now() & 0xffff) + Math.floor(Math.random() * 0xff)
+    _state.runId = (Date.now() & 0xffff) + M().randInt(0, 0xfe)
     beginLevel(_state.level, _state.round)
     if (audio()) try { audio().onLevelStart(snapshot()) } catch (e) {}
     if (announcer()) try { announcer().levelStart(snapshot()) } catch (e) {}

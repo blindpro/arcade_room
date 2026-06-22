@@ -4,6 +4,7 @@
 // guaranteed-solvable level (bounded DFS solvability check). It carries no audio
 // or scoring — game.js drives it and emits events.
 content.board = (() => {
+  const M = () => content.math
   let cap = 4
   let colors = 0
   let vials = []          // array of arrays, each bottom..top of colourIds
@@ -133,7 +134,7 @@ content.board = (() => {
       for (let k = 0; k < capacity; k++) bag.push(c)
     }
     for (let i = bag.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
+      const j = M().randInt(0, i)
       const t = bag[i]; bag[i] = bag[j]; bag[j] = t
     }
     const vs = []

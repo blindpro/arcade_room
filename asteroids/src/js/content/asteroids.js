@@ -2,6 +2,7 @@
 // pitch offset (`pitch`) so the looping voices stay decipherable in a crowd
 // (CLAUDE.md "Pitch families").
 content.asteroids = (() => {
+  const M = () => content.math
   const K = () => content.constants
   const P = () => content.physics
 
@@ -14,7 +15,7 @@ content.asteroids = (() => {
   function _spawnAtEdge() {
     // Spawn near the field perimeter so rocks drift in rather than appear
     // on top of the player. Pick a random edge, then a random offset along it.
-    const side = Math.floor(Math.random() * 4)
+    const side = M().randInt(0, 3)
     let x, y
     const w = K().FIELD_W, h = K().FIELD_H
     if      (side === 0) { x = 0; y = Math.random() * h }

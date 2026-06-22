@@ -9,6 +9,7 @@
  * Spanish reads naturally rather than as a literal English carbon copy.
  */
 app.i18n = (() => {
+  const M = () => content.math
   const FALLBACK = 'en'
   const STORAGE_KEY = 'missilecmd.lang'
 
@@ -460,7 +461,7 @@ app.i18n = (() => {
       else if (i > 0) break
     }
     if (!variants.length) return t(prefix, params)
-    const k = variants[Math.floor(Math.random() * variants.length)]
+    const k = M().pick(variants)
     return t(k, params)
   }
 

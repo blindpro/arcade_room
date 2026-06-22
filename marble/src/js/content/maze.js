@@ -8,6 +8,7 @@
 // Size and pit count scale with level. The maze also answers spatial queries
 // used by physics (isWall/isPit) and audio (nearestPit, goalPos, nextStepToGoal).
 content.maze = (() => {
+  const M = () => content.math
   let W = 0, H = 0
   let grid = []          // grid[cy][cx] = cell type
   let goalCell = {cx: 0, cy: 0}
@@ -30,7 +31,7 @@ content.maze = (() => {
 
   function shuffle(a) {
     for (let i = a.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
+      const j = M().randInt(0, i)
       const t = a[i]; a[i] = a[j]; a[j] = t
     }
     return a
@@ -81,9 +82,9 @@ content.maze = (() => {
     const count = Math.floor(2 + level * 1.1)
     for (let i = 0; i < count; i++) {
       const horizontal = Math.random() < 0.5
-      const len = 2 + Math.floor(Math.random() * Math.min(5, 2 + level / 3))
-      const sx = 1 + Math.floor(Math.random() * (W - 2))
-      const sy = 1 + Math.floor(Math.random() * (H - 2))
+      const len = 2 + M().randInt(0, Math.min(5, 2 + level / 3) - 1)
+      const sx = M().randInt(1, W - 2)
+      const sy = M().randInt(1, H - 2)
       for (let s = 0; s < len; s++) {
         const cx = horizontal ? sx + s : sx
         const cy = horizontal ? sy : sy + s
@@ -110,7 +111,7 @@ content.maze = (() => {
     candidates.sort((a, b) => b.d - a.d)
     // Some variety: pick among the farthest third.
     const pool = candidates.slice(0, Math.max(1, Math.floor(candidates.length / 3)))
-    return pool[Math.floor(Math.random() * pool.length)]
+    return M().pick(pool)
   }
 
   function generate(level) {

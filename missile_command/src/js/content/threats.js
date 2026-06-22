@@ -1,13 +1,11 @@
 content.threats = (() => {
+  const K = () => content.constants
   let nextId = 1
   const list = []
 
-  const LEFT_ZONE_BOUNDARY = -0.33
-  const RIGHT_ZONE_BOUNDARY = 0.33
-
   function zoneForX(x) {
-    if (x < LEFT_ZONE_BOUNDARY) return 'L'
-    if (x > RIGHT_ZONE_BOUNDARY) return 'R'
+    if (x < K().LEFT_ZONE_BOUNDARY) return 'L'
+    if (x > K().RIGHT_ZONE_BOUNDARY) return 'R'
     return 'C'
   }
 
@@ -18,7 +16,7 @@ content.threats = (() => {
       x: 0,
       y: 1,
       vx: 0,
-      vy: -0.18,
+      vy: K().ICBM_VY,
       alive: true,
       forked: false,
       voice: null,
@@ -28,21 +26,21 @@ content.threats = (() => {
     t.zone = zoneForX(t.x)
 
     if (t.kind === 'icbm') {
-      const baseHz = (700 + Math.random() * 200) * t.jitter
+      const baseHz = (K().ICBM_BASE_HZ_MIN + Math.random() * K().ICBM_BASE_HZ_RANGE) * t.jitter
       t.baseHz = baseHz
       const ch = content.audio.makeProp({
         build: (out) => {
-          const v = content.audio.buildIncomingWhistle(out, {baseHz, level: 0.16})
+          const v = content.audio.buildIncomingWhistle(out, {baseHz, level: K().ICBM_LEVEL})
           t._voiceCtl = v
           return v.stop
         },
         x: t.x,
         y: t.y,
-        gain: 0.95,
+        gain: K().THREAT_GAIN_THREATENING,
       })
       t.voice = ch
     } else if (t.kind === 'splitter') {
-      const baseHz = (520 + Math.random() * 80) * t.jitter
+      const baseHz = (K().SPLITTER_BASE_HZ_MIN + Math.random() * K().SPLITTER_BASE_HZ_RANGE) * t.jitter
       t.baseHz = baseHz
       const ch = content.audio.makeProp({
         build: (out) => {
@@ -52,10 +50,10 @@ content.threats = (() => {
         },
         x: t.x,
         y: t.y,
-        gain: 0.95,
+        gain: K().THREAT_GAIN_THREATENING,
       })
       t.voice = ch
-      t.forkAt = 0.45 + Math.random() * 0.15
+      t.forkAt = K().SPLITTER_FORK_Y + Math.random() * K().SPLITTER_FORK_Y_RANGE
     } else if (t.kind === 'bomber') {
       const ch = content.audio.makeProp({
         build: (out) => {
@@ -65,24 +63,24 @@ content.threats = (() => {
         },
         x: t.x,
         y: t.y,
-        gain: 0.85,
+        gain: K().THREAT_GAIN_BOMBER_BOMB,
       })
       t.voice = ch
-      t.dropAt = 0.5 + Math.random() * 1.5
+      t.dropAt = K().BOMBER_DROP_Y + Math.random() * K().BOMBER_DROP_Y_RANGE
       t.bombsDropped = 0
-      t.maxBombs = 1 + (Math.random() < 0.3 ? 1 : 0)
+      t.maxBombs = 1 + (Math.random() < K().BOMBER_MAX_BOMB_CHANCE ? 1 : 0)
     } else if (t.kind === 'bomb') {
-      const baseHz = (650 + Math.random() * 200) * t.jitter
+      const baseHz = (K().BOMB_BASE_HZ_MIN + Math.random() * K().BOMB_BASE_HZ_RANGE) * t.jitter
       t.baseHz = baseHz
       const ch = content.audio.makeProp({
         build: (out) => {
-          const v = content.audio.buildIncomingWhistle(out, {baseHz, level: 0.14, wave: 'square'})
+          const v = content.audio.buildIncomingWhistle(out, {baseHz, level: K().BOMB_LEVEL, wave: 'square'})
           t._voiceCtl = v
           return v.stop
         },
         x: t.x,
         y: t.y,
-        gain: 0.85,
+        gain: K().THREAT_GAIN_BOMBER_BOMB,
       })
       t.voice = ch
     }
@@ -120,7 +118,7 @@ content.threats = (() => {
     content.events.emit('ground-impact', {x: t.x, kind: t.kind})
     if (idx >= 0) {
       const c = content.cities.get(idx)
-      if (Math.abs(c.x - t.x) < 0.18) {
+      if (Math.abs(c.x - t.x) < K().CITY_KILL_RADIUS) {
         content.cities.destroy(idx)
       }
     }
@@ -131,15 +129,15 @@ content.threats = (() => {
     if (t._voiceCtl && t._voiceCtl.stop) try { t._voiceCtl.stop() } catch (_) {}
     if (t.voice) { try { t.voice.destroy() } catch (_) {} t.voice = null }
     t.alive = false
-    const baseDescent = -Math.abs(t.vy) * 1.05
-    const xs = [-0.18, 0, 0.18]
+    const baseDescent = -Math.abs(t.vy) * K().FORK_SPEED_MUL
+    const xs = [-K().FORK_SPREAD, 0, K().FORK_SPREAD]
     for (const dx of xs) {
-      const targetX = content.world.clamp(t.x + dx * 1.4, -0.95, 0.95)
-      const horiz = (targetX - t.x) / Math.max(0.4, t.y / Math.abs(baseDescent))
+      const targetX = content.world.clamp(t.x + dx * K().FORK_SPREAD_MUL, -0.95, 0.95)
+      const horiz = (targetX - t.x) / Math.max(K().FORK_HORIZ_DENOM, t.y / Math.abs(baseDescent))
       spawn({
         kind: 'icbm',
         x: t.x,
-        y: t.y - 0.02,
+        y: t.y - K().SPAWN_Y_OFFSET,
         vx: horiz,
         vy: baseDescent,
       })
@@ -152,16 +150,16 @@ content.threats = (() => {
     spawn({
       kind: 'bomb',
       x: t.x,
-      y: t.y - 0.02,
-      vx: (Math.random() - 0.5) * 0.04,
-      vy: -0.22,
+      y: t.y - K().SPAWN_Y_OFFSET,
+      vx: (Math.random() - 0.5) * K().BOMB_DRIFT_RANGE,
+      vy: K().BOMB_VY,
     })
     content.events.emit('bomber-drop', {x: t.x, y: t.y})
     if (t._voiceCtl && t._voiceCtl.setHighpass) {
       t._voiceCtl.setHighpass(true)
       setTimeout(() => {
         if (t._voiceCtl && t._voiceCtl.setHighpass) t._voiceCtl.setHighpass(false)
-      }, 400)
+      }, K().BOMBER_HIGHPASS_DURATION)
     }
   }
 
@@ -176,7 +174,7 @@ content.threats = (() => {
     const ix = projectImpactX(t)
     for (const c of content.cities.getAll()) {
       if (!c.alive) continue
-      if (Math.abs(c.x - ix) < 0.18) return false
+      if (Math.abs(c.x - ix) < K().CITY_KILL_RADIUS) return false
     }
     return true
   }
@@ -193,30 +191,30 @@ content.threats = (() => {
       if (t.voice) {
         t.voice.setPosition(t.x, t.y)
         t.voice._update()
-        const baseGain = (t.kind === 'bomb' || t.kind === 'bomber') ? 0.85 : 0.95
-        t.voice.setGain(harmless ? baseGain * 0.20 : baseGain)
+        const baseGain = (t.kind === 'bomb' || t.kind === 'bomber') ? K().THREAT_GAIN_BOMBER_BOMB : K().THREAT_GAIN_THREATENING
+        t.voice.setGain(harmless ? baseGain * K().HARMLESS_GAIN_MUL : baseGain)
       }
-      const cutoffCap = harmless ? 700 : 22000
+      const cutoffCap = harmless ? K().CUTOFF_HARMLESS : K().CUTOFF_THREATENING
 
       if (t.kind === 'icbm' || t.kind === 'bomb') {
         if (t._voiceCtl && t._voiceCtl.setFreq) {
           const yc = content.world.clamp(t.y, 0, 1)
-          const hz = (380 + (1 - yc) * 1600) * t.jitter
+          const hz = (K().ICBM_FREQ_BASE + (1 - yc) * K().ICBM_FREQ_RANGE) * t.jitter
           t._voiceCtl.setFreq(hz)
         }
         if (t._voiceCtl && t._voiceCtl.setCutoff) {
           const yc = content.world.clamp(t.y, 0, 1)
-          const c = Math.min(cutoffCap, 900 + (1 - yc) * 5000)
+          const c = Math.min(cutoffCap, K().ICBM_CUTOFF_BASE + (1 - yc) * K().ICBM_CUTOFF_RANGE)
           t._voiceCtl.setCutoff(c)
         }
       } else if (t.kind === 'splitter') {
         if (t._voiceCtl && t._voiceCtl.setFreq) {
           const yc = content.world.clamp(t.y, 0, 1)
-          const hz = (520 + (1 - yc) * 1000) * t.jitter
+          const hz = (K().SPLITTER_FREQ_BASE + (1 - yc) * K().SPLITTER_FREQ_RANGE) * t.jitter
           t._voiceCtl.setFreq(hz)
         }
         if (t._voiceCtl && t._voiceCtl.setCutoff) {
-          t._voiceCtl.setCutoff(Math.min(cutoffCap, 2800))
+          t._voiceCtl.setCutoff(Math.min(cutoffCap, K().SPLITTER_CUTOFF))
         }
         if (!t.forked && t.y <= t.forkAt) {
           _doFork(t)
@@ -226,12 +224,12 @@ content.threats = (() => {
         t.dropAt -= dt
         if (t.dropAt <= 0 && t.bombsDropped < t.maxBombs) {
           _bomberDrop(t)
-          t.dropAt = 1.2 + Math.random() * 1.6
+          t.dropAt = K().BOMBER_DROP_COOLDOWN_BASE + Math.random() * K().BOMBER_DROP_COOLDOWN_RANGE
         }
       }
 
       if (t.kind === 'bomber') {
-        if (t.x > 1.2 || t.x < -1.2) _kill(t, false)
+        if (t.x > K().BOMBER_BOUNDS || t.x < -K().BOMBER_BOUNDS) _kill(t, false)
       } else {
         if (t.y <= 0) _impact(t)
       }
@@ -313,6 +311,5 @@ content.threats = (() => {
     spawn, tick, killById, clearAll,
     getAll, aliveCount, killableCount, within, nearestDistanceTo,
     zoneForX, threatsInZone, nearestInZone,
-    LEFT_ZONE_BOUNDARY, RIGHT_ZONE_BOUNDARY,
   }
 })()

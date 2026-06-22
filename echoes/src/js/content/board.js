@@ -3,6 +3,7 @@
 // (east+), y = row, y increasing SOUTH. The board only knows pair identity and
 // face-up / matched state — the timbre for a pairId is owned by audio.js.
 content.board = (() => {
+  const M = () => content.math
   let cols = 0, rows = 0, pairs = 0
   let cells = []
   let matchedPairs = 0
@@ -21,7 +22,7 @@ content.board = (() => {
     const deck = []
     for (let p = 0; p < pairs; p++) { deck.push(p); deck.push(p) }
     for (let i = deck.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1))
+      const j = M().randInt(0, i)
       const tmp = deck[i]; deck[i] = deck[j]; deck[j] = tmp
     }
 

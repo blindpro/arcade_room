@@ -25,8 +25,9 @@
  * Mount-jump only unlocks at round 2+.
  */
 content.ai = (() => {
+  const M = () => content.math
   function rand(a, b) { return a + Math.random() * (b - a) }
-  function pick(arr) { return arr[Math.floor(Math.random() * arr.length)] }
+  function pick(arr) { return M().pick(arr) }
   function clamp(v, lo, hi) { return v < lo ? lo : (v > hi ? hi : v) }
 
   function create(roundIndex, character) {

@@ -43,6 +43,7 @@ content.game = (() => {
   const A  = () => content.audio
   const M  = () => content.music
   const ST = () => content.styles
+  const MATH = () => content.math
   const ARROWS = ['up', 'down', 'left', 'right']
   const BPM_BASE = 72
   const BPM_STEP = 8
@@ -264,7 +265,7 @@ content.game = (() => {
     let pick
     let safety = 0
     do {
-      pick = arrows[Math.floor(Math.random() * arrows.length)]
+      pick = MATH().pick(arrows)
       safety++
     } while (safety < 10 && prev != null && prev === prevPrev && pick === prev)
     return pick
@@ -405,7 +406,7 @@ content.game = (() => {
     let pick
     const r = Math.random()
     if (r < 0.45) pick = MODULATIONS[0]                        // stay (no semitone shift)
-    else          pick = MODULATIONS[1 + Math.floor(Math.random() * (MODULATIONS.length - 1))]
+    else          pick = MODULATIONS[1 + MATH().randInt(0, MODULATIONS.length - 2)]
 
     const newRoot = (((baseRoot + pick.by) % 12) + 12) % 12
     let modKey = pick.key

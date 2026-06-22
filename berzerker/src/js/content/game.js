@@ -15,6 +15,7 @@
 //    re-generate). If robots remained alive we set the "fled" flag so Otto
 //    persists.
 content.game = (() => {
+  const M = () => content.math
   const R = () => content.room
   const P = () => content.player
   const O = () => content.otto
@@ -127,7 +128,7 @@ content.game = (() => {
       // robot's curse has finished so the two voices don't collide.
       const live = ROBOTS().list().filter((r) => r.alive)
       if (live.length) {
-        const survivor = live[Math.floor(Math.random() * live.length)]
+        const survivor = M().pick(live)
         const delayMs = ((ev.curseDur || 0) + 0.25) * 1000
         setTimeout(() => {
           if (survivor.alive) VOICE().bark('killAlly', survivor)

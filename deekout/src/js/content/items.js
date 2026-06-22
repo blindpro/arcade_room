@@ -6,6 +6,7 @@
 content.items = (() => {
   const C = () => content.constants
   const S = () => content.state
+  const M = () => content.math
 
   const GRAB_RADIUS = 1.3
   const HAZARD_RADIUS = 0.9
@@ -177,7 +178,7 @@ content.items = (() => {
       return C().ITEM.ARMOR
     }
     const pool = C().GOOD_ITEM_POOL.filter((id) => id !== C().ITEM.ARMOR)
-    return pool[Math.floor(Math.random() * pool.length)]
+    return M().pick(pool)
   }
 
   function spawnGood() {
@@ -199,7 +200,7 @@ content.items = (() => {
     const cell = freeCell()
     if (!cell) return
     const id = S().nextId()
-    const kind = C().NASTY_POOL[Math.floor(Math.random() * C().NASTY_POOL.length)]
+    const kind = M().pick(C().NASTY_POOL)
     lvl.nastyItems.push({id, col: cell.col, row: cell.row, kind})
     startNastyVoice(lvl.nastyItems[lvl.nastyItems.length - 1])
     content.announcer.nastySpawned()
@@ -216,7 +217,7 @@ content.items = (() => {
   // ----- bombs & hazards -----
   function scatterBombs() {
     const lvl = S().level()
-    const n = 4 + Math.floor(Math.random() * 3)
+    const n = M().randInt(4, 6)
     for (let i = 0; i < n; i++) {
       const cell = content.field.randomFreeCell(null, {minFromPlayer: 1})
       if (!cell) continue

@@ -1,22 +1,23 @@
 content.game = (() => {
+  const M = () => content.math
   const config = {
-    gunRange: 17,
-    gunCone: 0.20,
-    gunDamage: 8,
+    gunRange: 20,
+    gunCone: 0.40,
+    gunDamage: 6,
     gunCooldown: 0.18,
     missileRange: 48,
     missileCone: 0.42,
-    missileDamage: 45,
+    missileDamage: 40,
     missileCooldown: 1.2,
-    missileSpeed: 15,
+    missileSpeed: 18,
     missileTurnRate: 1.0,
     missileLifetime: 3.0,
-    missileHitRadius: 0.5,
+    missileHitRadius: 0.6,
     // Boost cuts missile tracking significantly — a fast-accelerating
     // target is much harder for a pure-pursuit missile to lead.
-    missileBoostTurnPenalty: 0.8,
+    missileBoostTurnPenalty: 0.9,
     // Sharp-turn window also degrades tracking briefly.
-    missileSharpTurnPenalty: 1,
+    missileSharpTurnPenalty: 1.3,
   }
 
   const api = {
@@ -271,7 +272,7 @@ content.game = (() => {
         const lock = bestLock(playerCar)
         if (lock && lock.info.inGunCone && now >= (playerCar.ammo.nextGunAt || 0)) {
           playerCar.ammo.nextGunAt = now + config.gunCooldown
-          damagePlane(lock.target, config.gunDamage, playerCar, 'gun')
+          damagePlane(lock.target, config.gunDamage+M().randInt(0, 4), playerCar, 'gun')
         }
         content.sounds.startMachineGun(playerCar.position)
       } else {
@@ -562,7 +563,7 @@ content.game = (() => {
     owner.ammo.nextGunAt = now + config.gunCooldown
     const lock = bestLock(owner)
     if (!lock || !lock.info.inGunCone) return true
-    damagePlane(lock.target, config.gunDamage, owner, 'gun')
+    damagePlane(lock.target, config.gunDamage+M().randInt(0, 4), owner, 'gun')
     return true
   }
 
@@ -649,7 +650,7 @@ content.game = (() => {
       if (dist <= missile.target.radius + config.missileHitRadius) {
         content.sounds.explosion(missile.position, 1)
         content.sounds.destroyMissileVoice(missile.id)
-        damagePlane(missile.target, config.missileDamage, missile.owner, 'missile')
+        damagePlane(missile.target, config.missileDamage+M().randInt(0, 9), missile.owner, 'missile')
         continue
       }
       live.push(missile)

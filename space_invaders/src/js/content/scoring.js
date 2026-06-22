@@ -18,10 +18,11 @@ content.scoring = (() => {
   const A = () => content.audio
   const E = () => content.enemies
   const W = () => content.weapons
+  const K = () => content.constants
 
   function multiplyByZ(z) {
-    if (z > 0.7) return 1.5
-    if (z < 0.2) return 0.75
+    if (z > K().farRangeZ) return K().farRangeMul
+    if (z < K().pointBlankZ) return K().pointBlankMul
     return 1.0
   }
 
@@ -33,7 +34,7 @@ content.scoring = (() => {
     while (s.score >= s.nextExtendAt) {
       s.lives += 1
       s.nextExtendAt += s.nextExtendStep
-      s.nextExtendStep += 40000
+      s.nextExtendStep += K().extendStep
       A().enqueue({type: 'extraLife'})
       try { app.announce.assertive(app.i18n.t('ann.extraLife')) } catch (e) {}
     }
@@ -43,8 +44,8 @@ content.scoring = (() => {
     const s = S().get()
     if (!s) return
     const matchup = W().matchup(weapon, enemy.kind)
-    const base = E().BASE_SCORE[enemy.kind] || 100
-    const weaponMul = matchup === 'right' ? 1.5 : 0.5
+    const base = K().baseScore[enemy.kind] || 100
+    const weaponMul = matchup === 'right' ? K().weaponRightMul : K().weaponWrongMul
     const zMul = multiplyByZ(enemy.z)
     let chainMul = 1
     // Chain logic: only relevant for tagged ships
@@ -52,7 +53,7 @@ content.scoring = (() => {
       if (enemy.chainIndex === s.chainExpected && !s.chainBroken) {
         // In-order kill: advance chain. Cap at 5 — matches the
         // 5-note Close Encounters motif served from audio.CHAIN_NOTES.
-        s.chainMult = Math.min(5, s.chainMult + 1)
+        s.chainMult = Math.min(K().chainMax, s.chainMult + 1)
         s.chainExpected = enemy.chainIndex + 1
         chainMul = s.chainMult
         if (s.chainMult > s.bestChainMult) s.bestChainMult = s.chainMult
@@ -69,7 +70,7 @@ content.scoring = (() => {
   function onCivilianKill(_enemy) {
     const s = S().get()
     if (!s) return
-    awardScore(-500)
+    awardScore(-K().civilianPenalty)
     s.civiliansLost += 1
     s.lives -= 1
     breakChain()
@@ -109,14 +110,14 @@ content.scoring = (() => {
       } catch (e) {}
       return false
     }
-    const bonus = 1000 * wave
+    const bonus = K().waveClearBase * wave
     awardScore(bonus)
     try { app.announce.polite(app.i18n.t('ann.waveClear', {bonus})) } catch (e) {}
     // Perfect chain ⇔ player killed every tagged ship (1..5) in order
     // and never broke. chainExpected advances to enemy.chainIndex+1, so
     // after killing chain[5] in order, chainExpected is 6.
-    if (s.chainTaggingActive && !s.chainBroken && s.chainExpected > 5) {
-      const perfect = 2000 * wave
+    if (s.chainTaggingActive && !s.chainBroken && s.chainExpected > K().chainMax) {
+      const perfect = K().perfectChainBase * wave
       awardScore(perfect)
       try { app.announce.assertive(app.i18n.t('ann.perfectChain', {bonus: perfect})) } catch (e) {}
     }

@@ -9,7 +9,7 @@ content.physics = (() => {
     linearDrag: 0.45,
     angularDrag: 4.0,
     turnRate: 3.5,
-    maxSpeed: 6.5,
+    maxSpeed: 7,
     carRestitution: 0.85,
     wallRestitution: 0.55,
     damageScaleCar: 4.0,
