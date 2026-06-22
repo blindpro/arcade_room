@@ -91,7 +91,7 @@ content.audio = (() => {
     const out = c.createGain(); out.gain.value = 0
     const pan = c.createStereoPanner(); pan.pan.value = 0.75
     out.connect(pan); pan.connect(bus())
-    const osc = c.createOscillator(); osc.type = 'square'; osc.frequency.value = 900
+    const osc = c.createOscillator(); osc.type = 'triangle'; osc.frequency.value = 900
     const lp = c.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 1800
     osc.connect(lp); lp.connect(out); osc.start()
     return {out, osc}
@@ -188,7 +188,7 @@ content.audio = (() => {
     out.connect(pan); pan.connect(bus())
     const o = c.createOscillator(); o.type = 'square'; o.frequency.value = 1100
     o.connect(out)
-    envelope(out.gain, when, 0.001, 0.012, 0.018, 0.18)
+    envelope(out.gain, when, 0.001, 0.012, 0.018, 0.12)
     o.start(when); o.stop(when + 0.04)
     setTimeout(() => { try { pan.disconnect() } catch (e) {} }, (when + 0.06 - engine.time()) * 1000)
   }
@@ -222,7 +222,7 @@ content.audio = (() => {
         pitch = 180 + u * 1020
       }
       _voices.altTone.osc.frequency.setTargetAtTime(pitch, t, 0.06)
-      _voices.altTone.out.gain.setTargetAtTime(0.13, t, 0.08)
+      _voices.altTone.out.gain.setTargetAtTime(0.09, t, 0.08)
     } else {
       _voices.altTone.out.gain.setTargetAtTime(0, t, 0.08)
     }
@@ -240,21 +240,21 @@ content.audio = (() => {
         pitch = 180 + u * 720   // 900 high → 180 low
       }
       _voices.fuelTone.osc.frequency.setTargetAtTime(pitch, t, 0.06)
-      _voices.fuelTone.out.gain.setTargetAtTime(0.10, t, 0.08)
+      _voices.fuelTone.out.gain.setTargetAtTime(0.07, t, 0.08)
     } else {
       _voices.fuelTone.out.gain.setTargetAtTime(0, t, 0.08)
     }
 
     // Ascent tone (center) — only while rising.
     if (s.monitor.vel && alive && s.vy > 0.2) {
-      _voices.ascent.out.gain.setTargetAtTime(0.13, t, 0.05)
+      _voices.ascent.out.gain.setTargetAtTime(0.09, t, 0.05)
     } else {
       _voices.ascent.out.gain.setTargetAtTime(0, t, 0.06)
     }
 
     // Emergency tone (off-center) — physics asks "will I crash?"
     if (s.monitor.emergency && alive && P().willCrash()) {
-      _voices.emergency.out.gain.setTargetAtTime(0.18, t, 0.04)
+      _voices.emergency.out.gain.setTargetAtTime(0.12, t, 0.04)
     } else {
       _voices.emergency.out.gain.setTargetAtTime(0, t, 0.08)
     }
@@ -363,10 +363,10 @@ content.audio = (() => {
   function emitOneShot(spec) {
     const {kind, pan = 0} = spec
     if (kind === 'click')        return playClick(engine.time() + 0.02)
-    if (kind === 'altTone')      return playBeep(engine.time(), 900, 0.7, 0.22, -0.75, 'sine')
-    if (kind === 'fuelTone')     return playBeep(engine.time(), 700, 0.7, 0.18, 0.75, 'square')
-    if (kind === 'ascent')       return playBeep(engine.time(), 1600, 0.6, 0.22, 0, 'sine')
-    if (kind === 'emergency')    return playBeep(engine.time(), 520, 0.8, 0.25, 0.35, 'sawtooth')
+    if (kind === 'altTone')      return playBeep(engine.time(), 900, 0.7, 0.15, -0.75, 'sine')
+    if (kind === 'fuelTone')     return playBeep(engine.time(), 700, 0.7, 0.12, 0.75, 'triangle')
+    if (kind === 'ascent')       return playBeep(engine.time(), 1600, 0.6, 0.15, 0, 'sine')
+    if (kind === 'emergency')    return playBeep(engine.time(), 520, 0.8, 0.15, 0.35, 'sawtooth')
     if (kind === 'thrust')       return playBeep(engine.time(), 180, 0.5, 0.3, pan, 'triangle')
     if (kind === 'softLand')     return touchdownSoft()
     if (kind === 'hardLand')     return touchdownHard()

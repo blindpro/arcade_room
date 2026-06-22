@@ -39,18 +39,23 @@ app.screen.gameOver = app.screenManager.invent({
     const youWon = !!e.youWon
     const isDm = e.mode === 'deathmatch'
     const isTeam = e.mode === 'teamDm'
+    const isSurvival = e.mode === 'survival'
     const t = app.i18n.t
 
     root.querySelector('.a-gameOver--title').textContent =
-      isTeam
-        ? t(youWon ? 'gameOver.titleTeamWin' : 'gameOver.titleTeamLose')
-        : t(youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
+      isSurvival
+        ? t('gameOver.titleLose')
+        : isTeam
+          ? t(youWon ? 'gameOver.titleTeamWin' : 'gameOver.titleTeamLose')
+          : t(youWon ? 'gameOver.titleWin' : 'gameOver.titleLose')
     root.querySelector('.a-gameOver--result').textContent =
-      isTeam
-        ? t(youWon ? 'gameOver.resultTeamWin' : 'gameOver.resultTeamLose')
-        : t(youWon
-            ? (isDm ? 'gameOver.resultWinDm' : 'gameOver.resultWin')
-            : (isDm ? 'gameOver.resultLoseDm' : 'gameOver.resultLose'))
+      isSurvival
+        ? t('gameOver.resultSurvival', {kills: e.kills || score})
+        : isTeam
+          ? t(youWon ? 'gameOver.resultTeamWin' : 'gameOver.resultTeamLose')
+          : t(youWon
+              ? (isDm ? 'gameOver.resultWinDm' : 'gameOver.resultWin')
+              : (isDm ? 'gameOver.resultLoseDm' : 'gameOver.resultLose'))
 
     // Team match score display
     const teamScoreEl = root.querySelector('.a-gameOver--teamScore')
@@ -64,6 +69,10 @@ app.screen.gameOver = app.screenManager.invent({
       teamScoreEl.parentElement.hidden = true
     }
 
+    const scoreLabelEl = root.querySelector('.a-gameOver--scoreLabel')
+    if (scoreLabelEl) {
+      scoreLabelEl.textContent = t(isSurvival ? 'gameOver.kills' : 'gameOver.score')
+    }
     root.querySelector('.a-gameOver--scoreValue').textContent = String(score)
     root.querySelector('.a-gameOver--bestValue').textContent = String(best)
 
@@ -115,14 +124,16 @@ app.screen.gameOver = app.screenManager.invent({
       rematchBtn.parentElement.hidden = !e.multiplayer
     }
 
-    const summary = isTeam
-      ? t(youWon ? 'gameOver.summaryTeamWin' : 'gameOver.summaryTeamLose', {
-          score,
-          best,
-          playerWins: e.playerRoundWins || 0,
-          enemyWins: e.enemyRoundWins || 0,
-        })
-      : t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
+    const summary = isSurvival
+      ? t('gameOver.summarySurvival', {kills: e.kills || score, best})
+      : isTeam
+        ? t(youWon ? 'gameOver.summaryTeamWin' : 'gameOver.summaryTeamLose', {
+            score,
+            best,
+            playerWins: e.playerRoundWins || 0,
+            enemyWins: e.enemyRoundWins || 0,
+          })
+        : t(youWon ? 'gameOver.summaryWin' : 'gameOver.summaryLose', {score, best})
     content.announcer.say(summary, 'assertive')
 
     // Spoken leaderboard for screen-reader users (multiplayer / team).

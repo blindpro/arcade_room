@@ -49,17 +49,19 @@ app.screen.game = app.screenManager.invent({
       }
 
       const store = app.storage.get('dogfight') || {}
-      const best = Math.max(store.bestScore || 0, data.score || 0)
+      const displayScore = data.mode === 'survival' ? (data.kills || 0) : (data.score || 0)
+      const best = Math.max(store.bestScore || 0, displayScore)
       app.storage.set('dogfight', {...store, bestScore: best})
 
       app.screenManager.dispatch('over', {
         youWon: data.youWon,
-        score: data.score,
+        score: displayScore,
         best,
         multiplayer: false,
         standings: data.standings,
         selfId: data.selfId,
-        mode: 'dogfight',
+        mode: data.mode || 'dogfight',
+        kills: data.mode === 'survival' ? data.kills : undefined,
       })
     })
 
@@ -108,11 +110,27 @@ app.screen.game = app.screenManager.invent({
       }
       if (e.code === 'KeyF') {
         e.preventDefault()
+        if (!e.repeat) content.game.wingmanBeacon()
+      }
+      if (e.code === 'KeyG') {
+        e.preventDefault()
         if (!e.repeat) content.game.fireMissile()
       }
       if (e.code === 'ShiftLeft' || e.code === 'ShiftRight') {
         e.preventDefault()
         if (!e.repeat) content.game.activateBoost()
+      }
+      if (e.code === 'KeyA') {
+        e.preventDefault()
+        if (!e.repeat) content.game.performSharpTurn(-1)
+      }
+      if (e.code === 'KeyD') {
+        e.preventDefault()
+        if (!e.repeat) content.game.performSharpTurn(1)
+      }
+      if (e.code === 'KeyS') {
+        e.preventDefault()
+        if (!e.repeat) content.game.performTurnaround()
       }
     })
   },
@@ -127,6 +145,10 @@ app.screen.game = app.screenManager.invent({
       hud.classList.remove('a-game--hud-team')
     }
     content.game.start({aiOpponents: this.state.aiOpponents, mode: this.state.mode})
+    const carsLabel = this.rootElement.querySelector('.a-game--carsLabel')
+    if (carsLabel) {
+      carsLabel.textContent = app.i18n.t(this.state.mode === 'survival' ? 'game.planesSurvival' : 'game.planes')
+    }
     this.updateHud()
   },
   onExit: function () {

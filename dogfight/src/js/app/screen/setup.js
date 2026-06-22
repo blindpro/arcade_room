@@ -8,6 +8,7 @@ app.screen.setup = app.screenManager.invent({
   },
   state: {
     showingMode: true,
+    selectedMode: 'ffa',
   },
   onReady: function () {
     const root = this.rootElement
@@ -28,13 +29,14 @@ app.screen.setup = app.screenManager.invent({
         app.screenManager.dispatch('play', {aiOpponents: 3, mode: 'teamDm'})
         return
       }
-      if (btn.dataset.action === 'ffa') {
+      if (btn.dataset.action === 'ffa' || btn.dataset.action === 'survival') {
+        self.state.selectedMode = btn.dataset.action === 'survival' ? 'survival' : 'ffa'
         self.showFfaSelection()
         return
       }
       const ai = parseInt(btn.dataset.ai, 10)
       if (Number.isFinite(ai)) {
-        app.screenManager.dispatch('play', {aiOpponents: ai, mode: 'ffa'})
+        app.screenManager.dispatch('play', {aiOpponents: ai, mode: self.state.selectedMode})
       }
     })
 
@@ -54,13 +56,14 @@ app.screen.setup = app.screenManager.invent({
   },
   showFfaSelection: function () {
     this.state.showingMode = false
+    const isSurvival = this.state.selectedMode === 'survival'
     const root = this.rootElement
-    root.querySelector('.a-setup--title').textContent = app.i18n.t('setup.title')
+    root.querySelector('.a-setup--title').textContent = app.i18n.t(isSurvival ? 'setup.titleSurvival' : 'setup.title')
     root.querySelector('.a-setup--subtitle').textContent = ''
     root.querySelector('.a-setup--ffaTitle').hidden = false
-    root.querySelector('.a-setup--ffaTitle').textContent = app.i18n.t('setup.title')
+    root.querySelector('.a-setup--ffaTitle').textContent = app.i18n.t(isSurvival ? 'setup.titleSurvival' : 'setup.title')
     root.querySelector('.a-setup--ffaSubtitle').hidden = false
-    root.querySelector('.a-setup--ffaSubtitle').textContent = app.i18n.t('setup.ffaSubtitle')
+    root.querySelector('.a-setup--ffaSubtitle').textContent = app.i18n.t(isSurvival ? 'setup.survivalSubtitle' : 'setup.ffaSubtitle')
     root.querySelector('.a-setup--modeSel').hidden = true
     root.querySelector('.a-setup--ffa').hidden = false
   },

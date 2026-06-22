@@ -157,26 +157,58 @@ content.audio = (() => {
 
   // ---------- voice builders ----------
 
-  // Threat-family voice: an incoming whistle. Pitch climbs with descent
-  // (low-y = closer to ground = higher panic). Sawtooth + lowpass that
-  // opens as it falls.
+  // Threat-family voice: an airy incoming whistle. Uses filtered white noise
+  // with a gentle amplitude pulse ("shshhshhshsh") instead of a sawtooth
+  // oscillator, so it reads as wind/breath rather than a siren. The bandpass
+  // center frequency climbs with descent, and the Q tightens as the threat
+  // gets closer.
   function buildIncomingWhistle(out, opts = {}) {
     const ctx = engine.context()
-    const osc = ctx.createOscillator()
-    osc.type = opts.wave || 'sawtooth'
-    osc.frequency.value = opts.baseHz || 600
-    const lp = ctx.createBiquadFilter()
-    lp.type = 'lowpass'
-    lp.frequency.value = 1800
-    lp.Q.value = 1.5
+    const t0 = ctxNow()
+
+    // White noise — airy base for the "shshh" character.
+    const buf = engine.buffer.whiteNoise({channels: 1, duration: 4})
+    const src = ctx.createBufferSource()
+    src.buffer = buf
+    src.loop = true
+
+    // Bandpass filter shapes the noise into a pitched "shhh" sound.
+    const bp = ctx.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = opts.baseHz || 1500
+    // Bombs (wave:'square') get a tighter bandpass (more focused/tonal)
+    // while ICBMs get a broader, airier bandpass.
+    bp.Q.value = opts.wave === 'square' ? 2.0 : 1.4
+
+    // Gentle 5.5 Hz LFO modulates amplitude for the "shshhshsh" pulse.
+    const lfo = ctx.createOscillator()
+    lfo.type = 'sine'
+    lfo.frequency.value = 5.5
+    const lfoDepth = ctx.createGain()
+    lfoDepth.gain.value = 0.30
+    const ampMod = ctx.createGain()
+    ampMod.gain.value = 0.5
+    lfo.connect(lfoDepth).connect(ampMod.gain)
+
     const g = ctx.createGain()
-    g.gain.value = opts.level != null ? opts.level : 0.20
-    osc.connect(lp).connect(g).connect(out)
-    osc.start()
+    g.gain.value = opts.level != null ? opts.level : 0.10
+    bp.connect(ampMod).connect(g).connect(out)
+    src.connect(bp)
+    src.start()
+    lfo.start()
+
     return {
-      stop: () => { try { osc.stop() } catch (_) {} },
-      setFreq: (hz) => osc.frequency.setTargetAtTime(hz, ctxNow(), 0.03),
-      setCutoff: (hz) => lp.frequency.setTargetAtTime(hz, ctxNow(), 0.04),
+      stop: () => {
+        try { src.stop() } catch (_) {}
+        try { lfo.stop() } catch (_) {}
+      },
+      setFreq: (hz) => {
+        bp.frequency.setTargetAtTime(hz, ctxNow(), 0.03)
+      },
+      setCutoff: (c) => {
+        // Maps cutoff to Q: higher cutoff = tighter bandpass (more focused)
+        bp.Q.setTargetAtTime(0.8 + (c / 4900) * 2.0, ctxNow(), 0.04)
+      },
     }
   }
 
@@ -376,8 +408,10 @@ content.audio = (() => {
     }, (durSec + 0.4) * 1000)
   }
 
-  // Blast bloom: filtered-noise cloud, attack→hold (expansion)→release
-  // (contraction). Stereo only, no binaural — distance is conveyed by pan.
+  // Blast bloom: sub-bass thump + filtered-noise cloud for a big, satisfying
+  // boom. Two layers — a low sine (sub) provides the earthquake rumble, and
+  // bandpassed noise provides the explosion body. Stereo only, no binaural
+  // (distance is conveyed by pan).
   function emitBlast(x, y, durSec) {
     const ctx = engine.context()
     const t0 = ctx.currentTime
@@ -386,19 +420,37 @@ content.audio = (() => {
     pan.pan.value = W().clamp(x, -1, 1)
     post.connect(pan).connect(engine.mixer.input())
 
+    // Layer 1: Sub-bass rumble — slow sine that sinks from 55 Hz to 20 Hz.
+    const sub = ctx.createOscillator()
+    sub.type = 'sine'
+    sub.frequency.setValueAtTime(55, t0)
+    sub.frequency.exponentialRampToValueAtTime(20, t0 + durSec)
+    const subGain = ctx.createGain()
+    envelope(subGain.gain, t0, 0.005, durSec * 0.25, durSec * 0.75, 0.55)
+    sub.connect(subGain).connect(post)
+    sub.start(t0); sub.stop(t0 + durSec + 0.1)
+
+    // Layer 2: Noise body — lowpassed to stay in the bass/mid range.
     const buf = engine.buffer.whiteNoise({channels: 1, duration: durSec + 0.1})
     const src = ctx.createBufferSource(); src.buffer = buf
-    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.Q.value = 0.7
-    bp.frequency.setValueAtTime(1200, t0)
-    bp.frequency.exponentialRampToValueAtTime(300, t0 + durSec)
-    src.connect(bp).connect(post)
-    envelope(post.gain, t0, 0.01, durSec * 0.5, durSec * 0.5, 0.45)
+    const bp = ctx.createBiquadFilter(); bp.type = 'lowpass'; bp.Q.value = 0.5
+    bp.frequency.setValueAtTime(900, t0)
+    bp.frequency.exponentialRampToValueAtTime(50, t0 + durSec)
+    const noiseGain = ctx.createGain()
+    envelope(noiseGain.gain, t0, 0.008, durSec * 0.15, durSec * 0.85, 0.50)
+    src.connect(bp).connect(noiseGain).connect(post)
     src.start(t0); src.stop(t0 + durSec + 0.1)
+
+    // Master envelope — quick attack, short hold, long release.
+    envelope(post.gain, t0, 0.002, 0.04, 0.02, 1.0)
 
     setTimeout(() => {
       try { post.disconnect() } catch (_) {}
       try { pan.disconnect() } catch (_) {}
+      try { sub.disconnect() } catch (_) {}
+      try { subGain.disconnect() } catch (_) {}
       try { bp.disconnect() } catch (_) {}
+      try { noiseGain.disconnect() } catch (_) {}
     }, (durSec + 0.4) * 1000)
   }
 

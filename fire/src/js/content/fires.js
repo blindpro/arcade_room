@@ -30,8 +30,13 @@ content.fires = (() => {
   const HP_DRAIN_RATE = 28      // HP/sec when intensity at 2.0
   const BUILDING_HP = 100
 
-  // Angular full-width of the spray cone (rad).
-  const CONE_HALF_WIDTH = 0.30  // ≈ ±17°
+  // Angular half-width of the spray cone (rad). Wider at level 6+ where
+  // fires scale quickly into bigger ones, so the player can take out a
+  // bigger portion per sweep.
+  function coneHalfWidth() {
+    const G = content.game
+    return G && G.level() >= 6 ? 0.50 : 0.30
+  }
 
   function buildingAngle(i) {
     if (BUILDING_COUNT === 1) return 0
@@ -236,10 +241,11 @@ content.fires = (() => {
       if (b.lostFlag) continue
       if (b.intensity <= 0) continue
       const delta = b.angle - aim
-      const within = Math.abs(delta) <= CONE_HALF_WIDTH
+      const hw = coneHalfWidth()
+      const within = Math.abs(delta) <= hw
       if (!within) continue
       // Triangular falloff inside the cone.
-      const falloff = 1 - Math.abs(delta) / CONE_HALF_WIDTH
+      const falloff = 1 - Math.abs(delta) / hw
       const reduction = sprayPower * falloff * dt
       const before = b.intensity
       b.intensity = Math.max(0, b.intensity - reduction)
@@ -316,7 +322,7 @@ content.fires = (() => {
     BUILDING_COUNT,
     SPREAD_THRESHOLD,
     MAX_INTENSITY,
-    CONE_HALF_WIDTH,
+    coneHalfWidth,
     BUILDING_HP,
     start, stop, reset,
     spawnRandom, getActive, getAll,

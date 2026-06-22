@@ -1394,6 +1394,58 @@ content.sounds = (() => {
     lockToneVoice = {out, o}
   }
 
+  function wingmanLost() {
+    const t0 = now()
+    const c = ctx()
+    const out = c.createGain()
+    out.gain.value = 0
+    out.connect(engine.mixer.output())
+
+    // Sad descending two-tone — a descending fifth (C5 → F4) that signals
+    // "ally lost" without competing with the player's own defeat sound.
+    ;[523, 349].forEach((f, i) => {
+      const o = c.createOscillator()
+      o.type = 'triangle'
+      o.frequency.value = f
+      const g = c.createGain()
+      g.gain.value = 0
+      o.connect(g).connect(out)
+      const start = t0 + i * 0.35
+      envelope(g.gain, start, 0.02, 0.35, 0.4, 0.5)
+      o.start(start)
+      o.stop(start + 0.8)
+    })
+    out.gain.value = 1
+    setTimeout(() => { try { out.disconnect() } catch (e) {} }, 1800)
+  }
+
+  /**
+   * Quick air whoosh for sharp turn / turnaround maneuvers.
+   * Non-spatial — it's the player's own plane.
+   */
+  function whoosh() {
+    const t0 = now()
+    const dur = 0.12
+    const c = ctx()
+    const out = c.createGain()
+    out.gain.value = 0
+    out.connect(engine.mixer.output())
+
+    const noise = c.createBufferSource()
+    noise.buffer = engine.buffer.whiteNoise({channels: 1, duration: dur + 0.1})
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.setValueAtTime(400, t0)
+    bp.frequency.exponentialRampToValueAtTime(2000, t0 + dur)
+    bp.Q.value = 4
+    noise.connect(bp).connect(out)
+    noise.start(t0)
+    noise.stop(t0 + dur + 0.05)
+
+    envelope(out.gain, t0, 0.002, 0.02, dur - 0.024, 0.22)
+    setTimeout(() => { try { out.disconnect() } catch (e) {} }, (dur + 0.3) * 1000)
+  }
+
   function stopLockTone() {
     if (!lockToneVoice) return
     const t = ctx().currentTime
@@ -1453,5 +1505,7 @@ content.sounds = (() => {
     stopLockTone,
     pickupRepulsor,
     pickupRocket,
+    wingmanLost,
+    whoosh,
   }
 })()

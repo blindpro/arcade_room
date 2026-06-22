@@ -8,14 +8,15 @@ content.game = (() => {
     missileCone: 0.42,
     missileDamage: 45,
     missileCooldown: 1.2,
-    missileSpeed: 24,
-    missileTurnRate: 2.3,
+    missileSpeed: 22,
+    missileTurnRate: 1.6,
     missileLifetime: 5.5,
     missileHitRadius: 1.8,
-    // When the target is boosting, the missile's tracking degrades — a
-    // fast-accelerating target is harder to lead. This makes boost a real
-    // evasion tool instead of just "get there faster."
-    missileBoostTurnPenalty: 0.55,
+    // Boost cuts missile tracking significantly — a fast-accelerating
+    // target is much harder for a pure-pursuit missile to lead.
+    missileBoostTurnPenalty: 0.8,
+    // Sharp-turn window also degrades tracking briefly.
+    missileSharpTurnPenalty: 0.6,
   }
 
   const api = {
@@ -41,6 +42,11 @@ content.game = (() => {
   const BOOST_DURATION = 0.6
   const BOOST_COOLDOWN = 5
   const BOOST_IMPULSE = 12
+  let playerStability = 100
+  let playerSpinning = false
+  const STABILITY_SHARP_TURN_COST = 15
+  const STABILITY_TURNAROUND_COST = 30
+  const STABILITY_RECOVERY_RATE = 8
 
   // Team / round state
   let mode = 'ffa'
@@ -48,10 +54,15 @@ content.game = (() => {
   let playerRoundWins = 0
   let enemyRoundWins = 0
   let lastOptions = {}
+  let killCount = 0
+  let survivalChallengerIndex = 0
+  let survivalSpawnQueue = []
 
   function t(key, params) {
     return app.i18n ? app.i18n.t(key, params) : key
   }
+
+  function isSurvival() { return mode === 'survival' }
 
   function start({aiOpponents = 0, mode: gameMode = 'ffa'} = {}) {
     end({silent: true})
@@ -63,6 +74,11 @@ content.game = (() => {
     missiles = []
     nextLockToneAt = 0
     lastLockedId = null
+    playerStability = 100
+    playerSpinning = false
+    killCount = 0
+    survivalChallengerIndex = 0
+    survivalSpawnQueue = []
     lastOptions = {aiOpponents, mode}
 
     content.arena.selectMap('large')
@@ -143,6 +159,10 @@ content.game = (() => {
         content.announcer.say(t('ann.roundTeamN', {round: currentRound}), 'assertive')
       }
       setTimeout(() => sweep(), 900)
+    } else if (isSurvival()) {
+      const key = aiOpponents === 1 ? 'ann.survivalRoundStart1' : 'ann.survivalRoundStartN'
+      content.announcer.say(t(key, {count: aiOpponents}), 'assertive')
+      setTimeout(() => sweep(), 900)
     } else if (aiOpponents <= 0) {
       content.announcer.say(t('ann.sandbox'), 'assertive')
     } else {
@@ -185,13 +205,57 @@ content.game = (() => {
     api.cars = []
     missiles = []
     playerCar = null
+    killCount = 0
+    survivalChallengerIndex = 0
+    survivalSpawnQueue = []
     if (!silent) content.announcer.say(t('game.ended'), 'polite')
   }
 
   function applyPlayerInput(input) {
     if (!playerCar || playerCar.eliminated) return
+    if (playerSpinning) {
+      playerCar.input.steering = 1
+      return
+    }
     playerCar.input.throttle = input.throttle || 0
-    playerCar.input.steering = input.steering || 0
+    playerCar.input.steering = engine.fn.clamp(input.steering || 0, -1, 1)
+  }
+
+  function performSharpTurn(dir) {
+    if (!playerCar || playerCar.eliminated || playerSpinning) return false
+    playerCar.heading += dir * 0.45
+    playerCar.sharpTurnEvadeUntil = engine.time() + 0.35
+    content.sounds.whoosh()
+    playerStability = Math.max(0, playerStability - STABILITY_SHARP_TURN_COST)
+    if (playerStability <= 0) {
+      enterSpin()
+    }
+    return true
+  }
+
+  function performTurnaround() {
+    if (!playerCar || playerCar.eliminated || playerSpinning) return false
+    playerCar.heading += Math.PI
+    content.sounds.whoosh()
+    playerStability = Math.max(0, playerStability - STABILITY_TURNAROUND_COST)
+    if (playerStability <= 0) {
+      enterSpin()
+    }
+    return true
+  }
+
+  function enterSpin() {
+    if (playerSpinning) return
+    playerSpinning = true
+    playerStability = 0
+    content.announcer.say(t('ann.spin'), 'assertive')
+  }
+
+  function exitSpin() {
+    if (!playerSpinning) return
+    playerSpinning = false
+    playerStability = 40
+    content.announcer.say(t('ann.recovered'), 'assertive')
   }
 
   function updateGuns(delta) {
@@ -277,6 +341,15 @@ content.game = (() => {
     for (const plane of api.cars) {
       if (plane.ai) plane.ai.update(delta)
     }
+
+    if (playerCar && !playerCar.eliminated) {
+      if (playerSpinning) {
+        playerCar.heading += 4 * delta
+      } else {
+        playerStability = Math.min(100, playerStability + STABILITY_RECOVERY_RATE * delta)
+      }
+    }
+
     for (const plane of api.cars) {
       content.physics.integrate(plane, delta)
     }
@@ -288,6 +361,39 @@ content.game = (() => {
     if (targeting) targeting.update()
     updateLockTone()
     updateBoost(delta)
+
+    if (isSurvival()) {
+      if (survivalSpawnQueue.length) {
+        const now = engine.time()
+        for (let i = survivalSpawnQueue.length - 1; i >= 0; i--) {
+          if (now >= survivalSpawnQueue[i].at) {
+            survivalSpawnQueue.splice(i, 1)
+            spawnSurvivalChallenger()
+          }
+        }
+      }
+      if (playerCar && playerCar.eliminated) {
+        roundEnding = true
+        const alive = api.cars.filter((p) => !p.eliminated)
+        const winner = alive[0] || null
+        const standings = api.cars.map((p) => ({
+          id: p.id,
+          label: p.label,
+          score: p === playerCar ? killCount : Math.max(0, Math.round(p.health)),
+          eliminated: !!p.eliminated,
+          winner: p === winner,
+        }))
+        const youWon = false
+        if (playerCar && playerCar.eliminated) score = Math.max(0, score - 25)
+        setTimeout(() => {
+          if (!running) return
+          onRoundOver({youWon, score: killCount, standings, selfId: playerCar && playerCar.id, mode: 'survival', kills: killCount})
+        }, 900)
+        return
+      }
+      return
+    }
+
     checkRoundEnd()
   }
 
@@ -327,6 +433,7 @@ content.game = (() => {
         content.sounds.wallThud({x: ev.x, y: ev.y}, engine.fn.clamp(ev.damage / 40, 0.2, 1))
         damagePlane(plane, ev.damage, null, 'wall')
         if (plane === playerCar) {
+          if (playerSpinning) exitSpin()
           content.announcer.say(t('ann.wallHit', {damage: Math.round(ev.damage)}), 'assertive')
         }
       }
@@ -366,12 +473,33 @@ content.game = (() => {
 
   function onEliminated(victim, attacker) {
     content.sounds.eliminate(victim.position)
-    if (attacker === playerCar && victim !== playerCar) {
+    if (victim.friendly && victim.team === 'player') {
+      content.sounds.wingmanLost()
+      content.announcer.say(t('ann.wingmanLost'), 'assertive')
+    } else if (attacker === playerCar && victim !== playerCar) {
       score += 50
-      content.announcer.say(t('ann.youShotDown', {label: victim.label}), 'assertive')
+      if (isSurvival()) {
+        killCount++
+        if (playerCar && !playerCar.eliminated) {
+          playerCar.health = playerCar.maxHealth
+          playerCar.ammo.missiles = 5
+          content.sounds.pickupHealth(playerCar.position)
+        }
+        survivalSpawnQueue.push({at: engine.time() + 2.5})
+        content.announcer.say(t('ann.youShotDownSurvival', {label: victim.label, kills: killCount}), 'assertive')
+      } else {
+        content.announcer.say(t('ann.youShotDown', {label: victim.label}), 'assertive')
+      }
     } else if (victim === playerCar) {
-      content.announcer.say(t('ann.youEliminated'), 'assertive')
+      if (isSurvival()) {
+        content.announcer.say(t('ann.youEliminatedSurvival', {kills: killCount}), 'assertive')
+      } else {
+        content.announcer.say(t('ann.youEliminated'), 'assertive')
+      }
     } else {
+      if (isSurvival() && victim.controller === 'ai') {
+        survivalSpawnQueue.push({at: engine.time() + 2.5})
+      }
       content.announcer.say(t('ann.otherShotDown', {label: victim.label}), 'polite')
     }
   }
@@ -497,12 +625,14 @@ content.game = (() => {
       const dy = missile.target.position.y - missile.position.y
       const desired = Math.atan2(dy, dx)
       const diff = Math.atan2(Math.sin(desired - missile.heading), Math.cos(desired - missile.heading))
-      // Degrade tracking against a boosting target. A target pouring on
-      // boost is accelerating hard, which is exactly when a pure-pursuit
-      // missile struggles most — so boost becomes a viable missile break.
+      // Boost and sharp-turn windows degrade missile tracking — sudden
+      // acceleration or instant heading changes make pure-pursuit miss.
       let effectiveTurn = config.missileTurnRate
       if (missile.target.boostUntil > now) {
         effectiveTurn *= (1 - config.missileBoostTurnPenalty)
+      }
+      if (missile.target.sharpTurnEvadeUntil > now) {
+        effectiveTurn *= (1 - config.missileSharpTurnPenalty)
       }
       const turn = engine.fn.clamp(diff, -effectiveTurn * delta, effectiveTurn * delta)
       missile.heading += turn
@@ -731,11 +861,48 @@ content.game = (() => {
     content.announcer.say(targeting.sweepText(), 'polite')
   }
 
+  function wingmanBeacon() {
+    if (targeting) targeting.requestWingmanBeacon()
+  }
+
+  function spawnSurvivalChallenger() {
+    if (!running) return
+    survivalChallengerIndex++
+    const points = content.arena.spawnPoints(1)
+    const point = points[0]
+    const challengerN = survivalChallengerIndex
+    const label = t('label.challenger', {n: challengerN})
+    const health = livingCount() <= 1 ? 300 : 180
+
+    const plane = content.car.create({
+      id: 'survival-ai-' + challengerN,
+      label: label,
+      controller: 'ai',
+      profileIndex: challengerN % 6,
+      position: {x: point.x, y: point.y},
+      heading: point.heading,
+      health: health,
+      radius: 1.15,
+    })
+    plane.team = 'enemy'
+    plane.throttle = 0.5
+    plane.ammo.missiles = 4
+    plane.ai = content.ai.create(plane, api, 'enemy')
+    api.cars.push(plane)
+
+    updateAudioStage()
+    content.sounds.teleport({x: point.x, y: point.y})
+    content.announcer.say(t('ann.survivalEnter', {label: label}), 'assertive')
+  }
+
   Object.assign(api, {
     start,
     end,
     update,
     applyPlayerInput,
+    performSharpTurn,
+    performTurnaround,
+    wingmanBeacon,
     startGuns,
     stopGuns,
     fireGuns,
@@ -746,7 +913,7 @@ content.game = (() => {
     player: () => playerCar,
     listenerCar,
     livingCount,
-    getScore: () => score,
+    getScore: () => isSurvival() ? killCount : score,
     isRunning: () => running,
     isPaused: () => paused,
     setOnRoundOver: (fn) => { onRoundOver = typeof fn === 'function' ? fn : () => {} },
@@ -760,6 +927,8 @@ content.game = (() => {
     resetMatch,
     nextRound,
     getMatchState,
+    getKills: () => killCount,
+    isSurvival,
   })
 
   return api
