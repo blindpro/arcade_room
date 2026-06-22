@@ -8,15 +8,15 @@ content.game = (() => {
     missileCone: 0.42,
     missileDamage: 45,
     missileCooldown: 1.2,
-    missileSpeed: 22,
-    missileTurnRate: 1.6,
-    missileLifetime: 5.5,
-    missileHitRadius: 1.8,
+    missileSpeed: 15,
+    missileTurnRate: 1.0,
+    missileLifetime: 3.0,
+    missileHitRadius: 0.5,
     // Boost cuts missile tracking significantly — a fast-accelerating
     // target is much harder for a pure-pursuit missile to lead.
     missileBoostTurnPenalty: 0.8,
     // Sharp-turn window also degrades tracking briefly.
-    missileSharpTurnPenalty: 0.6,
+    missileSharpTurnPenalty: 1,
   }
 
   const api = {
@@ -224,7 +224,7 @@ content.game = (() => {
   function performSharpTurn(dir) {
     if (!playerCar || playerCar.eliminated || playerSpinning) return false
     playerCar.heading += dir * 0.45
-    playerCar.sharpTurnEvadeUntil = engine.time() + 0.35
+    playerCar.sharpTurnEvadeUntil = engine.time() + 0.75
     content.sounds.whoosh()
     playerStability = Math.max(0, playerStability - STABILITY_SHARP_TURN_COST)
     if (playerStability <= 0) {
