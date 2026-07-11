@@ -1,0 +1,18 @@
+{
+  "kind": "oneshot",
+  "dur": 0.21,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sine", "freq": 126, "glideTo": 92, "glideTime": 0.09, "gain": 0.48,
+      "env": { "a": 0.003, "d": 0.05, "s": 0.0, "r": 0.06, "peak": 1 } },
+    { "type": "noise", "color": "brown", "gain": 0.52,
+      "filter": { "type": "bandpass", "freq": 500, "q": 0.8 },
+      "env": { "a": 0.003, "d": 0.05, "s": 0.0, "r": 0.07, "peak": 1 } },
+    { "type": "noise", "color": "pink", "gain": 0.1,
+      "filter": { "type": "bandpass", "freq": 1450, "q": 1.0 },
+      "env": { "a": 0.003, "d": 0.035, "s": 0.0, "r": 0.045, "peak": 1 } },
+    { "type": "noise", "color": "pink", "gain": 0.03,
+      "filter": { "type": "bandpass", "freq": 2800, "q": 1.2 },
+      "env": { "a": 0.002, "d": 0.028, "s": 0.0, "r": 0.038, "peak": 1 } }
+  ]
+}

@@ -1,0 +1,35 @@
+{
+  "kind": "loop",
+  "dur": 2,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sine", "freq": 59, "gain": 0.14,
+      "ampLfoRate": 4, "ampLfoDepth": 0.5, "ampLfoWave": "square" },
+    { "type": "osc", "wave": "sawtooth", "freq": 118, "unison": [-5, 4], "gain": 0.08,
+      "ampLfoRate": 4, "ampLfoDepth": 0.5, "ampLfoWave": "square",
+      "filter": { "type": "lowpass", "freq": 320, "q": 0.9 } },
+    { "type": "noise", "color": "brown", "gain": 0.3,
+      "ampLfoRate": 6, "ampLfoDepth": 0.5, "ampLfoWave": "square",
+      "filter": { "type": "bandpass", "freq": 220, "q": 0.6 } },
+    { "type": "noise", "color": "pink", "gain": 0.18,
+      "ampLfoRate": 8, "ampLfoDepth": 0.6, "ampLfoWave": "square",
+      "filter": { "type": "bandpass", "freq": 800, "q": 0.7 } },
+    { "type": "noise", "color": "pink", "gain": 0.04,
+      "ampLfoRate": 8, "ampLfoDepth": 0.6, "ampLfoWave": "square",
+      "filter": { "type": "bandpass", "freq": 2600, "q": 0.8 } }
+  ],
+  "seq": [
+    { "t": 0, "dur": 0.14, "freq": 220, "wave": "sawtooth", "gain": 0.13,
+      "filter": { "type": "lowpass", "freq": 800, "q": 0.9 },
+      "env": { "a": 0.005, "d": 0.05, "s": 0.2, "r": 0.04 } },
+    { "t": 0.5, "dur": 0.14, "freq": 165, "wave": "sawtooth", "gain": 0.13,
+      "filter": { "type": "lowpass", "freq": 800, "q": 0.9 },
+      "env": { "a": 0.005, "d": 0.05, "s": 0.2, "r": 0.04 } },
+    { "t": 1, "dur": 0.14, "freq": 247, "wave": "sawtooth", "gain": 0.13,
+      "filter": { "type": "lowpass", "freq": 800, "q": 0.9 },
+      "env": { "a": 0.005, "d": 0.05, "s": 0.2, "r": 0.04 } },
+    { "t": 1.5, "dur": 0.14, "freq": 196, "wave": "sawtooth", "gain": 0.13,
+      "filter": { "type": "lowpass", "freq": 800, "q": 0.9 },
+      "env": { "a": 0.005, "d": 0.05, "s": 0.2, "r": 0.04 } }
+  ]
+}

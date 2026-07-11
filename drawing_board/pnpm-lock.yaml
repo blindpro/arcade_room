@@ -45,8 +45,8 @@ importers:
         specifier: ^2.0.0
         version: 2.0.0
       syngen:
-        specifier: ^2.0.0-beta.3
-        version: 2.0.0-beta.3
+        specifier: link:/home/syngen
+        version: link:../../syngen
       yargs:
         specifier: ^18.0.0
         version: 18.0.0
@@ -1013,9 +1013,6 @@ packages:
 
   sver@1.8.4:
     resolution: {integrity: sha512-71o1zfzyawLfIWBOmw8brleKyvnbn73oVHNCsu51uPMz/HWiKkkXsI31JjHW5zqXEqnPYkIiHd8ZmL7FCimLEA==}
-
-  syngen@2.0.0-beta.3:
-    resolution: {integrity: sha512-+FShvaIAh2QY+Q919xgwBe3GE/283CkuxCrKeSB3G8lUB+Ohjb1cplGaUxgFNHps5iO8S0zbumGM58WlK6UwRg==}
 
   teex@1.0.1:
     resolution: {integrity: sha512-eYE6iEI62Ni1H8oIa7KlDU6uQBtqr4Eajni3wX7rpfXD8ysFx8z0+dri+KWEPWpBsxXfxu58x/0jvTVT1ekOSg==}
@@ -2146,11 +2143,6 @@ snapshots:
   sver@1.8.4:
     optionalDependencies:
       semver: 6.3.1
-
-  syngen@2.0.0-beta.3:
-    dependencies:
-      gulp-footer: 2.1.0
-      merge-stream: 2.0.0
 
   teex@1.0.1:
     dependencies:

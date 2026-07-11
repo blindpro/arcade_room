@@ -1,0 +1,120 @@
+{
+  "kind": "oneshot",
+  "dur": 2.35,
+  "gain": 0.85,
+  "layers": [
+    {
+      "type": "osc",
+      "wave": "sawtooth",
+      "freq": 89.91,
+      "glideTo": 70.13,
+      "glideTime": 1.76,
+      "unison": [
+        -14,
+        11
+      ],
+      "gain": 0.55,
+      "ampLfoRate": 14.37,
+      "ampLfoDepth": 0.55,
+      "ampLfoWave": "saw",
+      "filter": {
+        "type": "lowpass",
+        "freq": 340,
+        "q": 0.9
+      },
+      "env": {
+        "a": 0.0235,
+        "d": 0.8663290941728307,
+        "s": 0.33387321830357825,
+        "r": 0.8814306408143859,
+        "peak": 1
+      }
+    },
+    {
+      "type": "osc",
+      "wave": "sawtooth",
+      "freq": 89.91,
+      "glideTo": 70.13,
+      "glideTime": 1.76,
+      "gain": 0.4,
+      "ampLfoRate": 14.94,
+      "ampLfoDepth": 0.5,
+      "ampLfoWave": "saw",
+      "filter": {
+        "type": "bandpass",
+        "freq": 900,
+        "q": 1.6
+      },
+      "env": {
+        "a": 0.0235,
+        "d": 0.8663290941728307,
+        "s": 0.33387321830357825,
+        "r": 0.8814306408143859,
+        "peak": 1
+      }
+    },
+    {
+      "type": "osc",
+      "wave": "sawtooth",
+      "freq": 89.91,
+      "glideTo": 70.13,
+      "glideTime": 1.76,
+      "gain": 0.2,
+      "ampLfoRate": 14.37,
+      "ampLfoDepth": 0.6,
+      "ampLfoWave": "saw",
+      "filter": {
+        "type": "bandpass",
+        "freq": 773.15,
+        "q": 2
+      },
+      "env": {
+        "a": 0.0235,
+        "d": 0.8663290941728307,
+        "s": 0.33387321830357825,
+        "r": 0.8814306408143859,
+        "peak": 1
+      }
+    },
+    {
+      "type": "noise",
+      "color": "brown",
+      "gain": 0.4,
+      "ampLfoRate": 14.37,
+      "ampLfoDepth": 0.6,
+      "ampLfoWave": "saw",
+      "filter": {
+        "type": "bandpass",
+        "freq": 720,
+        "q": 1.2
+      },
+      "env": {
+        "a": 0.0235,
+        "d": 0.8663290941728307,
+        "s": 0.33387321830357825,
+        "r": 0.8814306408143859,
+        "peak": 1
+      }
+    },
+    {
+      "type": "noise",
+      "color": "pink",
+      "gain": 0.03,
+      "ampLfoRate": 14.37,
+      "ampLfoDepth": 0.5,
+      "ampLfoWave": "saw",
+      "filter": {
+        "type": "bandpass",
+        "freq": 1900,
+        "q": 1
+      },
+      "env": {
+        "a": 0.0235,
+        "d": 0.8663290941728307,
+        "s": 0.33387321830357825,
+        "r": 0.8814306408143859,
+        "peak": 1
+      }
+    }
+  ]
+}

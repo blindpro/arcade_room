@@ -1,0 +1,19 @@
+{
+  "kind": "oneshot",
+  "dur": 0.78,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sawtooth", "freq": 330, "unison": [-5, 4], "gain": 0.34,
+      "filter": { "type": "lowpass", "freq": 2200, "q": 0.8 },
+      "env": { "a": 0.05, "d": 0.1, "s": 0.8, "r": 0.16, "peak": 1 } },
+    { "type": "osc", "wave": "sawtooth", "freq": 415, "unison": [-5, 4], "gain": 0.36,
+      "filter": { "type": "lowpass", "freq": 2400, "q": 0.8 },
+      "env": { "a": 0.05, "d": 0.1, "s": 0.8, "r": 0.16, "peak": 1 } },
+    { "type": "osc", "wave": "sawtooth", "freq": 330, "gain": 0.18,
+      "filter": { "type": "bandpass", "freq": 1650, "q": 2.5 },
+      "env": { "a": 0.05, "d": 0.1, "s": 0.8, "r": 0.16, "peak": 1 } },
+    { "type": "osc", "wave": "sawtooth", "freq": 415, "gain": 0.18,
+      "filter": { "type": "bandpass", "freq": 2075, "q": 2.5 },
+      "env": { "a": 0.05, "d": 0.1, "s": 0.8, "r": 0.16, "peak": 1 } }
+  ]
+}

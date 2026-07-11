@@ -1,0 +1,24 @@
+{
+  "kind": "loop",
+  "dur": 2,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sine", "freq": 140, "gain": 0.45,
+      "pitchLfoRate": 4.8, "pitchLfoCents": 20,
+      "env": { "a": 1.0, "d": 0.4, "s": 0.55, "r": 0.5, "peak": 1 } },
+    { "type": "osc", "wave": "triangle", "freq": 280, "gain": 0.24,
+      "pitchLfoRate": 4.8, "pitchLfoCents": 20,
+      "filter": { "type": "lowpass", "freq": 700, "q": 0.8 },
+      "env": { "a": 1.0, "d": 0.4, "s": 0.55, "r": 0.5, "peak": 1 } },
+    { "type": "noise", "color": "pink", "gain": 0.3,
+      "ampLfoRate": 0.24, "ampLfoDepth": 0.5, "ampLfoWave": "sine",
+      "filterLfoOct": 0.6, "filterLfoRate": 0.17,
+      "filter": { "type": "bandpass", "freq": 900, "q": 2.5 } },
+    { "type": "noise", "color": "pink", "gain": 0.12,
+      "ampLfoRate": 0.31, "ampLfoDepth": 0.5, "ampLfoWave": "sine",
+      "filter": { "type": "bandpass", "freq": 1600, "q": 3.0 } },
+    { "type": "noise", "color": "brown", "gain": 0.25,
+      "ampLfoRate": 0.2, "ampLfoDepth": 0.4, "ampLfoWave": "sine",
+      "filter": { "type": "lowpass", "freq": 250, "q": 0.8 } }
+  ]
+}

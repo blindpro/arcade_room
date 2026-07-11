@@ -1,0 +1,3082 @@
+{
+  "auto1": {
+    "name": "auto1",
+    "role": "engine",
+    "description": "Generic 4-cylinder car engine idle/drive. Used by police, pickup, sander, rust, pink, square cars, ghostbusters car. The workhorse engine.",
+    "usedBy": "police, pickup, sander, rust, pink, square, ghostbusters",
+    "kind": "loop",
+    "durationS": 4.28,
+    "target": {
+      "centroidHz": 963,
+      "flatness": 0.13,
+      "sustainedFraction": 0.97,
+      "attackMs": 506,
+      "topPeaksHz": [
+        {
+          "hz": 86,
+          "rel": 1
+        },
+        {
+          "hz": 161,
+          "rel": 0.647
+        },
+        {
+          "hz": 673,
+          "rel": 0.595
+        },
+        {
+          "hz": 452,
+          "rel": 0.578
+        },
+        {
+          "hz": 721,
+          "rel": 0.538
+        },
+        {
+          "hz": 479,
+          "rel": 0.508
+        },
+        {
+          "hz": 646,
+          "rel": 0.504
+        },
+        {
+          "hz": 581,
+          "rel": 0.493
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.063,
+        "low_120_350": 0.153,
+        "lowmid_350_800": 0.37,
+        "mid_800_2k": 0.313,
+        "hi_2k_5k": 0.09,
+        "air_5k_9k": 0.011
+      }
+    }
+  },
+  "scheurkar": {
+    "name": "scheurkar",
+    "role": "engine",
+    "description": "Aggressive racing/screeching car engine, revving hard. Used by boom-car, Spanish car, Batmobile. Louder, brighter, more buzz than auto1.",
+    "usedBy": "boom-car, Spanish car, Batmobile",
+    "kind": "loop",
+    "durationS": 5.2,
+    "target": {
+      "centroidHz": 902,
+      "flatness": 0.014,
+      "sustainedFraction": 0.59,
+      "attackMs": 713,
+      "topPeaksHz": [
+        {
+          "hz": 178,
+          "rel": 1
+        },
+        {
+          "hz": 205,
+          "rel": 0.944
+        },
+        {
+          "hz": 118,
+          "rel": 0.519
+        },
+        {
+          "hz": 619,
+          "rel": 0.29
+        },
+        {
+          "hz": 474,
+          "rel": 0.271
+        },
+        {
+          "hz": 759,
+          "rel": 0.259
+        },
+        {
+          "hz": 727,
+          "rel": 0.255
+        },
+        {
+          "hz": 662,
+          "rel": 0.25
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.032,
+        "low_120_350": 0.294,
+        "lowmid_350_800": 0.256,
+        "mid_800_2k": 0.304,
+        "hi_2k_5k": 0.113,
+        "air_5k_9k": 0.001
+      }
+    }
+  },
+  "pruttelauto": {
+    "name": "pruttelauto",
+    "role": "engine",
+    "description": "Sputtering, putt-putt little old car engine (uneven firing). Orange wagon.",
+    "usedBy": "orange wagon",
+    "kind": "loop",
+    "durationS": 4.49,
+    "target": {
+      "centroidHz": 2254,
+      "flatness": 0.613,
+      "sustainedFraction": 0.24,
+      "attackMs": 2024,
+      "topPeaksHz": [
+        {
+          "hz": 102,
+          "rel": 1
+        },
+        {
+          "hz": 291,
+          "rel": 0.364
+        },
+        {
+          "hz": 151,
+          "rel": 0.343
+        },
+        {
+          "hz": 205,
+          "rel": 0.268
+        },
+        {
+          "hz": 188,
+          "rel": 0.24
+        },
+        {
+          "hz": 258,
+          "rel": 0.214
+        },
+        {
+          "hz": 231,
+          "rel": 0.173
+        },
+        {
+          "hz": 824,
+          "rel": 0.165
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.128,
+        "low_120_350": 0.12,
+        "lowmid_350_800": 0.118,
+        "mid_800_2k": 0.233,
+        "hi_2k_5k": 0.265,
+        "air_5k_9k": 0.136
+      }
+    }
+  },
+  "belmobiel": {
+    "name": "belmobiel",
+    "role": "engine",
+    "description": "Small mobile/scooter-ish engine for the \"phone car\". Mid buzzy.",
+    "usedBy": "phone-car",
+    "kind": "loop",
+    "durationS": 8.1,
+    "target": {
+      "centroidHz": 1626,
+      "flatness": 0.436,
+      "sustainedFraction": 0.68,
+      "attackMs": 2783,
+      "topPeaksHz": [
+        {
+          "hz": 70,
+          "rel": 1
+        },
+        {
+          "hz": 135,
+          "rel": 0.484
+        },
+        {
+          "hz": 97,
+          "rel": 0.475
+        },
+        {
+          "hz": 194,
+          "rel": 0.46
+        },
+        {
+          "hz": 226,
+          "rel": 0.31
+        },
+        {
+          "hz": 264,
+          "rel": 0.25
+        },
+        {
+          "hz": 775,
+          "rel": 0.158
+        },
+        {
+          "hz": 382,
+          "rel": 0.153
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.137,
+        "low_120_350": 0.193,
+        "lowmid_350_800": 0.168,
+        "mid_800_2k": 0.216,
+        "hi_2k_5k": 0.207,
+        "air_5k_9k": 0.079
+      }
+    }
+  },
+  "motorloop": {
+    "name": "motorloop",
+    "role": "engine",
+    "description": "Motorbike engine, low rumbling with closely-spaced firing partials around 97 Hz.",
+    "usedBy": "motorbike",
+    "kind": "loop",
+    "durationS": 3.5,
+    "target": {
+      "centroidHz": 1181,
+      "flatness": 0.277,
+      "sustainedFraction": 0.73,
+      "attackMs": 989,
+      "topPeaksHz": [
+        {
+          "hz": 97,
+          "rel": 1
+        },
+        {
+          "hz": 167,
+          "rel": 0.394
+        },
+        {
+          "hz": 199,
+          "rel": 0.367
+        },
+        {
+          "hz": 221,
+          "rel": 0.359
+        },
+        {
+          "hz": 242,
+          "rel": 0.257
+        },
+        {
+          "hz": 280,
+          "rel": 0.125
+        },
+        {
+          "hz": 840,
+          "rel": 0.118
+        },
+        {
+          "hz": 312,
+          "rel": 0.116
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.216,
+        "low_120_350": 0.219,
+        "lowmid_350_800": 0.115,
+        "mid_800_2k": 0.248,
+        "hi_2k_5k": 0.166,
+        "air_5k_9k": 0.035
+      }
+    }
+  },
+  "bootloop": {
+    "name": "bootloop",
+    "role": "engine",
+    "description": "Boat / outboard motor chugging on water, low and watery.",
+    "usedBy": "boat",
+    "kind": "loop",
+    "durationS": 1.91,
+    "target": {
+      "centroidHz": 795,
+      "flatness": 0.133,
+      "sustainedFraction": 0.89,
+      "attackMs": 138,
+      "topPeaksHz": [
+        {
+          "hz": 54,
+          "rel": 1
+        },
+        {
+          "hz": 108,
+          "rel": 0.86
+        },
+        {
+          "hz": 135,
+          "rel": 0.69
+        },
+        {
+          "hz": 151,
+          "rel": 0.654
+        },
+        {
+          "hz": 188,
+          "rel": 0.651
+        },
+        {
+          "hz": 377,
+          "rel": 0.546
+        },
+        {
+          "hz": 479,
+          "rel": 0.507
+        },
+        {
+          "hz": 307,
+          "rel": 0.375
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.163,
+        "low_120_350": 0.284,
+        "lowmid_350_800": 0.305,
+        "mid_800_2k": 0.131,
+        "hi_2k_5k": 0.105,
+        "air_5k_9k": 0.011
+      }
+    }
+  },
+  "tjoekbel": {
+    "name": "tjoekbel",
+    "role": "engine",
+    "description": "Steam-train chug + bell (\"tjoek-tjoek\" + bell ding). Locomotive bed loop.",
+    "usedBy": "locomotive",
+    "kind": "loop",
+    "durationS": 1.31,
+    "target": {
+      "centroidHz": 1978,
+      "flatness": 0.485,
+      "sustainedFraction": 0.39,
+      "attackMs": 322,
+      "topPeaksHz": [
+        {
+          "hz": 1927,
+          "rel": 1
+        },
+        {
+          "hz": 3440,
+          "rel": 0.407
+        },
+        {
+          "hz": 743,
+          "rel": 0.328
+        },
+        {
+          "hz": 102,
+          "rel": 0.289
+        },
+        {
+          "hz": 269,
+          "rel": 0.288
+        },
+        {
+          "hz": 221,
+          "rel": 0.253
+        },
+        {
+          "hz": 81,
+          "rel": 0.236
+        },
+        {
+          "hz": 151,
+          "rel": 0.225
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.075,
+        "low_120_350": 0.165,
+        "lowmid_350_800": 0.176,
+        "mid_800_2k": 0.265,
+        "hi_2k_5k": 0.2,
+        "air_5k_9k": 0.119
+      }
+    }
+  },
+  "harmonie": {
+    "name": "harmonie",
+    "role": "music",
+    "description": "Marching brass band / fanfare loop (oompah). Melodic, brassy. Used by the fanfare float. Compose an ORIGINAL short brassy oompah loop in a similar register; do NOT copy any tune.",
+    "usedBy": "fanfare float",
+    "kind": "loop",
+    "durationS": 8.1,
+    "target": {
+      "centroidHz": 1366,
+      "flatness": 0.195,
+      "sustainedFraction": 0.42,
+      "attackMs": 2875,
+      "topPeaksHz": [
+        {
+          "hz": 393,
+          "rel": 1
+        },
+        {
+          "hz": 872,
+          "rel": 0.828
+        },
+        {
+          "hz": 581,
+          "rel": 0.768
+        },
+        {
+          "hz": 1157,
+          "rel": 0.706
+        },
+        {
+          "hz": 291,
+          "rel": 0.67
+        },
+        {
+          "hz": 937,
+          "rel": 0.589
+        },
+        {
+          "hz": 517,
+          "rel": 0.553
+        },
+        {
+          "hz": 781,
+          "rel": 0.546
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.004,
+        "low_120_350": 0.099,
+        "lowmid_350_800": 0.247,
+        "mid_800_2k": 0.45,
+        "hi_2k_5k": 0.179,
+        "air_5k_9k": 0.02
+      }
+    }
+  },
+  "ghosty": {
+    "name": "ghosty",
+    "role": "engine",
+    "description": "Ghost wail / spooky hollow moan loop, slow vibrato. Tonal ~140 Hz with vowel formants.",
+    "usedBy": "ghost",
+    "kind": "loop",
+    "durationS": 3.66,
+    "target": {
+      "centroidHz": 751,
+      "flatness": 0.062,
+      "sustainedFraction": 0.63,
+      "attackMs": 874,
+      "topPeaksHz": [
+        {
+          "hz": 140,
+          "rel": 1
+        },
+        {
+          "hz": 829,
+          "rel": 0.942
+        },
+        {
+          "hz": 877,
+          "rel": 0.875
+        },
+        {
+          "hz": 371,
+          "rel": 0.844
+        },
+        {
+          "hz": 420,
+          "rel": 0.788
+        },
+        {
+          "hz": 931,
+          "rel": 0.535
+        },
+        {
+          "hz": 334,
+          "rel": 0.517
+        },
+        {
+          "hz": 161,
+          "rel": 0.494
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.029,
+        "low_120_350": 0.211,
+        "lowmid_350_800": 0.399,
+        "mid_800_2k": 0.308,
+        "hi_2k_5k": 0.048,
+        "air_5k_9k": 0.004
+      }
+    }
+  },
+  "ufo2": {
+    "name": "ufo2",
+    "role": "engine",
+    "description": "UFO hum / sci-fi oscillating drone loop. Warbling.",
+    "usedBy": "UFO",
+    "kind": "loop",
+    "durationS": 1.23,
+    "target": {
+      "centroidHz": 1408,
+      "flatness": 0.102,
+      "sustainedFraction": 0.62,
+      "attackMs": 828,
+      "topPeaksHz": [
+        {
+          "hz": 974,
+          "rel": 1
+        },
+        {
+          "hz": 1179,
+          "rel": 0.834
+        },
+        {
+          "hz": 1039,
+          "rel": 0.762
+        },
+        {
+          "hz": 1001,
+          "rel": 0.719
+        },
+        {
+          "hz": 1340,
+          "rel": 0.66
+        },
+        {
+          "hz": 1427,
+          "rel": 0.645
+        },
+        {
+          "hz": 1324,
+          "rel": 0.559
+        },
+        {
+          "hz": 1394,
+          "rel": 0.55
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.001,
+        "low_120_350": 0.005,
+        "lowmid_350_800": 0.157,
+        "mid_800_2k": 0.662,
+        "hi_2k_5k": 0.166,
+        "air_5k_9k": 0.008
+      }
+    }
+  },
+  "shark": {
+    "name": "shark",
+    "role": "engine",
+    "description": "Menacing low approaching swell (Jaws-like) loop. Very low, ominous.",
+    "usedBy": "shark",
+    "kind": "loop",
+    "durationS": 0.71,
+    "target": {
+      "centroidHz": 674,
+      "flatness": 0.15,
+      "sustainedFraction": 0.37,
+      "attackMs": 69,
+      "topPeaksHz": [
+        {
+          "hz": 75,
+          "rel": 1
+        },
+        {
+          "hz": 231,
+          "rel": 0.582
+        },
+        {
+          "hz": 156,
+          "rel": 0.316
+        },
+        {
+          "hz": 388,
+          "rel": 0.151
+        },
+        {
+          "hz": 118,
+          "rel": 0.111
+        },
+        {
+          "hz": 856,
+          "rel": 0.085
+        },
+        {
+          "hz": 318,
+          "rel": 0.072
+        },
+        {
+          "hz": 447,
+          "rel": 0.046
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.311,
+        "low_120_350": 0.364,
+        "lowmid_350_800": 0.137,
+        "mid_800_2k": 0.104,
+        "hi_2k_5k": 0.056,
+        "air_5k_9k": 0.029
+      }
+    }
+  },
+  "olistamp": {
+    "name": "olistamp",
+    "role": "engine",
+    "description": "Heavy elephant footstep stomps loop (also the warthog body). Low thuddy rhythmic.",
+    "usedBy": "elephant/warthog",
+    "kind": "loop",
+    "durationS": 1.07,
+    "target": {
+      "centroidHz": 231,
+      "flatness": 0.01,
+      "sustainedFraction": 0.46,
+      "attackMs": 138,
+      "topPeaksHz": [
+        {
+          "hz": 108,
+          "rel": 1
+        },
+        {
+          "hz": 54,
+          "rel": 0.811
+        },
+        {
+          "hz": 183,
+          "rel": 0.401
+        },
+        {
+          "hz": 151,
+          "rel": 0.269
+        },
+        {
+          "hz": 221,
+          "rel": 0.2
+        },
+        {
+          "hz": 296,
+          "rel": 0.123
+        },
+        {
+          "hz": 275,
+          "rel": 0.111
+        },
+        {
+          "hz": 318,
+          "rel": 0.102
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.514,
+        "low_120_350": 0.356,
+        "lowmid_350_800": 0.094,
+        "mid_800_2k": 0.022,
+        "hi_2k_5k": 0.015,
+        "air_5k_9k": 0
+      }
+    }
+  },
+  "driveback01": {
+    "name": "driveback01",
+    "role": "engine",
+    "description": "A driving-car engine bed for the \"drive02\" car. Mid car engine.",
+    "usedBy": "drive car",
+    "kind": "loop",
+    "durationS": 3.58,
+    "target": {
+      "centroidHz": 1778,
+      "flatness": 0.496,
+      "sustainedFraction": 0.39,
+      "attackMs": 1150,
+      "topPeaksHz": [
+        {
+          "hz": 81,
+          "rel": 1
+        },
+        {
+          "hz": 113,
+          "rel": 0.753
+        },
+        {
+          "hz": 393,
+          "rel": 0.666
+        },
+        {
+          "hz": 183,
+          "rel": 0.628
+        },
+        {
+          "hz": 199,
+          "rel": 0.62
+        },
+        {
+          "hz": 350,
+          "rel": 0.326
+        },
+        {
+          "hz": 468,
+          "rel": 0.3
+        },
+        {
+          "hz": 452,
+          "rel": 0.299
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.19,
+        "low_120_350": 0.207,
+        "lowmid_350_800": 0.171,
+        "mid_800_2k": 0.146,
+        "hi_2k_5k": 0.144,
+        "air_5k_9k": 0.142
+      }
+    }
+  },
+  "sirene": {
+    "name": "sirene",
+    "role": "siren",
+    "description": "Police two-tone siren wail, ~2.4 kHz cluster. Classic up/down wail.",
+    "usedBy": "police",
+    "kind": "loop",
+    "durationS": 0.5,
+    "target": {
+      "centroidHz": 2200,
+      "flatness": 0.079,
+      "sustainedFraction": 0.57,
+      "attackMs": 276,
+      "topPeaksHz": [
+        {
+          "hz": 2422,
+          "rel": 1
+        },
+        {
+          "hz": 2455,
+          "rel": 0.959
+        },
+        {
+          "hz": 2487,
+          "rel": 0.912
+        },
+        {
+          "hz": 2859,
+          "rel": 0.789
+        },
+        {
+          "hz": 2396,
+          "rel": 0.677
+        },
+        {
+          "hz": 2783,
+          "rel": 0.657
+        },
+        {
+          "hz": 2815,
+          "rel": 0.635
+        },
+        {
+          "hz": 2509,
+          "rel": 0.629
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.002,
+        "low_120_350": 0.001,
+        "lowmid_350_800": 0.046,
+        "mid_800_2k": 0.335,
+        "hi_2k_5k": 0.608,
+        "air_5k_9k": 0.007
+      }
+    }
+  },
+  "boemcar": {
+    "name": "boemcar",
+    "role": "bed",
+    "description": "Boom-car subwoofer bass thump loop (doof-doof). Very low, rhythmic bass.",
+    "usedBy": "boom-car",
+    "kind": "loop",
+    "durationS": 0.55,
+    "target": {
+      "centroidHz": 147,
+      "flatness": 0.013,
+      "sustainedFraction": 0.74,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 54,
+          "rel": 1
+        },
+        {
+          "hz": 161,
+          "rel": 0.091
+        },
+        {
+          "hz": 135,
+          "rel": 0.083
+        },
+        {
+          "hz": 210,
+          "rel": 0.035
+        },
+        {
+          "hz": 264,
+          "rel": 0.019
+        },
+        {
+          "hz": 334,
+          "rel": 0.009
+        },
+        {
+          "hz": 350,
+          "rel": 0.008
+        },
+        {
+          "hz": 382,
+          "rel": 0.007
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.733,
+        "low_120_350": 0.216,
+        "lowmid_350_800": 0.032,
+        "mid_800_2k": 0.013,
+        "hi_2k_5k": 0.005,
+        "air_5k_9k": 0.002
+      }
+    }
+  },
+  "quepasa": {
+    "name": "quepasa",
+    "role": "voice",
+    "description": "A shouted Spanish phrase loop (\"que pasa\") from the Spanish car. Make an abstract rhythmic vowel-formant vocal stand-in, NOT speech.",
+    "usedBy": "Spanish car",
+    "kind": "loop",
+    "durationS": 1.46,
+    "target": {
+      "centroidHz": 1975,
+      "flatness": 0.367,
+      "sustainedFraction": 0.49,
+      "attackMs": 368,
+      "topPeaksHz": [
+        {
+          "hz": 748,
+          "rel": 1
+        },
+        {
+          "hz": 732,
+          "rel": 0.948
+        },
+        {
+          "hz": 668,
+          "rel": 0.853
+        },
+        {
+          "hz": 694,
+          "rel": 0.679
+        },
+        {
+          "hz": 786,
+          "rel": 0.642
+        },
+        {
+          "hz": 1384,
+          "rel": 0.542
+        },
+        {
+          "hz": 1480,
+          "rel": 0.54
+        },
+        {
+          "hz": 1324,
+          "rel": 0.533
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.014,
+        "low_120_350": 0.046,
+        "lowmid_350_800": 0.239,
+        "mid_800_2k": 0.333,
+        "hi_2k_5k": 0.293,
+        "air_5k_9k": 0.076
+      }
+    }
+  },
+  "schetenloop": {
+    "name": "schetenloop",
+    "role": "fart",
+    "description": "Long looping flatulence (warthog 999 / burp mode). Wet buzzy low splutter with random wobble.",
+    "usedBy": "warthog",
+    "kind": "loop",
+    "durationS": 10.89,
+    "target": {
+      "centroidHz": 2505,
+      "flatness": 0.701,
+      "sustainedFraction": 0.11,
+      "attackMs": 5520,
+      "topPeaksHz": [
+        {
+          "hz": 81,
+          "rel": 1
+        },
+        {
+          "hz": 156,
+          "rel": 0.549
+        },
+        {
+          "hz": 237,
+          "rel": 0.443
+        },
+        {
+          "hz": 183,
+          "rel": 0.427
+        },
+        {
+          "hz": 318,
+          "rel": 0.288
+        },
+        {
+          "hz": 404,
+          "rel": 0.259
+        },
+        {
+          "hz": 371,
+          "rel": 0.238
+        },
+        {
+          "hz": 425,
+          "rel": 0.216
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.105,
+        "low_120_350": 0.123,
+        "lowmid_350_800": 0.098,
+        "mid_800_2k": 0.209,
+        "hi_2k_5k": 0.29,
+        "air_5k_9k": 0.176
+      }
+    }
+  },
+  "toeter1": {
+    "name": "toeter1",
+    "role": "horn",
+    "description": "Short car horn honk, a two-note dyad (~328 + 447 Hz) with buzzy harmonics.",
+    "usedBy": "pickup/sander/pink",
+    "kind": "oneshot",
+    "durationS": 0.84,
+    "target": {
+      "centroidHz": 2505,
+      "flatness": 0.394,
+      "sustainedFraction": 0.31,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 447,
+          "rel": 1
+        },
+        {
+          "hz": 328,
+          "rel": 0.708
+        },
+        {
+          "hz": 3112,
+          "rel": 0.372
+        },
+        {
+          "hz": 2670,
+          "rel": 0.332
+        },
+        {
+          "hz": 2223,
+          "rel": 0.141
+        },
+        {
+          "hz": 3558,
+          "rel": 0.116
+        },
+        {
+          "hz": 646,
+          "rel": 0.097
+        },
+        {
+          "hz": 888,
+          "rel": 0.096
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.01,
+        "low_120_350": 0.137,
+        "lowmid_350_800": 0.24,
+        "mid_800_2k": 0.081,
+        "hi_2k_5k": 0.381,
+        "air_5k_9k": 0.15
+      }
+    }
+  },
+  "toeter2": {
+    "name": "toeter2",
+    "role": "horn",
+    "description": "Alternate car horn honk, slightly different pitch/timbre from toeter1.",
+    "usedBy": "orange/rust/square",
+    "kind": "oneshot",
+    "durationS": 0.78,
+    "target": {
+      "centroidHz": 3194,
+      "flatness": 0.376,
+      "sustainedFraction": 0.29,
+      "attackMs": 69,
+      "topPeaksHz": [
+        {
+          "hz": 366,
+          "rel": 1
+        },
+        {
+          "hz": 3289,
+          "rel": 0.929
+        },
+        {
+          "hz": 2923,
+          "rel": 0.623
+        },
+        {
+          "hz": 3655,
+          "rel": 0.437
+        },
+        {
+          "hz": 2557,
+          "rel": 0.362
+        },
+        {
+          "hz": 5486,
+          "rel": 0.193
+        },
+        {
+          "hz": 3241,
+          "rel": 0.115
+        },
+        {
+          "hz": 2196,
+          "rel": 0.078
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.01,
+        "low_120_350": 0.061,
+        "lowmid_350_800": 0.134,
+        "mid_800_2k": 0.049,
+        "hi_2k_5k": 0.56,
+        "air_5k_9k": 0.186
+      }
+    }
+  },
+  "treinhorn": {
+    "name": "treinhorn",
+    "role": "horn",
+    "description": "Deep train air-horn blast, low and powerful, long sustain.",
+    "usedBy": "locomotive",
+    "kind": "oneshot",
+    "durationS": 3.6,
+    "target": {
+      "centroidHz": 1438,
+      "flatness": 0.006,
+      "sustainedFraction": 0.81,
+      "attackMs": 230,
+      "topPeaksHz": [
+        {
+          "hz": 657,
+          "rel": 1
+        },
+        {
+          "hz": 501,
+          "rel": 0.795
+        },
+        {
+          "hz": 581,
+          "rel": 0.784
+        },
+        {
+          "hz": 404,
+          "rel": 0.737
+        },
+        {
+          "hz": 764,
+          "rel": 0.674
+        },
+        {
+          "hz": 1206,
+          "rel": 0.128
+        },
+        {
+          "hz": 1502,
+          "rel": 0.116
+        },
+        {
+          "hz": 1739,
+          "rel": 0.105
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.002,
+        "low_120_350": 0.013,
+        "lowmid_350_800": 0.433,
+        "mid_800_2k": 0.259,
+        "hi_2k_5k": 0.294,
+        "air_5k_9k": 0
+      }
+    }
+  },
+  "boottoeter": {
+    "name": "boottoeter",
+    "role": "horn",
+    "description": "Boat fog-horn, low broad honk.",
+    "usedBy": "boat",
+    "kind": "oneshot",
+    "durationS": 1.46,
+    "target": {
+      "centroidHz": 1347,
+      "flatness": 0.246,
+      "sustainedFraction": 0.6,
+      "attackMs": 368,
+      "topPeaksHz": [
+        {
+          "hz": 506,
+          "rel": 1
+        },
+        {
+          "hz": 377,
+          "rel": 0.877
+        },
+        {
+          "hz": 129,
+          "rel": 0.672
+        },
+        {
+          "hz": 1136,
+          "rel": 0.518
+        },
+        {
+          "hz": 630,
+          "rel": 0.44
+        },
+        {
+          "hz": 253,
+          "rel": 0.396
+        },
+        {
+          "hz": 1513,
+          "rel": 0.256
+        },
+        {
+          "hz": 1637,
+          "rel": 0.237
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.031,
+        "low_120_350": 0.126,
+        "lowmid_350_800": 0.345,
+        "mid_800_2k": 0.296,
+        "hi_2k_5k": 0.164,
+        "air_5k_9k": 0.038
+      }
+    }
+  },
+  "leader": {
+    "name": "leader",
+    "role": "voice",
+    "description": "UFO \"take me to your leader\" alien voice clip. Abstract robotic/ring-mod formant gesture, NOT speech.",
+    "usedBy": "UFO",
+    "kind": "oneshot",
+    "durationS": 1.41,
+    "target": {
+      "centroidHz": 1841,
+      "flatness": 0.443,
+      "sustainedFraction": 0.75,
+      "attackMs": 230,
+      "topPeaksHz": [
+        {
+          "hz": 156,
+          "rel": 1
+        },
+        {
+          "hz": 231,
+          "rel": 0.748
+        },
+        {
+          "hz": 75,
+          "rel": 0.612
+        },
+        {
+          "hz": 312,
+          "rel": 0.605
+        },
+        {
+          "hz": 544,
+          "rel": 0.564
+        },
+        {
+          "hz": 388,
+          "rel": 0.534
+        },
+        {
+          "hz": 468,
+          "rel": 0.515
+        },
+        {
+          "hz": 619,
+          "rel": 0.46
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.052,
+        "low_120_350": 0.175,
+        "lowmid_350_800": 0.269,
+        "mid_800_2k": 0.155,
+        "hi_2k_5k": 0.273,
+        "air_5k_9k": 0.076
+      }
+    }
+  },
+  "phone": {
+    "name": "phone",
+    "role": "horn",
+    "description": "Mobile phone ringtone (the bel-car). A cheerful melodic ring — synthesize a short original ringtone arpeggio.",
+    "usedBy": "phone-car",
+    "kind": "oneshot",
+    "durationS": 2.51,
+    "target": {
+      "centroidHz": 4461,
+      "flatness": 0.368,
+      "sustainedFraction": 0.91,
+      "attackMs": 1357,
+      "topPeaksHz": [
+        {
+          "hz": 5276,
+          "rel": 1
+        },
+        {
+          "hz": 2638,
+          "rel": 0.96
+        },
+        {
+          "hz": 2218,
+          "rel": 0.643
+        },
+        {
+          "hz": 4985,
+          "rel": 0.564
+        },
+        {
+          "hz": 3521,
+          "rel": 0.394
+        },
+        {
+          "hz": 3951,
+          "rel": 0.391
+        },
+        {
+          "hz": 4613,
+          "rel": 0.37
+        },
+        {
+          "hz": 5179,
+          "rel": 0.37
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.001,
+        "low_120_350": 0.001,
+        "lowmid_350_800": 0.002,
+        "mid_800_2k": 0.046,
+        "hi_2k_5k": 0.546,
+        "air_5k_9k": 0.403
+      }
+    }
+  },
+  "batmanclip": {
+    "name": "batmanclip",
+    "role": "voice",
+    "description": "A Batman movie/voice clip. Abstract heroic brass-y sting stand-in, NOT the actual clip.",
+    "usedBy": "Batmobile",
+    "kind": "oneshot",
+    "durationS": 3.45,
+    "target": {
+      "centroidHz": 1545,
+      "flatness": 0.047,
+      "sustainedFraction": 0.79,
+      "attackMs": 115,
+      "topPeaksHz": [
+        {
+          "hz": 388,
+          "rel": 1
+        },
+        {
+          "hz": 275,
+          "rel": 0.775
+        },
+        {
+          "hz": 291,
+          "rel": 0.662
+        },
+        {
+          "hz": 549,
+          "rel": 0.625
+        },
+        {
+          "hz": 97,
+          "rel": 0.538
+        },
+        {
+          "hz": 576,
+          "rel": 0.495
+        },
+        {
+          "hz": 242,
+          "rel": 0.487
+        },
+        {
+          "hz": 684,
+          "rel": 0.479
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.02,
+        "low_120_350": 0.12,
+        "lowmid_350_800": 0.199,
+        "mid_800_2k": 0.362,
+        "hi_2k_5k": 0.287,
+        "air_5k_9k": 0.012
+      }
+    }
+  },
+  "gbustclip2": {
+    "name": "gbustclip2",
+    "role": "voice",
+    "description": "A Ghostbusters movie/voice clip. Abstract spooky vocal sting stand-in, NOT the actual clip.",
+    "usedBy": "ghostbusters",
+    "kind": "oneshot",
+    "durationS": 4.34,
+    "target": {
+      "centroidHz": 2329,
+      "flatness": 0.658,
+      "sustainedFraction": 0.3,
+      "attackMs": 161,
+      "topPeaksHz": [
+        {
+          "hz": 59,
+          "rel": 1
+        },
+        {
+          "hz": 501,
+          "rel": 0.32
+        },
+        {
+          "hz": 1001,
+          "rel": 0.304
+        },
+        {
+          "hz": 167,
+          "rel": 0.288
+        },
+        {
+          "hz": 221,
+          "rel": 0.247
+        },
+        {
+          "hz": 248,
+          "rel": 0.244
+        },
+        {
+          "hz": 619,
+          "rel": 0.243
+        },
+        {
+          "hz": 565,
+          "rel": 0.24
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.097,
+        "low_120_350": 0.08,
+        "lowmid_350_800": 0.145,
+        "mid_800_2k": 0.271,
+        "hi_2k_5k": 0.258,
+        "air_5k_9k": 0.149
+      }
+    }
+  },
+  "olifant": {
+    "name": "olifant",
+    "role": "horn",
+    "description": "Elephant trumpet blast (rising brassy bray). One-shot.",
+    "usedBy": "elephant",
+    "kind": "oneshot",
+    "durationS": 2.85,
+    "target": {
+      "centroidHz": 1643,
+      "flatness": 0.069,
+      "sustainedFraction": 0.26,
+      "attackMs": 1771,
+      "topPeaksHz": [
+        {
+          "hz": 689,
+          "rel": 1
+        },
+        {
+          "hz": 1384,
+          "rel": 0.448
+        },
+        {
+          "hz": 1357,
+          "rel": 0.408
+        },
+        {
+          "hz": 1308,
+          "rel": 0.22
+        },
+        {
+          "hz": 2078,
+          "rel": 0.214
+        },
+        {
+          "hz": 608,
+          "rel": 0.211
+        },
+        {
+          "hz": 2772,
+          "rel": 0.194
+        },
+        {
+          "hz": 2035,
+          "rel": 0.181
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.001,
+        "low_120_350": 0.018,
+        "lowmid_350_800": 0.251,
+        "mid_800_2k": 0.392,
+        "hi_2k_5k": 0.335,
+        "air_5k_9k": 0.004
+      }
+    }
+  },
+  "driveleo1": {
+    "name": "driveleo1",
+    "role": "voice",
+    "description": "A shouted catchphrase voice clip variant 1 (drive car). Abstract vowel-shout stand-in, NOT speech.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.19,
+    "target": {
+      "centroidHz": 3013,
+      "flatness": 0.79,
+      "sustainedFraction": 0.29,
+      "attackMs": 782,
+      "topPeaksHz": [
+        {
+          "hz": 129,
+          "rel": 1
+        },
+        {
+          "hz": 264,
+          "rel": 0.756
+        },
+        {
+          "hz": 188,
+          "rel": 0.658
+        },
+        {
+          "hz": 280,
+          "rel": 0.631
+        },
+        {
+          "hz": 603,
+          "rel": 0.596
+        },
+        {
+          "hz": 86,
+          "rel": 0.567
+        },
+        {
+          "hz": 565,
+          "rel": 0.558
+        },
+        {
+          "hz": 619,
+          "rel": 0.544
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.028,
+        "low_120_350": 0.106,
+        "lowmid_350_800": 0.144,
+        "mid_800_2k": 0.205,
+        "hi_2k_5k": 0.249,
+        "air_5k_9k": 0.267
+      }
+    }
+  },
+  "driveleo2": {
+    "name": "driveleo2",
+    "role": "voice",
+    "description": "Shouted catchphrase voice clip variant 2. Abstract vowel-shout stand-in.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.35,
+    "target": {
+      "centroidHz": 2912,
+      "flatness": 0.708,
+      "sustainedFraction": 0.54,
+      "attackMs": 989,
+      "topPeaksHz": [
+        {
+          "hz": 851,
+          "rel": 1
+        },
+        {
+          "hz": 603,
+          "rel": 0.962
+        },
+        {
+          "hz": 565,
+          "rel": 0.723
+        },
+        {
+          "hz": 458,
+          "rel": 0.707
+        },
+        {
+          "hz": 425,
+          "rel": 0.687
+        },
+        {
+          "hz": 549,
+          "rel": 0.648
+        },
+        {
+          "hz": 522,
+          "rel": 0.573
+        },
+        {
+          "hz": 786,
+          "rel": 0.433
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.003,
+        "low_120_350": 0.018,
+        "lowmid_350_800": 0.204,
+        "mid_800_2k": 0.223,
+        "hi_2k_5k": 0.329,
+        "air_5k_9k": 0.223
+      }
+    }
+  },
+  "driveleo3": {
+    "name": "driveleo3",
+    "role": "voice",
+    "description": "Shouted catchphrase voice clip variant 3. Abstract vowel-shout stand-in.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.69,
+    "target": {
+      "centroidHz": 2392,
+      "flatness": 0.637,
+      "sustainedFraction": 0.35,
+      "attackMs": 1012,
+      "topPeaksHz": [
+        {
+          "hz": 425,
+          "rel": 1
+        },
+        {
+          "hz": 484,
+          "rel": 0.877
+        },
+        {
+          "hz": 657,
+          "rel": 0.788
+        },
+        {
+          "hz": 377,
+          "rel": 0.767
+        },
+        {
+          "hz": 872,
+          "rel": 0.69
+        },
+        {
+          "hz": 856,
+          "rel": 0.648
+        },
+        {
+          "hz": 571,
+          "rel": 0.545
+        },
+        {
+          "hz": 533,
+          "rel": 0.497
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.004,
+        "low_120_350": 0.068,
+        "lowmid_350_800": 0.218,
+        "mid_800_2k": 0.305,
+        "hi_2k_5k": 0.25,
+        "air_5k_9k": 0.155
+      }
+    }
+  },
+  "i1": {
+    "name": "i1",
+    "role": "footstep",
+    "description": "Hedgehog footstep 1: short soft low thump/scuff (~0.25 s).",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.26,
+    "target": {
+      "centroidHz": 1018,
+      "flatness": 0.177,
+      "sustainedFraction": 0.27,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 318,
+          "rel": 1
+        },
+        {
+          "hz": 958,
+          "rel": 0.072
+        },
+        {
+          "hz": 248,
+          "rel": 0.057
+        },
+        {
+          "hz": 75,
+          "rel": 0.046
+        },
+        {
+          "hz": 199,
+          "rel": 0.043
+        },
+        {
+          "hz": 641,
+          "rel": 0.041
+        },
+        {
+          "hz": 54,
+          "rel": 0.04
+        },
+        {
+          "hz": 113,
+          "rel": 0.036
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.053,
+        "low_120_350": 0.603,
+        "lowmid_350_800": 0.117,
+        "mid_800_2k": 0.113,
+        "hi_2k_5k": 0.049,
+        "air_5k_9k": 0.064
+      }
+    }
+  },
+  "i2": {
+    "name": "i2",
+    "role": "footstep",
+    "description": "Hedgehog footstep 2 (slightly different pitch).",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.21,
+    "target": {
+      "centroidHz": 916,
+      "flatness": 0.08,
+      "sustainedFraction": 0.22,
+      "attackMs": 23,
+      "topPeaksHz": [
+        {
+          "hz": 355,
+          "rel": 1
+        },
+        {
+          "hz": 1055,
+          "rel": 0.26
+        },
+        {
+          "hz": 711,
+          "rel": 0.129
+        },
+        {
+          "hz": 1023,
+          "rel": 0.09
+        },
+        {
+          "hz": 59,
+          "rel": 0.07
+        },
+        {
+          "hz": 285,
+          "rel": 0.06
+        },
+        {
+          "hz": 108,
+          "rel": 0.052
+        },
+        {
+          "hz": 269,
+          "rel": 0.052
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.059,
+        "low_120_350": 0.315,
+        "lowmid_350_800": 0.35,
+        "mid_800_2k": 0.208,
+        "hi_2k_5k": 0.019,
+        "air_5k_9k": 0.049
+      }
+    }
+  },
+  "i3": {
+    "name": "i3",
+    "role": "footstep",
+    "description": "Hedgehog footstep 3.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.24,
+    "target": {
+      "centroidHz": 1118,
+      "flatness": 0.109,
+      "sustainedFraction": 0.3,
+      "attackMs": 23,
+      "topPeaksHz": [
+        {
+          "hz": 366,
+          "rel": 1
+        },
+        {
+          "hz": 1098,
+          "rel": 0.486
+        },
+        {
+          "hz": 738,
+          "rel": 0.246
+        },
+        {
+          "hz": 1071,
+          "rel": 0.186
+        },
+        {
+          "hz": 65,
+          "rel": 0.038
+        },
+        {
+          "hz": 1023,
+          "rel": 0.035
+        },
+        {
+          "hz": 86,
+          "rel": 0.033
+        },
+        {
+          "hz": 280,
+          "rel": 0.032
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.027,
+        "low_120_350": 0.094,
+        "lowmid_350_800": 0.444,
+        "mid_800_2k": 0.351,
+        "hi_2k_5k": 0.03,
+        "air_5k_9k": 0.054
+      }
+    }
+  },
+  "i4": {
+    "name": "i4",
+    "role": "footstep",
+    "description": "Hedgehog footstep 4.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.21,
+    "target": {
+      "centroidHz": 1019,
+      "flatness": 0.135,
+      "sustainedFraction": 0.22,
+      "attackMs": 23,
+      "topPeaksHz": [
+        {
+          "hz": 409,
+          "rel": 1
+        },
+        {
+          "hz": 818,
+          "rel": 0.311
+        },
+        {
+          "hz": 1211,
+          "rel": 0.104
+        },
+        {
+          "hz": 65,
+          "rel": 0.063
+        },
+        {
+          "hz": 851,
+          "rel": 0.061
+        },
+        {
+          "hz": 334,
+          "rel": 0.047
+        },
+        {
+          "hz": 92,
+          "rel": 0.046
+        },
+        {
+          "hz": 307,
+          "rel": 0.04
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.043,
+        "low_120_350": 0.101,
+        "lowmid_350_800": 0.477,
+        "mid_800_2k": 0.288,
+        "hi_2k_5k": 0.042,
+        "air_5k_9k": 0.05
+      }
+    }
+  },
+  "i5": {
+    "name": "i5",
+    "role": "footstep",
+    "description": "Hedgehog footstep 5.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.21,
+    "target": {
+      "centroidHz": 1177,
+      "flatness": 0.161,
+      "sustainedFraction": 0.22,
+      "attackMs": 23,
+      "topPeaksHz": [
+        {
+          "hz": 931,
+          "rel": 1
+        },
+        {
+          "hz": 463,
+          "rel": 0.953
+        },
+        {
+          "hz": 65,
+          "rel": 0.387
+        },
+        {
+          "hz": 86,
+          "rel": 0.339
+        },
+        {
+          "hz": 980,
+          "rel": 0.132
+        },
+        {
+          "hz": 118,
+          "rel": 0.101
+        },
+        {
+          "hz": 140,
+          "rel": 0.098
+        },
+        {
+          "hz": 156,
+          "rel": 0.088
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.102,
+        "low_120_350": 0.073,
+        "lowmid_350_800": 0.299,
+        "mid_800_2k": 0.426,
+        "hi_2k_5k": 0.042,
+        "air_5k_9k": 0.058
+      }
+    }
+  },
+  "win": {
+    "name": "win",
+    "role": "jingle",
+    "description": "Happy success chime when you reach a curb (+100). A short rising 4-note arpeggio (~619->931->1244->1863 Hz), bright bell/marimba timbre.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.02,
+    "target": {
+      "centroidHz": 1812,
+      "flatness": 0.062,
+      "sustainedFraction": 0.48,
+      "attackMs": 230,
+      "topPeaksHz": [
+        {
+          "hz": 1244,
+          "rel": 1
+        },
+        {
+          "hz": 931,
+          "rel": 0.823
+        },
+        {
+          "hz": 1863,
+          "rel": 0.56
+        },
+        {
+          "hz": 619,
+          "rel": 0.517
+        },
+        {
+          "hz": 2487,
+          "rel": 0.345
+        },
+        {
+          "hz": 1206,
+          "rel": 0.044
+        },
+        {
+          "hz": 1292,
+          "rel": 0.024
+        },
+        {
+          "hz": 1825,
+          "rel": 0.021
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.001,
+        "low_120_350": 0.007,
+        "lowmid_350_800": 0.153,
+        "mid_800_2k": 0.628,
+        "hi_2k_5k": 0.137,
+        "air_5k_9k": 0.074
+      }
+    }
+  },
+  "lose": {
+    "name": "lose",
+    "role": "splat",
+    "description": "Death \"splat\"/squish when hit by a vehicle. Bright noisy burst with a quick downward pitch — comic squash.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.52,
+    "target": {
+      "centroidHz": 3692,
+      "flatness": 0.875,
+      "sustainedFraction": 0.28,
+      "attackMs": 115,
+      "topPeaksHz": [
+        {
+          "hz": 361,
+          "rel": 1
+        },
+        {
+          "hz": 285,
+          "rel": 0.833
+        },
+        {
+          "hz": 474,
+          "rel": 0.727
+        },
+        {
+          "hz": 415,
+          "rel": 0.694
+        },
+        {
+          "hz": 388,
+          "rel": 0.682
+        },
+        {
+          "hz": 129,
+          "rel": 0.673
+        },
+        {
+          "hz": 188,
+          "rel": 0.666
+        },
+        {
+          "hz": 554,
+          "rel": 0.665
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.009,
+        "low_120_350": 0.055,
+        "lowmid_350_800": 0.097,
+        "mid_800_2k": 0.126,
+        "hi_2k_5k": 0.381,
+        "air_5k_9k": 0.331
+      }
+    }
+  },
+  "burp1": {
+    "name": "burp1",
+    "role": "burp",
+    "description": "Comic belch variant 1. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.1,
+    "target": {
+      "centroidHz": 1708,
+      "flatness": 0.409,
+      "sustainedFraction": 0.45,
+      "attackMs": 138,
+      "topPeaksHz": [
+        {
+          "hz": 522,
+          "rel": 1
+        },
+        {
+          "hz": 490,
+          "rel": 0.981
+        },
+        {
+          "hz": 59,
+          "rel": 0.394
+        },
+        {
+          "hz": 118,
+          "rel": 0.353
+        },
+        {
+          "hz": 576,
+          "rel": 0.321
+        },
+        {
+          "hz": 1497,
+          "rel": 0.277
+        },
+        {
+          "hz": 1513,
+          "rel": 0.277
+        },
+        {
+          "hz": 415,
+          "rel": 0.275
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.054,
+        "low_120_350": 0.092,
+        "lowmid_350_800": 0.406,
+        "mid_800_2k": 0.198,
+        "hi_2k_5k": 0.128,
+        "air_5k_9k": 0.122
+      }
+    }
+  },
+  "burp2": {
+    "name": "burp2",
+    "role": "burp",
+    "description": "Comic belch variant 2. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.19,
+    "target": {
+      "centroidHz": 1537,
+      "flatness": 0.374,
+      "sustainedFraction": 0.49,
+      "attackMs": 506,
+      "topPeaksHz": [
+        {
+          "hz": 689,
+          "rel": 1
+        },
+        {
+          "hz": 75,
+          "rel": 0.973
+        },
+        {
+          "hz": 705,
+          "rel": 0.708
+        },
+        {
+          "hz": 118,
+          "rel": 0.685
+        },
+        {
+          "hz": 183,
+          "rel": 0.37
+        },
+        {
+          "hz": 770,
+          "rel": 0.309
+        },
+        {
+          "hz": 554,
+          "rel": 0.255
+        },
+        {
+          "hz": 533,
+          "rel": 0.234
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.105,
+        "low_120_350": 0.126,
+        "lowmid_350_800": 0.344,
+        "mid_800_2k": 0.209,
+        "hi_2k_5k": 0.135,
+        "air_5k_9k": 0.081
+      }
+    }
+  },
+  "burp3": {
+    "name": "burp3",
+    "role": "burp",
+    "description": "Comic belch variant 3. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.39,
+    "target": {
+      "centroidHz": 1621,
+      "flatness": 0.348,
+      "sustainedFraction": 0.47,
+      "attackMs": 92,
+      "topPeaksHz": [
+        {
+          "hz": 549,
+          "rel": 1
+        },
+        {
+          "hz": 565,
+          "rel": 0.862
+        },
+        {
+          "hz": 598,
+          "rel": 0.619
+        },
+        {
+          "hz": 86,
+          "rel": 0.547
+        },
+        {
+          "hz": 528,
+          "rel": 0.536
+        },
+        {
+          "hz": 70,
+          "rel": 0.465
+        },
+        {
+          "hz": 156,
+          "rel": 0.374
+        },
+        {
+          "hz": 624,
+          "rel": 0.373
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.077,
+        "low_120_350": 0.122,
+        "lowmid_350_800": 0.348,
+        "mid_800_2k": 0.209,
+        "hi_2k_5k": 0.163,
+        "air_5k_9k": 0.082
+      }
+    }
+  },
+  "burp4": {
+    "name": "burp4",
+    "role": "burp",
+    "description": "Comic belch variant 4. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.88,
+    "target": {
+      "centroidHz": 1392,
+      "flatness": 0.347,
+      "sustainedFraction": 0.63,
+      "attackMs": 115,
+      "topPeaksHz": [
+        {
+          "hz": 54,
+          "rel": 1
+        },
+        {
+          "hz": 102,
+          "rel": 0.993
+        },
+        {
+          "hz": 447,
+          "rel": 0.98
+        },
+        {
+          "hz": 479,
+          "rel": 0.809
+        },
+        {
+          "hz": 151,
+          "rel": 0.643
+        },
+        {
+          "hz": 377,
+          "rel": 0.346
+        },
+        {
+          "hz": 205,
+          "rel": 0.293
+        },
+        {
+          "hz": 307,
+          "rel": 0.273
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.144,
+        "low_120_350": 0.158,
+        "lowmid_350_800": 0.336,
+        "mid_800_2k": 0.15,
+        "hi_2k_5k": 0.132,
+        "air_5k_9k": 0.081
+      }
+    }
+  },
+  "burp5": {
+    "name": "burp5",
+    "role": "burp",
+    "description": "Comic belch variant 5. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.57,
+    "target": {
+      "centroidHz": 1418,
+      "flatness": 0.281,
+      "sustainedFraction": 0.5,
+      "attackMs": 115,
+      "topPeaksHz": [
+        {
+          "hz": 495,
+          "rel": 1
+        },
+        {
+          "hz": 544,
+          "rel": 0.78
+        },
+        {
+          "hz": 565,
+          "rel": 0.666
+        },
+        {
+          "hz": 92,
+          "rel": 0.637
+        },
+        {
+          "hz": 113,
+          "rel": 0.587
+        },
+        {
+          "hz": 135,
+          "rel": 0.448
+        },
+        {
+          "hz": 468,
+          "rel": 0.443
+        },
+        {
+          "hz": 441,
+          "rel": 0.352
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.116,
+        "low_120_350": 0.116,
+        "lowmid_350_800": 0.358,
+        "mid_800_2k": 0.182,
+        "hi_2k_5k": 0.171,
+        "air_5k_9k": 0.056
+      }
+    }
+  },
+  "burp6": {
+    "name": "burp6",
+    "role": "burp",
+    "description": "Comic belch variant 6. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.61,
+    "target": {
+      "centroidHz": 2238,
+      "flatness": 0.517,
+      "sustainedFraction": 0.34,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 447,
+          "rel": 1
+        },
+        {
+          "hz": 415,
+          "rel": 0.957
+        },
+        {
+          "hz": 474,
+          "rel": 0.859
+        },
+        {
+          "hz": 118,
+          "rel": 0.807
+        },
+        {
+          "hz": 565,
+          "rel": 0.78
+        },
+        {
+          "hz": 592,
+          "rel": 0.757
+        },
+        {
+          "hz": 635,
+          "rel": 0.676
+        },
+        {
+          "hz": 140,
+          "rel": 0.675
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.041,
+        "low_120_350": 0.078,
+        "lowmid_350_800": 0.24,
+        "mid_800_2k": 0.235,
+        "hi_2k_5k": 0.291,
+        "air_5k_9k": 0.115
+      }
+    }
+  },
+  "burp7": {
+    "name": "burp7",
+    "role": "burp",
+    "description": "Comic belch variant 7. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 2.35,
+    "target": {
+      "centroidHz": 2060,
+      "flatness": 0.515,
+      "sustainedFraction": 0.23,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 544,
+          "rel": 1
+        },
+        {
+          "hz": 565,
+          "rel": 0.83
+        },
+        {
+          "hz": 86,
+          "rel": 0.687
+        },
+        {
+          "hz": 108,
+          "rel": 0.319
+        },
+        {
+          "hz": 630,
+          "rel": 0.307
+        },
+        {
+          "hz": 1486,
+          "rel": 0.266
+        },
+        {
+          "hz": 1518,
+          "rel": 0.236
+        },
+        {
+          "hz": 188,
+          "rel": 0.177
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.087,
+        "low_120_350": 0.075,
+        "lowmid_350_800": 0.284,
+        "mid_800_2k": 0.194,
+        "hi_2k_5k": 0.22,
+        "air_5k_9k": 0.14
+      }
+    }
+  },
+  "burp8": {
+    "name": "burp8",
+    "role": "burp",
+    "description": "Comic belch variant 8. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.34,
+    "target": {
+      "centroidHz": 1442,
+      "flatness": 0.283,
+      "sustainedFraction": 0.43,
+      "attackMs": 46,
+      "topPeaksHz": [
+        {
+          "hz": 549,
+          "rel": 1
+        },
+        {
+          "hz": 528,
+          "rel": 0.577
+        },
+        {
+          "hz": 506,
+          "rel": 0.35
+        },
+        {
+          "hz": 587,
+          "rel": 0.314
+        },
+        {
+          "hz": 59,
+          "rel": 0.229
+        },
+        {
+          "hz": 129,
+          "rel": 0.211
+        },
+        {
+          "hz": 447,
+          "rel": 0.187
+        },
+        {
+          "hz": 97,
+          "rel": 0.183
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.068,
+        "low_120_350": 0.117,
+        "lowmid_350_800": 0.434,
+        "mid_800_2k": 0.186,
+        "hi_2k_5k": 0.109,
+        "air_5k_9k": 0.086
+      }
+    }
+  },
+  "burp9": {
+    "name": "burp9",
+    "role": "burp",
+    "description": "Comic belch variant 9. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.46,
+    "target": {
+      "centroidHz": 1331,
+      "flatness": 0.259,
+      "sustainedFraction": 0.68,
+      "attackMs": 253,
+      "topPeaksHz": [
+        {
+          "hz": 554,
+          "rel": 1
+        },
+        {
+          "hz": 571,
+          "rel": 0.826
+        },
+        {
+          "hz": 97,
+          "rel": 0.364
+        },
+        {
+          "hz": 641,
+          "rel": 0.333
+        },
+        {
+          "hz": 1357,
+          "rel": 0.242
+        },
+        {
+          "hz": 662,
+          "rel": 0.237
+        },
+        {
+          "hz": 452,
+          "rel": 0.233
+        },
+        {
+          "hz": 151,
+          "rel": 0.231
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.058,
+        "low_120_350": 0.08,
+        "lowmid_350_800": 0.435,
+        "mid_800_2k": 0.254,
+        "hi_2k_5k": 0.113,
+        "air_5k_9k": 0.06
+      }
+    }
+  },
+  "burp10": {
+    "name": "burp10",
+    "role": "burp",
+    "description": "Comic belch variant 10. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.31,
+    "target": {
+      "centroidHz": 1904,
+      "flatness": 0.45,
+      "sustainedFraction": 0.36,
+      "attackMs": 184,
+      "topPeaksHz": [
+        {
+          "hz": 544,
+          "rel": 1
+        },
+        {
+          "hz": 528,
+          "rel": 0.968
+        },
+        {
+          "hz": 65,
+          "rel": 0.754
+        },
+        {
+          "hz": 124,
+          "rel": 0.588
+        },
+        {
+          "hz": 463,
+          "rel": 0.363
+        },
+        {
+          "hz": 447,
+          "rel": 0.33
+        },
+        {
+          "hz": 624,
+          "rel": 0.316
+        },
+        {
+          "hz": 183,
+          "rel": 0.293
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.067,
+        "low_120_350": 0.113,
+        "lowmid_350_800": 0.334,
+        "mid_800_2k": 0.179,
+        "hi_2k_5k": 0.183,
+        "air_5k_9k": 0.125
+      }
+    }
+  },
+  "burp11": {
+    "name": "burp11",
+    "role": "burp",
+    "description": "Comic belch variant 11. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.78,
+    "target": {
+      "centroidHz": 1802,
+      "flatness": 0.393,
+      "sustainedFraction": 0.47,
+      "attackMs": 92,
+      "topPeaksHz": [
+        {
+          "hz": 565,
+          "rel": 1
+        },
+        {
+          "hz": 70,
+          "rel": 0.748
+        },
+        {
+          "hz": 538,
+          "rel": 0.573
+        },
+        {
+          "hz": 140,
+          "rel": 0.57
+        },
+        {
+          "hz": 598,
+          "rel": 0.496
+        },
+        {
+          "hz": 188,
+          "rel": 0.451
+        },
+        {
+          "hz": 102,
+          "rel": 0.397
+        },
+        {
+          "hz": 248,
+          "rel": 0.395
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.09,
+        "low_120_350": 0.161,
+        "lowmid_350_800": 0.314,
+        "mid_800_2k": 0.14,
+        "hi_2k_5k": 0.174,
+        "air_5k_9k": 0.121
+      }
+    }
+  },
+  "burp12": {
+    "name": "burp12",
+    "role": "burp",
+    "description": "Comic belch variant 12. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.81,
+    "target": {
+      "centroidHz": 1612,
+      "flatness": 0.362,
+      "sustainedFraction": 0.31,
+      "attackMs": 69,
+      "topPeaksHz": [
+        {
+          "hz": 97,
+          "rel": 1
+        },
+        {
+          "hz": 447,
+          "rel": 0.891
+        },
+        {
+          "hz": 484,
+          "rel": 0.86
+        },
+        {
+          "hz": 404,
+          "rel": 0.677
+        },
+        {
+          "hz": 151,
+          "rel": 0.536
+        },
+        {
+          "hz": 366,
+          "rel": 0.405
+        },
+        {
+          "hz": 511,
+          "rel": 0.391
+        },
+        {
+          "hz": 312,
+          "rel": 0.339
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.138,
+        "low_120_350": 0.147,
+        "lowmid_350_800": 0.302,
+        "mid_800_2k": 0.158,
+        "hi_2k_5k": 0.144,
+        "air_5k_9k": 0.112
+      }
+    }
+  },
+  "burp13": {
+    "name": "burp13",
+    "role": "burp",
+    "description": "Comic belch variant 13. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.84,
+    "target": {
+      "centroidHz": 1361,
+      "flatness": 0.267,
+      "sustainedFraction": 0.39,
+      "attackMs": 23,
+      "topPeaksHz": [
+        {
+          "hz": 506,
+          "rel": 1
+        },
+        {
+          "hz": 124,
+          "rel": 0.856
+        },
+        {
+          "hz": 183,
+          "rel": 0.662
+        },
+        {
+          "hz": 102,
+          "rel": 0.639
+        },
+        {
+          "hz": 59,
+          "rel": 0.633
+        },
+        {
+          "hz": 565,
+          "rel": 0.452
+        },
+        {
+          "hz": 549,
+          "rel": 0.449
+        },
+        {
+          "hz": 145,
+          "rel": 0.391
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.12,
+        "low_120_350": 0.164,
+        "lowmid_350_800": 0.34,
+        "mid_800_2k": 0.172,
+        "hi_2k_5k": 0.117,
+        "air_5k_9k": 0.086
+      }
+    }
+  },
+  "burp14": {
+    "name": "burp14",
+    "role": "burp",
+    "description": "Comic belch variant 14. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.84,
+    "target": {
+      "centroidHz": 2101,
+      "flatness": 0.453,
+      "sustainedFraction": 0.19,
+      "attackMs": 69,
+      "topPeaksHz": [
+        {
+          "hz": 522,
+          "rel": 1
+        },
+        {
+          "hz": 554,
+          "rel": 0.565
+        },
+        {
+          "hz": 501,
+          "rel": 0.552
+        },
+        {
+          "hz": 598,
+          "rel": 0.373
+        },
+        {
+          "hz": 81,
+          "rel": 0.36
+        },
+        {
+          "hz": 1437,
+          "rel": 0.354
+        },
+        {
+          "hz": 151,
+          "rel": 0.314
+        },
+        {
+          "hz": 1464,
+          "rel": 0.308
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.037,
+        "low_120_350": 0.095,
+        "lowmid_350_800": 0.312,
+        "mid_800_2k": 0.19,
+        "hi_2k_5k": 0.238,
+        "air_5k_9k": 0.128
+      }
+    }
+  },
+  "burp15": {
+    "name": "burp15",
+    "role": "burp",
+    "description": "Comic belch variant 15. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.28,
+    "target": {
+      "centroidHz": 1960,
+      "flatness": 0.427,
+      "sustainedFraction": 0.2,
+      "attackMs": 552,
+      "topPeaksHz": [
+        {
+          "hz": 431,
+          "rel": 1
+        },
+        {
+          "hz": 463,
+          "rel": 0.577
+        },
+        {
+          "hz": 398,
+          "rel": 0.558
+        },
+        {
+          "hz": 501,
+          "rel": 0.391
+        },
+        {
+          "hz": 355,
+          "rel": 0.359
+        },
+        {
+          "hz": 70,
+          "rel": 0.323
+        },
+        {
+          "hz": 140,
+          "rel": 0.234
+        },
+        {
+          "hz": 743,
+          "rel": 0.231
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.035,
+        "low_120_350": 0.099,
+        "lowmid_350_800": 0.38,
+        "mid_800_2k": 0.12,
+        "hi_2k_5k": 0.26,
+        "air_5k_9k": 0.106
+      }
+    }
+  },
+  "burp16": {
+    "name": "burp16",
+    "role": "burp",
+    "description": "Comic belch variant 16. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 0.91,
+    "target": {
+      "centroidHz": 2955,
+      "flatness": 0.643,
+      "sustainedFraction": 0.21,
+      "attackMs": 414,
+      "topPeaksHz": [
+        {
+          "hz": 420,
+          "rel": 1
+        },
+        {
+          "hz": 2487,
+          "rel": 0.625
+        },
+        {
+          "hz": 2503,
+          "rel": 0.431
+        },
+        {
+          "hz": 2530,
+          "rel": 0.347
+        },
+        {
+          "hz": 2444,
+          "rel": 0.34
+        },
+        {
+          "hz": 355,
+          "rel": 0.289
+        },
+        {
+          "hz": 102,
+          "rel": 0.268
+        },
+        {
+          "hz": 59,
+          "rel": 0.264
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.038,
+        "low_120_350": 0.066,
+        "lowmid_350_800": 0.163,
+        "mid_800_2k": 0.12,
+        "hi_2k_5k": 0.416,
+        "air_5k_9k": 0.197
+      }
+    }
+  },
+  "burp17": {
+    "name": "burp17",
+    "role": "burp",
+    "description": "Comic belch variant 17. Voiced low buzzy burst (~80-200 Hz fundamental) with throaty noise and a short wet wobble. Each variant differs slightly in pitch/length/roughness.",
+    "usedBy": "",
+    "kind": "oneshot",
+    "durationS": 1.12,
+    "target": {
+      "centroidHz": 2377,
+      "flatness": 0.529,
+      "sustainedFraction": 0.65,
+      "attackMs": 115,
+      "topPeaksHz": [
+        {
+          "hz": 592,
+          "rel": 1
+        },
+        {
+          "hz": 1050,
+          "rel": 0.731
+        },
+        {
+          "hz": 565,
+          "rel": 0.723
+        },
+        {
+          "hz": 1082,
+          "rel": 0.674
+        },
+        {
+          "hz": 1491,
+          "rel": 0.662
+        },
+        {
+          "hz": 1012,
+          "rel": 0.619
+        },
+        {
+          "hz": 1523,
+          "rel": 0.607
+        },
+        {
+          "hz": 70,
+          "rel": 0.559
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.023,
+        "low_120_350": 0.035,
+        "lowmid_350_800": 0.166,
+        "mid_800_2k": 0.378,
+        "hi_2k_5k": 0.262,
+        "air_5k_9k": 0.135
+      }
+    }
+  },
+  "music": {
+    "name": "music",
+    "role": "music",
+    "description": "Upbeat, slightly goofy arcade title+gameplay music loop (plays under the round). Bouncy bass + simple lead, retro game feel. Compose an ORIGINAL ~2 s loop; do NOT reproduce the original melody.",
+    "usedBy": "",
+    "kind": "loop",
+    "durationS": 8.15,
+    "target": {
+      "centroidHz": 1317,
+      "flatness": 0.349,
+      "sustainedFraction": 0.58,
+      "attackMs": 1058,
+      "topPeaksHz": [
+        {
+          "hz": 172,
+          "rel": 1
+        },
+        {
+          "hz": 113,
+          "rel": 0.968
+        },
+        {
+          "hz": 75,
+          "rel": 0.946
+        },
+        {
+          "hz": 210,
+          "rel": 0.834
+        },
+        {
+          "hz": 140,
+          "rel": 0.594
+        },
+        {
+          "hz": 468,
+          "rel": 0.357
+        },
+        {
+          "hz": 291,
+          "rel": 0.348
+        },
+        {
+          "hz": 275,
+          "rel": 0.306
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.112,
+        "low_120_350": 0.254,
+        "lowmid_350_800": 0.224,
+        "mid_800_2k": 0.247,
+        "hi_2k_5k": 0.083,
+        "air_5k_9k": 0.079
+      }
+    }
+  },
+  "theburbgamemix": {
+    "name": "theburbgamemix",
+    "role": "music",
+    "description": "Burp-mode music bed: a sillier/funkier variant of the main loop. Compose an ORIGINAL ~2 s loop.",
+    "usedBy": "",
+    "kind": "loop",
+    "durationS": 8.15,
+    "target": {
+      "centroidHz": 1910,
+      "flatness": 0.537,
+      "sustainedFraction": 0.29,
+      "attackMs": 1104,
+      "topPeaksHz": [
+        {
+          "hz": 59,
+          "rel": 1
+        },
+        {
+          "hz": 156,
+          "rel": 0.197
+        },
+        {
+          "hz": 118,
+          "rel": 0.139
+        },
+        {
+          "hz": 178,
+          "rel": 0.125
+        },
+        {
+          "hz": 210,
+          "rel": 0.124
+        },
+        {
+          "hz": 194,
+          "rel": 0.118
+        },
+        {
+          "hz": 275,
+          "rel": 0.088
+        },
+        {
+          "hz": 231,
+          "rel": 0.082
+        }
+      ],
+      "bandEnergy": {
+        "sub_40_120": 0.189,
+        "low_120_350": 0.173,
+        "lowmid_350_800": 0.163,
+        "mid_800_2k": 0.178,
+        "hi_2k_5k": 0.147,
+        "air_5k_9k": 0.15
+      }
+    }
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "kind": "oneshot",
+  "dur": 1.52,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sine", "freq": 90, "glideTo": 42, "glideTime": 0.3, "gain": 0.5,
+      "env": {"a":0.004,"d":0.25,"s":0.1,"r":0.5,"peak":1.0} },
+    { "type": "noise", "color": "brown", "gain": 0.9,
+      "filter": {"type":"lowpass","freq":420,"q":0.8},
+      "env": {"a":0.004,"d":0.3,"s":0.15,"r":0.6,"peak":1.0} },
+    { "type": "noise", "color": "pink", "gain": 0.55,
+      "filter": {"type":"bandpass","freq":900,"q":0.6},
+      "filterLfoRate": 0.4, "filterLfoOct": -0.8,
+      "env": {"a":0.004,"d":0.35,"s":0.12,"r":0.6,"peak":1.0} },
+    { "type": "noise", "color": "pink", "gain": 0.14,
+      "filter": {"type":"bandpass","freq":2800,"q":0.8},
+      "env": {"a":0.003,"d":0.2,"s":0.08,"r":0.4,"peak":1.0} },
+    { "type": "osc", "wave": "sawtooth", "freq": 400, "glideTo": 130, "glideTime": 0.4,
+      "gain": 0.14,
+      "filter": {"type":"lowpass","freq":700,"q":1.0},
+      "env": {"a":0.004,"d":0.2,"s":0.05,"r":0.3,"peak":1.0} }
+  ]
+}
