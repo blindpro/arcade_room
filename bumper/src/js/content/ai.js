@@ -43,7 +43,12 @@ content.ai = (() => {
       nextBoostAttemptAt = engine.time() + 2,
       nextTeleportAttemptAt = engine.time() + 3,
       nextRepulsorAttemptAt = engine.time() + 3,
-      nextRocketAttemptAt = engine.time() + 3
+      nextRocketAttemptAt = engine.time() + 3,
+      // Persistent aim offset updated every 0.8–1.6s so the AI
+      // genuinely drifts off-target instead of per-frame jitter
+      // that averages to zero.
+      aimOffset = (Math.random() - 0.5) * 0.5,
+      nextAimOffsetAt = engine.time() + 0.8 + Math.random() * 0.8
 
     function randomArenaPoint() {
       const b = content.arena.bounds, m = 1.5
@@ -266,8 +271,13 @@ content.ai = (() => {
       // Avoidance scaled so the AI still steers clear of walls without
       // sharp swerves that look like dodging (avoid magnitude 1 → push
       // 1.2x the unit goal vector).
-	  const aimError = (Math.random() - 0.5) * 0.5
-      const desired = Math.atan2(goalY + avoid.y * 1.2, goalX + avoid.x * 1.2)+aimError
+      // Refresh persistent aim offset periodically
+      const t = engine.time()
+      if (t >= nextAimOffsetAt) {
+        aimOffset = (Math.random() - 0.5) * 0.5
+        nextAimOffsetAt = t + 0.8 + Math.random() * 0.8
+      }
+      const desired = Math.atan2(goalY + avoid.y * 1.2, goalX + avoid.x * 1.2) + aimOffset
       const diff = shortAngle(desired - car.heading)
       const steer = Math.sin(diff) * 2 + antiparallelBias(diff, avoid)
       car.input.steering = engine.fn.clamp(steer, -1, 1)
@@ -526,11 +536,11 @@ content.ai = (() => {
         qPressTimer += delta
 
         // Switch state based on health
-        if (car.health < 15 && state !== 'FLEE') {
+        if (car.health < 25 && state !== 'FLEE') {
           state = 'FLEE'
           stateTimer = 0
           chargeEndAt = 0
-        } else if (car.health >= 25 && state === 'FLEE') {
+        } else if (car.health >= 35 && state === 'FLEE') {
           state = 'PURSUE'
           stateTimer = 0
         }
@@ -603,8 +613,7 @@ content.ai = (() => {
             const opponents = game.cars.reduce(
               (n, c) => n + (!c.eliminated && c.id !== car.id ? 1 : 0), 0,
             )
-			breatherUntil = now + (personality.bumpBreather * 0.75) / personality.aggression
-//            breatherUntil = now + personality.bumpBreather / personality.aggression
+            breatherUntil = now + personality.bumpBreather / personality.aggression
           }
         }
         const breathing = state === 'PURSUE'

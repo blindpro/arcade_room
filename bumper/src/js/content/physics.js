@@ -25,7 +25,7 @@ content.physics = (() => {
     // aggressor against a non-AI victim. Randomised so hits feel varied:
     // applied as scale * (0.6 + random * 0.8) → 60-140% of base scale.
     // 1.8 avg → AI hits ~1.8x harder than a player would in the same bump.
-    aiDamageScale: 1.8,
+    aiDamageScale: 1.2,
     scrapeRate: 0.4,            // hp/s while scraping
     scrapeMinSpeed: 0.6,
     // Speed-burst pickup: while car.boostUntil > engine.time(), the
