@@ -1,0 +1,8 @@
+dist/*
+!dist/.gitkeep
+node_modules
+public/scripts.min.js
+public/styles.min.css
+
+# generated audio audition montages (regenerate via tools/audio/preview.mjs)
+tools/audio/preview/

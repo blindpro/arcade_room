@@ -1,0 +1,22 @@
+{
+  "kind": "loop",
+  "dur": 2,
+  "gain": 0.85,
+  "layers": [
+    { "type": "osc", "wave": "sine", "freq": 52, "gain": 0.55,
+      "ampLfoRate": 1.87, "ampLfoDepth": 0.95, "ampLfoWave": "square",
+      "filter": { "type": "lowpass", "freq": 160, "q": 0.8 } },
+    { "type": "osc", "wave": "sine", "freq": 104, "gain": 0.3,
+      "ampLfoRate": 1.87, "ampLfoDepth": 0.95, "ampLfoWave": "square",
+      "filter": { "type": "lowpass", "freq": 260, "q": 0.8 } },
+    { "type": "noise", "color": "brown", "gain": 0.4,
+      "ampLfoRate": 1.87, "ampLfoDepth": 0.95, "ampLfoWave": "square",
+      "filter": { "type": "lowpass", "freq": 220, "q": 0.9 } },
+    { "type": "noise", "color": "brown", "gain": 0.14,
+      "ampLfoRate": 1.9, "ampLfoDepth": 0.9, "ampLfoWave": "square",
+      "filter": { "type": "bandpass", "freq": 600, "q": 1.2 } },
+    { "type": "noise", "color": "brown", "gain": 0.12,
+      "ampLfoRate": 0.23, "ampLfoDepth": 0.4, "ampLfoWave": "sine",
+      "filter": { "type": "lowpass", "freq": 120, "q": 0.7 } }
+  ]
+}

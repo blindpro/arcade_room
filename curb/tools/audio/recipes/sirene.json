@@ -1,0 +1,17 @@
+{
+  "kind": "loop",
+  "dur": 2,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "sawtooth", "freq": 900, "gain": 0.38,
+      "pitchLfoRate": 0.35, "pitchLfoCents": 500,
+      "filter": { "type": "lowpass", "freq": 2600, "q": 1.2 } },
+    { "type": "osc", "wave": "triangle", "freq": 1800, "gain": 0.16,
+      "pitchLfoRate": 0.35, "pitchLfoCents": 500 },
+    { "type": "osc", "wave": "sawtooth", "freq": 900, "gain": 0.24,
+      "pitchLfoRate": 0.35, "pitchLfoCents": 500,
+      "filter": { "type": "bandpass", "freq": 1600, "q": 1.6 } },
+    { "type": "noise", "color": "pink", "gain": 0.03,
+      "filter": { "type": "bandpass", "freq": 2200, "q": 0.8 } }
+  ]
+}

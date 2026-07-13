@@ -1,0 +1,22 @@
+.c-hud {
+  font-family: monospace;
+  font-size: 1.6em;
+  line-height: 1.5;
+  text-align: center;
+}
+  .c-hud--row {
+    margin: 0;
+  }
+  .c-hud--hint {
+    margin-top: 1.5rem;
+    max-width: 36em;
+    opacity: 0.75;
+    text-align: center;
+  }
+
+.a-game {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}

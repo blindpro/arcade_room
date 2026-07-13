@@ -1,0 +1,3070 @@
+{
+  "_hiscoretype": {
+    "durationS": 4.15,
+    "rms": 0.1561,
+    "peak": 0.936,
+    "sustainedFraction": 0.26,
+    "attackMs": 276,
+    "spectralCentroidHz": 1722,
+    "spectralFlatness": 0.347,
+    "topPeaksHz": [
+      {
+        "hz": 495,
+        "rel": 1
+      },
+      {
+        "hz": 468,
+        "rel": 0.882
+      },
+      {
+        "hz": 140,
+        "rel": 0.731
+      },
+      {
+        "hz": 420,
+        "rel": 0.61
+      },
+      {
+        "hz": 576,
+        "rel": 0.5
+      },
+      {
+        "hz": 630,
+        "rel": 0.474
+      },
+      {
+        "hz": 603,
+        "rel": 0.469
+      },
+      {
+        "hz": 689,
+        "rel": 0.428
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.012,
+      "low_120_350": 0.101,
+      "lowmid_350_800": 0.272,
+      "mid_800_2k": 0.251,
+      "hi_2k_5k": 0.313,
+      "air_5k_9k": 0.05
+    },
+    "stereoBalance": 0
+  },
+  "_the_curb1": {
+    "durationS": 2.93,
+    "rms": 0.1209,
+    "peak": 0.994,
+    "sustainedFraction": 0.19,
+    "attackMs": 368,
+    "spectralCentroidHz": 1859,
+    "spectralFlatness": 0.349,
+    "topPeaksHz": [
+      {
+        "hz": 533,
+        "rel": 1
+      },
+      {
+        "hz": 458,
+        "rel": 0.675
+      },
+      {
+        "hz": 183,
+        "rel": 0.6
+      },
+      {
+        "hz": 350,
+        "rel": 0.587
+      },
+      {
+        "hz": 415,
+        "rel": 0.389
+      },
+      {
+        "hz": 1281,
+        "rel": 0.294
+      },
+      {
+        "hz": 264,
+        "rel": 0.285
+      },
+      {
+        "hz": 1308,
+        "rel": 0.284
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.01,
+      "low_120_350": 0.117,
+      "lowmid_350_800": 0.221,
+      "mid_800_2k": 0.253,
+      "hi_2k_5k": 0.349,
+      "air_5k_9k": 0.051
+    },
+    "stereoBalance": 0
+  },
+  "auto1": {
+    "durationS": 4.28,
+    "rms": 0.2435,
+    "peak": 0.783,
+    "sustainedFraction": 0.97,
+    "attackMs": 506,
+    "spectralCentroidHz": 963,
+    "spectralFlatness": 0.13,
+    "topPeaksHz": [
+      {
+        "hz": 86,
+        "rel": 1
+      },
+      {
+        "hz": 161,
+        "rel": 0.647
+      },
+      {
+        "hz": 673,
+        "rel": 0.595
+      },
+      {
+        "hz": 452,
+        "rel": 0.578
+      },
+      {
+        "hz": 721,
+        "rel": 0.538
+      },
+      {
+        "hz": 479,
+        "rel": 0.508
+      },
+      {
+        "hz": 646,
+        "rel": 0.504
+      },
+      {
+        "hz": 581,
+        "rel": 0.493
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.063,
+      "low_120_350": 0.153,
+      "lowmid_350_800": 0.37,
+      "mid_800_2k": 0.313,
+      "hi_2k_5k": 0.09,
+      "air_5k_9k": 0.011
+    },
+    "stereoBalance": 0
+  },
+  "batmanclip": {
+    "durationS": 3.45,
+    "rms": 0.3218,
+    "peak": 1.018,
+    "sustainedFraction": 0.79,
+    "attackMs": 115,
+    "spectralCentroidHz": 1545,
+    "spectralFlatness": 0.047,
+    "topPeaksHz": [
+      {
+        "hz": 388,
+        "rel": 1
+      },
+      {
+        "hz": 275,
+        "rel": 0.775
+      },
+      {
+        "hz": 291,
+        "rel": 0.662
+      },
+      {
+        "hz": 549,
+        "rel": 0.625
+      },
+      {
+        "hz": 97,
+        "rel": 0.538
+      },
+      {
+        "hz": 576,
+        "rel": 0.495
+      },
+      {
+        "hz": 242,
+        "rel": 0.487
+      },
+      {
+        "hz": 684,
+        "rel": 0.479
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.02,
+      "low_120_350": 0.12,
+      "lowmid_350_800": 0.199,
+      "mid_800_2k": 0.362,
+      "hi_2k_5k": 0.287,
+      "air_5k_9k": 0.012
+    },
+    "stereoBalance": 0
+  },
+  "belmobiel": {
+    "durationS": 8.1,
+    "rms": 0.2093,
+    "peak": 0.967,
+    "sustainedFraction": 0.68,
+    "attackMs": 2783,
+    "spectralCentroidHz": 1626,
+    "spectralFlatness": 0.436,
+    "topPeaksHz": [
+      {
+        "hz": 70,
+        "rel": 1
+      },
+      {
+        "hz": 135,
+        "rel": 0.484
+      },
+      {
+        "hz": 97,
+        "rel": 0.475
+      },
+      {
+        "hz": 194,
+        "rel": 0.46
+      },
+      {
+        "hz": 226,
+        "rel": 0.31
+      },
+      {
+        "hz": 264,
+        "rel": 0.25
+      },
+      {
+        "hz": 775,
+        "rel": 0.158
+      },
+      {
+        "hz": 382,
+        "rel": 0.153
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.137,
+      "low_120_350": 0.193,
+      "lowmid_350_800": 0.168,
+      "mid_800_2k": 0.216,
+      "hi_2k_5k": 0.207,
+      "air_5k_9k": 0.079
+    },
+    "stereoBalance": 0
+  },
+  "boemcar": {
+    "durationS": 0.55,
+    "rms": 0.3286,
+    "peak": 0.8,
+    "sustainedFraction": 0.74,
+    "attackMs": 46,
+    "spectralCentroidHz": 147,
+    "spectralFlatness": 0.013,
+    "topPeaksHz": [
+      {
+        "hz": 54,
+        "rel": 1
+      },
+      {
+        "hz": 161,
+        "rel": 0.091
+      },
+      {
+        "hz": 135,
+        "rel": 0.083
+      },
+      {
+        "hz": 210,
+        "rel": 0.035
+      },
+      {
+        "hz": 264,
+        "rel": 0.019
+      },
+      {
+        "hz": 334,
+        "rel": 0.009
+      },
+      {
+        "hz": 350,
+        "rel": 0.008
+      },
+      {
+        "hz": 382,
+        "rel": 0.007
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.733,
+      "low_120_350": 0.216,
+      "lowmid_350_800": 0.032,
+      "mid_800_2k": 0.013,
+      "hi_2k_5k": 0.005,
+      "air_5k_9k": 0.002
+    },
+    "stereoBalance": 0
+  },
+  "bootloop": {
+    "durationS": 1.91,
+    "rms": 0.2158,
+    "peak": 0.968,
+    "sustainedFraction": 0.89,
+    "attackMs": 138,
+    "spectralCentroidHz": 795,
+    "spectralFlatness": 0.133,
+    "topPeaksHz": [
+      {
+        "hz": 54,
+        "rel": 1
+      },
+      {
+        "hz": 108,
+        "rel": 0.86
+      },
+      {
+        "hz": 135,
+        "rel": 0.69
+      },
+      {
+        "hz": 151,
+        "rel": 0.654
+      },
+      {
+        "hz": 188,
+        "rel": 0.651
+      },
+      {
+        "hz": 377,
+        "rel": 0.546
+      },
+      {
+        "hz": 479,
+        "rel": 0.507
+      },
+      {
+        "hz": 307,
+        "rel": 0.375
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.163,
+      "low_120_350": 0.284,
+      "lowmid_350_800": 0.305,
+      "mid_800_2k": 0.131,
+      "hi_2k_5k": 0.105,
+      "air_5k_9k": 0.011
+    },
+    "stereoBalance": 0
+  },
+  "boottoeter": {
+    "durationS": 1.46,
+    "rms": 0.179,
+    "peak": 0.934,
+    "sustainedFraction": 0.6,
+    "attackMs": 368,
+    "spectralCentroidHz": 1347,
+    "spectralFlatness": 0.246,
+    "topPeaksHz": [
+      {
+        "hz": 506,
+        "rel": 1
+      },
+      {
+        "hz": 377,
+        "rel": 0.877
+      },
+      {
+        "hz": 129,
+        "rel": 0.672
+      },
+      {
+        "hz": 1136,
+        "rel": 0.518
+      },
+      {
+        "hz": 630,
+        "rel": 0.44
+      },
+      {
+        "hz": 253,
+        "rel": 0.396
+      },
+      {
+        "hz": 1513,
+        "rel": 0.256
+      },
+      {
+        "hz": 1637,
+        "rel": 0.237
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.031,
+      "low_120_350": 0.126,
+      "lowmid_350_800": 0.345,
+      "mid_800_2k": 0.296,
+      "hi_2k_5k": 0.164,
+      "air_5k_9k": 0.038
+    },
+    "stereoBalance": 0
+  },
+  "burp1": {
+    "durationS": 1.1,
+    "rms": 0.1862,
+    "peak": 0.934,
+    "sustainedFraction": 0.45,
+    "attackMs": 138,
+    "spectralCentroidHz": 1708,
+    "spectralFlatness": 0.409,
+    "topPeaksHz": [
+      {
+        "hz": 522,
+        "rel": 1
+      },
+      {
+        "hz": 490,
+        "rel": 0.981
+      },
+      {
+        "hz": 59,
+        "rel": 0.394
+      },
+      {
+        "hz": 118,
+        "rel": 0.353
+      },
+      {
+        "hz": 576,
+        "rel": 0.321
+      },
+      {
+        "hz": 1497,
+        "rel": 0.277
+      },
+      {
+        "hz": 1513,
+        "rel": 0.277
+      },
+      {
+        "hz": 415,
+        "rel": 0.275
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.054,
+      "low_120_350": 0.092,
+      "lowmid_350_800": 0.406,
+      "mid_800_2k": 0.198,
+      "hi_2k_5k": 0.128,
+      "air_5k_9k": 0.122
+    },
+    "stereoBalance": 0
+  },
+  "burp10": {
+    "durationS": 1.31,
+    "rms": 0.1572,
+    "peak": 0.851,
+    "sustainedFraction": 0.36,
+    "attackMs": 184,
+    "spectralCentroidHz": 1904,
+    "spectralFlatness": 0.45,
+    "topPeaksHz": [
+      {
+        "hz": 544,
+        "rel": 1
+      },
+      {
+        "hz": 528,
+        "rel": 0.968
+      },
+      {
+        "hz": 65,
+        "rel": 0.754
+      },
+      {
+        "hz": 124,
+        "rel": 0.588
+      },
+      {
+        "hz": 463,
+        "rel": 0.363
+      },
+      {
+        "hz": 447,
+        "rel": 0.33
+      },
+      {
+        "hz": 624,
+        "rel": 0.316
+      },
+      {
+        "hz": 183,
+        "rel": 0.293
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.067,
+      "low_120_350": 0.113,
+      "lowmid_350_800": 0.334,
+      "mid_800_2k": 0.179,
+      "hi_2k_5k": 0.183,
+      "air_5k_9k": 0.125
+    },
+    "stereoBalance": 0
+  },
+  "burp11": {
+    "durationS": 0.78,
+    "rms": 0.1628,
+    "peak": 0.914,
+    "sustainedFraction": 0.47,
+    "attackMs": 92,
+    "spectralCentroidHz": 1802,
+    "spectralFlatness": 0.393,
+    "topPeaksHz": [
+      {
+        "hz": 565,
+        "rel": 1
+      },
+      {
+        "hz": 70,
+        "rel": 0.748
+      },
+      {
+        "hz": 538,
+        "rel": 0.573
+      },
+      {
+        "hz": 140,
+        "rel": 0.57
+      },
+      {
+        "hz": 598,
+        "rel": 0.496
+      },
+      {
+        "hz": 188,
+        "rel": 0.451
+      },
+      {
+        "hz": 102,
+        "rel": 0.397
+      },
+      {
+        "hz": 248,
+        "rel": 0.395
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.09,
+      "low_120_350": 0.161,
+      "lowmid_350_800": 0.314,
+      "mid_800_2k": 0.14,
+      "hi_2k_5k": 0.174,
+      "air_5k_9k": 0.121
+    },
+    "stereoBalance": 0
+  },
+  "burp12": {
+    "durationS": 0.81,
+    "rms": 0.1398,
+    "peak": 0.911,
+    "sustainedFraction": 0.31,
+    "attackMs": 69,
+    "spectralCentroidHz": 1612,
+    "spectralFlatness": 0.362,
+    "topPeaksHz": [
+      {
+        "hz": 97,
+        "rel": 1
+      },
+      {
+        "hz": 447,
+        "rel": 0.891
+      },
+      {
+        "hz": 484,
+        "rel": 0.86
+      },
+      {
+        "hz": 404,
+        "rel": 0.677
+      },
+      {
+        "hz": 151,
+        "rel": 0.536
+      },
+      {
+        "hz": 366,
+        "rel": 0.405
+      },
+      {
+        "hz": 511,
+        "rel": 0.391
+      },
+      {
+        "hz": 312,
+        "rel": 0.339
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.138,
+      "low_120_350": 0.147,
+      "lowmid_350_800": 0.302,
+      "mid_800_2k": 0.158,
+      "hi_2k_5k": 0.144,
+      "air_5k_9k": 0.112
+    },
+    "stereoBalance": 0
+  },
+  "burp13": {
+    "durationS": 0.84,
+    "rms": 0.1537,
+    "peak": 0.935,
+    "sustainedFraction": 0.39,
+    "attackMs": 23,
+    "spectralCentroidHz": 1361,
+    "spectralFlatness": 0.267,
+    "topPeaksHz": [
+      {
+        "hz": 506,
+        "rel": 1
+      },
+      {
+        "hz": 124,
+        "rel": 0.856
+      },
+      {
+        "hz": 183,
+        "rel": 0.662
+      },
+      {
+        "hz": 102,
+        "rel": 0.639
+      },
+      {
+        "hz": 59,
+        "rel": 0.633
+      },
+      {
+        "hz": 565,
+        "rel": 0.452
+      },
+      {
+        "hz": 549,
+        "rel": 0.449
+      },
+      {
+        "hz": 145,
+        "rel": 0.391
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.12,
+      "low_120_350": 0.164,
+      "lowmid_350_800": 0.34,
+      "mid_800_2k": 0.172,
+      "hi_2k_5k": 0.117,
+      "air_5k_9k": 0.086
+    },
+    "stereoBalance": 0
+  },
+  "burp14": {
+    "durationS": 0.84,
+    "rms": 0.1167,
+    "peak": 0.87,
+    "sustainedFraction": 0.19,
+    "attackMs": 69,
+    "spectralCentroidHz": 2101,
+    "spectralFlatness": 0.453,
+    "topPeaksHz": [
+      {
+        "hz": 522,
+        "rel": 1
+      },
+      {
+        "hz": 554,
+        "rel": 0.565
+      },
+      {
+        "hz": 501,
+        "rel": 0.552
+      },
+      {
+        "hz": 598,
+        "rel": 0.373
+      },
+      {
+        "hz": 81,
+        "rel": 0.36
+      },
+      {
+        "hz": 1437,
+        "rel": 0.354
+      },
+      {
+        "hz": 151,
+        "rel": 0.314
+      },
+      {
+        "hz": 1464,
+        "rel": 0.308
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.037,
+      "low_120_350": 0.095,
+      "lowmid_350_800": 0.312,
+      "mid_800_2k": 0.19,
+      "hi_2k_5k": 0.238,
+      "air_5k_9k": 0.128
+    },
+    "stereoBalance": 0
+  },
+  "burp15": {
+    "durationS": 1.28,
+    "rms": 0.098,
+    "peak": 0.9,
+    "sustainedFraction": 0.2,
+    "attackMs": 552,
+    "spectralCentroidHz": 1960,
+    "spectralFlatness": 0.427,
+    "topPeaksHz": [
+      {
+        "hz": 431,
+        "rel": 1
+      },
+      {
+        "hz": 463,
+        "rel": 0.577
+      },
+      {
+        "hz": 398,
+        "rel": 0.558
+      },
+      {
+        "hz": 501,
+        "rel": 0.391
+      },
+      {
+        "hz": 355,
+        "rel": 0.359
+      },
+      {
+        "hz": 70,
+        "rel": 0.323
+      },
+      {
+        "hz": 140,
+        "rel": 0.234
+      },
+      {
+        "hz": 743,
+        "rel": 0.231
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.035,
+      "low_120_350": 0.099,
+      "lowmid_350_800": 0.38,
+      "mid_800_2k": 0.12,
+      "hi_2k_5k": 0.26,
+      "air_5k_9k": 0.106
+    },
+    "stereoBalance": 0
+  },
+  "burp16": {
+    "durationS": 0.91,
+    "rms": 0.094,
+    "peak": 0.854,
+    "sustainedFraction": 0.21,
+    "attackMs": 414,
+    "spectralCentroidHz": 2955,
+    "spectralFlatness": 0.643,
+    "topPeaksHz": [
+      {
+        "hz": 420,
+        "rel": 1
+      },
+      {
+        "hz": 2487,
+        "rel": 0.625
+      },
+      {
+        "hz": 2503,
+        "rel": 0.431
+      },
+      {
+        "hz": 2530,
+        "rel": 0.347
+      },
+      {
+        "hz": 2444,
+        "rel": 0.34
+      },
+      {
+        "hz": 355,
+        "rel": 0.289
+      },
+      {
+        "hz": 102,
+        "rel": 0.268
+      },
+      {
+        "hz": 59,
+        "rel": 0.264
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.038,
+      "low_120_350": 0.066,
+      "lowmid_350_800": 0.163,
+      "mid_800_2k": 0.12,
+      "hi_2k_5k": 0.416,
+      "air_5k_9k": 0.197
+    },
+    "stereoBalance": 0
+  },
+  "burp17": {
+    "durationS": 1.12,
+    "rms": 0.0979,
+    "peak": 0.943,
+    "sustainedFraction": 0.65,
+    "attackMs": 115,
+    "spectralCentroidHz": 2377,
+    "spectralFlatness": 0.529,
+    "topPeaksHz": [
+      {
+        "hz": 592,
+        "rel": 1
+      },
+      {
+        "hz": 1050,
+        "rel": 0.731
+      },
+      {
+        "hz": 565,
+        "rel": 0.723
+      },
+      {
+        "hz": 1082,
+        "rel": 0.674
+      },
+      {
+        "hz": 1491,
+        "rel": 0.662
+      },
+      {
+        "hz": 1012,
+        "rel": 0.619
+      },
+      {
+        "hz": 1523,
+        "rel": 0.607
+      },
+      {
+        "hz": 70,
+        "rel": 0.559
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.023,
+      "low_120_350": 0.035,
+      "lowmid_350_800": 0.166,
+      "mid_800_2k": 0.378,
+      "hi_2k_5k": 0.262,
+      "air_5k_9k": 0.135
+    },
+    "stereoBalance": 0
+  },
+  "burp2": {
+    "durationS": 2.19,
+    "rms": 0.1879,
+    "peak": 0.906,
+    "sustainedFraction": 0.49,
+    "attackMs": 506,
+    "spectralCentroidHz": 1537,
+    "spectralFlatness": 0.374,
+    "topPeaksHz": [
+      {
+        "hz": 689,
+        "rel": 1
+      },
+      {
+        "hz": 75,
+        "rel": 0.973
+      },
+      {
+        "hz": 705,
+        "rel": 0.708
+      },
+      {
+        "hz": 118,
+        "rel": 0.685
+      },
+      {
+        "hz": 183,
+        "rel": 0.37
+      },
+      {
+        "hz": 770,
+        "rel": 0.309
+      },
+      {
+        "hz": 554,
+        "rel": 0.255
+      },
+      {
+        "hz": 533,
+        "rel": 0.234
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.105,
+      "low_120_350": 0.126,
+      "lowmid_350_800": 0.344,
+      "mid_800_2k": 0.209,
+      "hi_2k_5k": 0.135,
+      "air_5k_9k": 0.081
+    },
+    "stereoBalance": 0
+  },
+  "burp3": {
+    "durationS": 0.39,
+    "rms": 0.1386,
+    "peak": 0.9,
+    "sustainedFraction": 0.47,
+    "attackMs": 92,
+    "spectralCentroidHz": 1621,
+    "spectralFlatness": 0.348,
+    "topPeaksHz": [
+      {
+        "hz": 549,
+        "rel": 1
+      },
+      {
+        "hz": 565,
+        "rel": 0.862
+      },
+      {
+        "hz": 598,
+        "rel": 0.619
+      },
+      {
+        "hz": 86,
+        "rel": 0.547
+      },
+      {
+        "hz": 528,
+        "rel": 0.536
+      },
+      {
+        "hz": 70,
+        "rel": 0.465
+      },
+      {
+        "hz": 156,
+        "rel": 0.374
+      },
+      {
+        "hz": 624,
+        "rel": 0.373
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.077,
+      "low_120_350": 0.122,
+      "lowmid_350_800": 0.348,
+      "mid_800_2k": 0.209,
+      "hi_2k_5k": 0.163,
+      "air_5k_9k": 0.082
+    },
+    "stereoBalance": 0
+  },
+  "burp4": {
+    "durationS": 1.88,
+    "rms": 0.2119,
+    "peak": 0.925,
+    "sustainedFraction": 0.63,
+    "attackMs": 115,
+    "spectralCentroidHz": 1392,
+    "spectralFlatness": 0.347,
+    "topPeaksHz": [
+      {
+        "hz": 54,
+        "rel": 1
+      },
+      {
+        "hz": 102,
+        "rel": 0.993
+      },
+      {
+        "hz": 447,
+        "rel": 0.98
+      },
+      {
+        "hz": 479,
+        "rel": 0.809
+      },
+      {
+        "hz": 151,
+        "rel": 0.643
+      },
+      {
+        "hz": 377,
+        "rel": 0.346
+      },
+      {
+        "hz": 205,
+        "rel": 0.293
+      },
+      {
+        "hz": 307,
+        "rel": 0.273
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.144,
+      "low_120_350": 0.158,
+      "lowmid_350_800": 0.336,
+      "mid_800_2k": 0.15,
+      "hi_2k_5k": 0.132,
+      "air_5k_9k": 0.081
+    },
+    "stereoBalance": 0
+  },
+  "burp5": {
+    "durationS": 0.57,
+    "rms": 0.1778,
+    "peak": 0.89,
+    "sustainedFraction": 0.5,
+    "attackMs": 115,
+    "spectralCentroidHz": 1418,
+    "spectralFlatness": 0.281,
+    "topPeaksHz": [
+      {
+        "hz": 495,
+        "rel": 1
+      },
+      {
+        "hz": 544,
+        "rel": 0.78
+      },
+      {
+        "hz": 565,
+        "rel": 0.666
+      },
+      {
+        "hz": 92,
+        "rel": 0.637
+      },
+      {
+        "hz": 113,
+        "rel": 0.587
+      },
+      {
+        "hz": 135,
+        "rel": 0.448
+      },
+      {
+        "hz": 468,
+        "rel": 0.443
+      },
+      {
+        "hz": 441,
+        "rel": 0.352
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.116,
+      "low_120_350": 0.116,
+      "lowmid_350_800": 0.358,
+      "mid_800_2k": 0.182,
+      "hi_2k_5k": 0.171,
+      "air_5k_9k": 0.056
+    },
+    "stereoBalance": 0
+  },
+  "burp6": {
+    "durationS": 2.61,
+    "rms": 0.0752,
+    "peak": 0.866,
+    "sustainedFraction": 0.34,
+    "attackMs": 46,
+    "spectralCentroidHz": 2238,
+    "spectralFlatness": 0.517,
+    "topPeaksHz": [
+      {
+        "hz": 447,
+        "rel": 1
+      },
+      {
+        "hz": 415,
+        "rel": 0.957
+      },
+      {
+        "hz": 474,
+        "rel": 0.859
+      },
+      {
+        "hz": 118,
+        "rel": 0.807
+      },
+      {
+        "hz": 565,
+        "rel": 0.78
+      },
+      {
+        "hz": 592,
+        "rel": 0.757
+      },
+      {
+        "hz": 635,
+        "rel": 0.676
+      },
+      {
+        "hz": 140,
+        "rel": 0.675
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.041,
+      "low_120_350": 0.078,
+      "lowmid_350_800": 0.24,
+      "mid_800_2k": 0.235,
+      "hi_2k_5k": 0.291,
+      "air_5k_9k": 0.115
+    },
+    "stereoBalance": 0
+  },
+  "burp7": {
+    "durationS": 2.35,
+    "rms": 0.0771,
+    "peak": 0.828,
+    "sustainedFraction": 0.23,
+    "attackMs": 46,
+    "spectralCentroidHz": 2060,
+    "spectralFlatness": 0.515,
+    "topPeaksHz": [
+      {
+        "hz": 544,
+        "rel": 1
+      },
+      {
+        "hz": 565,
+        "rel": 0.83
+      },
+      {
+        "hz": 86,
+        "rel": 0.687
+      },
+      {
+        "hz": 108,
+        "rel": 0.319
+      },
+      {
+        "hz": 630,
+        "rel": 0.307
+      },
+      {
+        "hz": 1486,
+        "rel": 0.266
+      },
+      {
+        "hz": 1518,
+        "rel": 0.236
+      },
+      {
+        "hz": 188,
+        "rel": 0.177
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.087,
+      "low_120_350": 0.075,
+      "lowmid_350_800": 0.284,
+      "mid_800_2k": 0.194,
+      "hi_2k_5k": 0.22,
+      "air_5k_9k": 0.14
+    },
+    "stereoBalance": 0
+  },
+  "burp8": {
+    "durationS": 0.34,
+    "rms": 0.1885,
+    "peak": 0.927,
+    "sustainedFraction": 0.43,
+    "attackMs": 46,
+    "spectralCentroidHz": 1442,
+    "spectralFlatness": 0.283,
+    "topPeaksHz": [
+      {
+        "hz": 549,
+        "rel": 1
+      },
+      {
+        "hz": 528,
+        "rel": 0.577
+      },
+      {
+        "hz": 506,
+        "rel": 0.35
+      },
+      {
+        "hz": 587,
+        "rel": 0.314
+      },
+      {
+        "hz": 59,
+        "rel": 0.229
+      },
+      {
+        "hz": 129,
+        "rel": 0.211
+      },
+      {
+        "hz": 447,
+        "rel": 0.187
+      },
+      {
+        "hz": 97,
+        "rel": 0.183
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.068,
+      "low_120_350": 0.117,
+      "lowmid_350_800": 0.434,
+      "mid_800_2k": 0.186,
+      "hi_2k_5k": 0.109,
+      "air_5k_9k": 0.086
+    },
+    "stereoBalance": 0
+  },
+  "burp9": {
+    "durationS": 1.46,
+    "rms": 0.1738,
+    "peak": 0.915,
+    "sustainedFraction": 0.68,
+    "attackMs": 253,
+    "spectralCentroidHz": 1331,
+    "spectralFlatness": 0.259,
+    "topPeaksHz": [
+      {
+        "hz": 554,
+        "rel": 1
+      },
+      {
+        "hz": 571,
+        "rel": 0.826
+      },
+      {
+        "hz": 97,
+        "rel": 0.364
+      },
+      {
+        "hz": 641,
+        "rel": 0.333
+      },
+      {
+        "hz": 1357,
+        "rel": 0.242
+      },
+      {
+        "hz": 662,
+        "rel": 0.237
+      },
+      {
+        "hz": 452,
+        "rel": 0.233
+      },
+      {
+        "hz": 151,
+        "rel": 0.231
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.058,
+      "low_120_350": 0.08,
+      "lowmid_350_800": 0.435,
+      "mid_800_2k": 0.254,
+      "hi_2k_5k": 0.113,
+      "air_5k_9k": 0.06
+    },
+    "stereoBalance": 0
+  },
+  "driveback01": {
+    "durationS": 3.58,
+    "rms": 0.2982,
+    "peak": 1.216,
+    "sustainedFraction": 0.39,
+    "attackMs": 1150,
+    "spectralCentroidHz": 1778,
+    "spectralFlatness": 0.496,
+    "topPeaksHz": [
+      {
+        "hz": 81,
+        "rel": 1
+      },
+      {
+        "hz": 113,
+        "rel": 0.753
+      },
+      {
+        "hz": 393,
+        "rel": 0.666
+      },
+      {
+        "hz": 183,
+        "rel": 0.628
+      },
+      {
+        "hz": 199,
+        "rel": 0.62
+      },
+      {
+        "hz": 350,
+        "rel": 0.326
+      },
+      {
+        "hz": 468,
+        "rel": 0.3
+      },
+      {
+        "hz": 452,
+        "rel": 0.299
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.19,
+      "low_120_350": 0.207,
+      "lowmid_350_800": 0.171,
+      "mid_800_2k": 0.146,
+      "hi_2k_5k": 0.144,
+      "air_5k_9k": 0.142
+    },
+    "stereoBalance": -0.05
+  },
+  "driveleo1": {
+    "durationS": 2.19,
+    "rms": 0.1589,
+    "peak": 0.939,
+    "sustainedFraction": 0.29,
+    "attackMs": 782,
+    "spectralCentroidHz": 3013,
+    "spectralFlatness": 0.79,
+    "topPeaksHz": [
+      {
+        "hz": 129,
+        "rel": 1
+      },
+      {
+        "hz": 264,
+        "rel": 0.756
+      },
+      {
+        "hz": 188,
+        "rel": 0.658
+      },
+      {
+        "hz": 280,
+        "rel": 0.631
+      },
+      {
+        "hz": 603,
+        "rel": 0.596
+      },
+      {
+        "hz": 86,
+        "rel": 0.567
+      },
+      {
+        "hz": 565,
+        "rel": 0.558
+      },
+      {
+        "hz": 619,
+        "rel": 0.544
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.028,
+      "low_120_350": 0.106,
+      "lowmid_350_800": 0.144,
+      "mid_800_2k": 0.205,
+      "hi_2k_5k": 0.249,
+      "air_5k_9k": 0.267
+    },
+    "stereoBalance": 0
+  },
+  "driveleo2": {
+    "durationS": 2.35,
+    "rms": 0.264,
+    "peak": 0.975,
+    "sustainedFraction": 0.54,
+    "attackMs": 989,
+    "spectralCentroidHz": 2912,
+    "spectralFlatness": 0.708,
+    "topPeaksHz": [
+      {
+        "hz": 851,
+        "rel": 1
+      },
+      {
+        "hz": 603,
+        "rel": 0.962
+      },
+      {
+        "hz": 565,
+        "rel": 0.723
+      },
+      {
+        "hz": 458,
+        "rel": 0.707
+      },
+      {
+        "hz": 425,
+        "rel": 0.687
+      },
+      {
+        "hz": 549,
+        "rel": 0.648
+      },
+      {
+        "hz": 522,
+        "rel": 0.573
+      },
+      {
+        "hz": 786,
+        "rel": 0.433
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.003,
+      "low_120_350": 0.018,
+      "lowmid_350_800": 0.204,
+      "mid_800_2k": 0.223,
+      "hi_2k_5k": 0.329,
+      "air_5k_9k": 0.223
+    },
+    "stereoBalance": 0
+  },
+  "driveleo3": {
+    "durationS": 2.69,
+    "rms": 0.2036,
+    "peak": 0.962,
+    "sustainedFraction": 0.35,
+    "attackMs": 1012,
+    "spectralCentroidHz": 2392,
+    "spectralFlatness": 0.637,
+    "topPeaksHz": [
+      {
+        "hz": 425,
+        "rel": 1
+      },
+      {
+        "hz": 484,
+        "rel": 0.877
+      },
+      {
+        "hz": 657,
+        "rel": 0.788
+      },
+      {
+        "hz": 377,
+        "rel": 0.767
+      },
+      {
+        "hz": 872,
+        "rel": 0.69
+      },
+      {
+        "hz": 856,
+        "rel": 0.648
+      },
+      {
+        "hz": 571,
+        "rel": 0.545
+      },
+      {
+        "hz": 533,
+        "rel": 0.497
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.004,
+      "low_120_350": 0.068,
+      "lowmid_350_800": 0.218,
+      "mid_800_2k": 0.305,
+      "hi_2k_5k": 0.25,
+      "air_5k_9k": 0.155
+    },
+    "stereoBalance": 0
+  },
+  "gbustclip2": {
+    "durationS": 4.34,
+    "rms": 0.1152,
+    "peak": 0.704,
+    "sustainedFraction": 0.3,
+    "attackMs": 161,
+    "spectralCentroidHz": 2329,
+    "spectralFlatness": 0.658,
+    "topPeaksHz": [
+      {
+        "hz": 59,
+        "rel": 1
+      },
+      {
+        "hz": 501,
+        "rel": 0.32
+      },
+      {
+        "hz": 1001,
+        "rel": 0.304
+      },
+      {
+        "hz": 167,
+        "rel": 0.288
+      },
+      {
+        "hz": 221,
+        "rel": 0.247
+      },
+      {
+        "hz": 248,
+        "rel": 0.244
+      },
+      {
+        "hz": 619,
+        "rel": 0.243
+      },
+      {
+        "hz": 565,
+        "rel": 0.24
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.097,
+      "low_120_350": 0.08,
+      "lowmid_350_800": 0.145,
+      "mid_800_2k": 0.271,
+      "hi_2k_5k": 0.258,
+      "air_5k_9k": 0.149
+    },
+    "stereoBalance": 0
+  },
+  "ghosty": {
+    "durationS": 3.66,
+    "rms": 0.1906,
+    "peak": 0.765,
+    "sustainedFraction": 0.63,
+    "attackMs": 874,
+    "spectralCentroidHz": 751,
+    "spectralFlatness": 0.062,
+    "topPeaksHz": [
+      {
+        "hz": 140,
+        "rel": 1
+      },
+      {
+        "hz": 829,
+        "rel": 0.942
+      },
+      {
+        "hz": 877,
+        "rel": 0.875
+      },
+      {
+        "hz": 371,
+        "rel": 0.844
+      },
+      {
+        "hz": 420,
+        "rel": 0.788
+      },
+      {
+        "hz": 931,
+        "rel": 0.535
+      },
+      {
+        "hz": 334,
+        "rel": 0.517
+      },
+      {
+        "hz": 161,
+        "rel": 0.494
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.029,
+      "low_120_350": 0.211,
+      "lowmid_350_800": 0.399,
+      "mid_800_2k": 0.308,
+      "hi_2k_5k": 0.048,
+      "air_5k_9k": 0.004
+    },
+    "stereoBalance": 0
+  },
+  "harmonie": {
+    "durationS": 8.1,
+    "rms": 0.1178,
+    "peak": 0.669,
+    "sustainedFraction": 0.42,
+    "attackMs": 2875,
+    "spectralCentroidHz": 1366,
+    "spectralFlatness": 0.195,
+    "topPeaksHz": [
+      {
+        "hz": 393,
+        "rel": 1
+      },
+      {
+        "hz": 872,
+        "rel": 0.828
+      },
+      {
+        "hz": 581,
+        "rel": 0.768
+      },
+      {
+        "hz": 1157,
+        "rel": 0.706
+      },
+      {
+        "hz": 291,
+        "rel": 0.67
+      },
+      {
+        "hz": 937,
+        "rel": 0.589
+      },
+      {
+        "hz": 517,
+        "rel": 0.553
+      },
+      {
+        "hz": 781,
+        "rel": 0.546
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.004,
+      "low_120_350": 0.099,
+      "lowmid_350_800": 0.247,
+      "mid_800_2k": 0.45,
+      "hi_2k_5k": 0.179,
+      "air_5k_9k": 0.02
+    },
+    "stereoBalance": 0
+  },
+  "i1": {
+    "durationS": 0.26,
+    "rms": 0.1002,
+    "peak": 0.551,
+    "sustainedFraction": 0.27,
+    "attackMs": 46,
+    "spectralCentroidHz": 1018,
+    "spectralFlatness": 0.177,
+    "topPeaksHz": [
+      {
+        "hz": 318,
+        "rel": 1
+      },
+      {
+        "hz": 958,
+        "rel": 0.072
+      },
+      {
+        "hz": 248,
+        "rel": 0.057
+      },
+      {
+        "hz": 75,
+        "rel": 0.046
+      },
+      {
+        "hz": 199,
+        "rel": 0.043
+      },
+      {
+        "hz": 641,
+        "rel": 0.041
+      },
+      {
+        "hz": 54,
+        "rel": 0.04
+      },
+      {
+        "hz": 113,
+        "rel": 0.036
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.053,
+      "low_120_350": 0.603,
+      "lowmid_350_800": 0.117,
+      "mid_800_2k": 0.113,
+      "hi_2k_5k": 0.049,
+      "air_5k_9k": 0.064
+    },
+    "stereoBalance": 0
+  },
+  "i2": {
+    "durationS": 0.21,
+    "rms": 0.0891,
+    "peak": 0.654,
+    "sustainedFraction": 0.22,
+    "attackMs": 23,
+    "spectralCentroidHz": 916,
+    "spectralFlatness": 0.08,
+    "topPeaksHz": [
+      {
+        "hz": 355,
+        "rel": 1
+      },
+      {
+        "hz": 1055,
+        "rel": 0.26
+      },
+      {
+        "hz": 711,
+        "rel": 0.129
+      },
+      {
+        "hz": 1023,
+        "rel": 0.09
+      },
+      {
+        "hz": 59,
+        "rel": 0.07
+      },
+      {
+        "hz": 285,
+        "rel": 0.06
+      },
+      {
+        "hz": 108,
+        "rel": 0.052
+      },
+      {
+        "hz": 269,
+        "rel": 0.052
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.059,
+      "low_120_350": 0.315,
+      "lowmid_350_800": 0.35,
+      "mid_800_2k": 0.208,
+      "hi_2k_5k": 0.019,
+      "air_5k_9k": 0.049
+    },
+    "stereoBalance": 0
+  },
+  "i3": {
+    "durationS": 0.24,
+    "rms": 0.0999,
+    "peak": 0.625,
+    "sustainedFraction": 0.3,
+    "attackMs": 23,
+    "spectralCentroidHz": 1118,
+    "spectralFlatness": 0.109,
+    "topPeaksHz": [
+      {
+        "hz": 366,
+        "rel": 1
+      },
+      {
+        "hz": 1098,
+        "rel": 0.486
+      },
+      {
+        "hz": 738,
+        "rel": 0.246
+      },
+      {
+        "hz": 1071,
+        "rel": 0.186
+      },
+      {
+        "hz": 65,
+        "rel": 0.038
+      },
+      {
+        "hz": 1023,
+        "rel": 0.035
+      },
+      {
+        "hz": 86,
+        "rel": 0.033
+      },
+      {
+        "hz": 280,
+        "rel": 0.032
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.027,
+      "low_120_350": 0.094,
+      "lowmid_350_800": 0.444,
+      "mid_800_2k": 0.351,
+      "hi_2k_5k": 0.03,
+      "air_5k_9k": 0.054
+    },
+    "stereoBalance": 0
+  },
+  "i4": {
+    "durationS": 0.21,
+    "rms": 0.0748,
+    "peak": 0.47,
+    "sustainedFraction": 0.22,
+    "attackMs": 23,
+    "spectralCentroidHz": 1019,
+    "spectralFlatness": 0.135,
+    "topPeaksHz": [
+      {
+        "hz": 409,
+        "rel": 1
+      },
+      {
+        "hz": 818,
+        "rel": 0.311
+      },
+      {
+        "hz": 1211,
+        "rel": 0.104
+      },
+      {
+        "hz": 65,
+        "rel": 0.063
+      },
+      {
+        "hz": 851,
+        "rel": 0.061
+      },
+      {
+        "hz": 334,
+        "rel": 0.047
+      },
+      {
+        "hz": 92,
+        "rel": 0.046
+      },
+      {
+        "hz": 307,
+        "rel": 0.04
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.043,
+      "low_120_350": 0.101,
+      "lowmid_350_800": 0.477,
+      "mid_800_2k": 0.288,
+      "hi_2k_5k": 0.042,
+      "air_5k_9k": 0.05
+    },
+    "stereoBalance": 0
+  },
+  "i5": {
+    "durationS": 0.21,
+    "rms": 0.0775,
+    "peak": 0.676,
+    "sustainedFraction": 0.22,
+    "attackMs": 23,
+    "spectralCentroidHz": 1177,
+    "spectralFlatness": 0.161,
+    "topPeaksHz": [
+      {
+        "hz": 931,
+        "rel": 1
+      },
+      {
+        "hz": 463,
+        "rel": 0.953
+      },
+      {
+        "hz": 65,
+        "rel": 0.387
+      },
+      {
+        "hz": 86,
+        "rel": 0.339
+      },
+      {
+        "hz": 980,
+        "rel": 0.132
+      },
+      {
+        "hz": 118,
+        "rel": 0.101
+      },
+      {
+        "hz": 140,
+        "rel": 0.098
+      },
+      {
+        "hz": 156,
+        "rel": 0.088
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.102,
+      "low_120_350": 0.073,
+      "lowmid_350_800": 0.299,
+      "mid_800_2k": 0.426,
+      "hi_2k_5k": 0.042,
+      "air_5k_9k": 0.058
+    },
+    "stereoBalance": 0
+  },
+  "leader": {
+    "durationS": 1.41,
+    "rms": 0.22,
+    "peak": 1.011,
+    "sustainedFraction": 0.75,
+    "attackMs": 230,
+    "spectralCentroidHz": 1841,
+    "spectralFlatness": 0.443,
+    "topPeaksHz": [
+      {
+        "hz": 156,
+        "rel": 1
+      },
+      {
+        "hz": 231,
+        "rel": 0.748
+      },
+      {
+        "hz": 75,
+        "rel": 0.612
+      },
+      {
+        "hz": 312,
+        "rel": 0.605
+      },
+      {
+        "hz": 544,
+        "rel": 0.564
+      },
+      {
+        "hz": 388,
+        "rel": 0.534
+      },
+      {
+        "hz": 468,
+        "rel": 0.515
+      },
+      {
+        "hz": 619,
+        "rel": 0.46
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.052,
+      "low_120_350": 0.175,
+      "lowmid_350_800": 0.269,
+      "mid_800_2k": 0.155,
+      "hi_2k_5k": 0.273,
+      "air_5k_9k": 0.076
+    },
+    "stereoBalance": 0
+  },
+  "lose": {
+    "durationS": 1.52,
+    "rms": 0.0458,
+    "peak": 0.398,
+    "sustainedFraction": 0.28,
+    "attackMs": 115,
+    "spectralCentroidHz": 3692,
+    "spectralFlatness": 0.875,
+    "topPeaksHz": [
+      {
+        "hz": 361,
+        "rel": 1
+      },
+      {
+        "hz": 285,
+        "rel": 0.833
+      },
+      {
+        "hz": 474,
+        "rel": 0.727
+      },
+      {
+        "hz": 415,
+        "rel": 0.694
+      },
+      {
+        "hz": 388,
+        "rel": 0.682
+      },
+      {
+        "hz": 129,
+        "rel": 0.673
+      },
+      {
+        "hz": 188,
+        "rel": 0.666
+      },
+      {
+        "hz": 554,
+        "rel": 0.665
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.009,
+      "low_120_350": 0.055,
+      "lowmid_350_800": 0.097,
+      "mid_800_2k": 0.126,
+      "hi_2k_5k": 0.381,
+      "air_5k_9k": 0.331
+    },
+    "stereoBalance": 0
+  },
+  "motorloop": {
+    "durationS": 3.5,
+    "rms": 0.2247,
+    "peak": 0.794,
+    "sustainedFraction": 0.73,
+    "attackMs": 989,
+    "spectralCentroidHz": 1181,
+    "spectralFlatness": 0.277,
+    "topPeaksHz": [
+      {
+        "hz": 97,
+        "rel": 1
+      },
+      {
+        "hz": 167,
+        "rel": 0.394
+      },
+      {
+        "hz": 199,
+        "rel": 0.367
+      },
+      {
+        "hz": 221,
+        "rel": 0.359
+      },
+      {
+        "hz": 242,
+        "rel": 0.257
+      },
+      {
+        "hz": 280,
+        "rel": 0.125
+      },
+      {
+        "hz": 840,
+        "rel": 0.118
+      },
+      {
+        "hz": 312,
+        "rel": 0.116
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.216,
+      "low_120_350": 0.219,
+      "lowmid_350_800": 0.115,
+      "mid_800_2k": 0.248,
+      "hi_2k_5k": 0.166,
+      "air_5k_9k": 0.035
+    },
+    "stereoBalance": 0
+  },
+  "music": {
+    "durationS": 8.15,
+    "rms": 0.1855,
+    "peak": 0.978,
+    "sustainedFraction": 0.58,
+    "attackMs": 1058,
+    "spectralCentroidHz": 1317,
+    "spectralFlatness": 0.349,
+    "topPeaksHz": [
+      {
+        "hz": 172,
+        "rel": 1
+      },
+      {
+        "hz": 113,
+        "rel": 0.968
+      },
+      {
+        "hz": 75,
+        "rel": 0.946
+      },
+      {
+        "hz": 210,
+        "rel": 0.834
+      },
+      {
+        "hz": 140,
+        "rel": 0.594
+      },
+      {
+        "hz": 468,
+        "rel": 0.357
+      },
+      {
+        "hz": 291,
+        "rel": 0.348
+      },
+      {
+        "hz": 275,
+        "rel": 0.306
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.112,
+      "low_120_350": 0.254,
+      "lowmid_350_800": 0.224,
+      "mid_800_2k": 0.247,
+      "hi_2k_5k": 0.083,
+      "air_5k_9k": 0.079
+    },
+    "stereoBalance": 0
+  },
+  "olifant": {
+    "durationS": 2.85,
+    "rms": 0.214,
+    "peak": 0.927,
+    "sustainedFraction": 0.26,
+    "attackMs": 1771,
+    "spectralCentroidHz": 1643,
+    "spectralFlatness": 0.069,
+    "topPeaksHz": [
+      {
+        "hz": 689,
+        "rel": 1
+      },
+      {
+        "hz": 1384,
+        "rel": 0.448
+      },
+      {
+        "hz": 1357,
+        "rel": 0.408
+      },
+      {
+        "hz": 1308,
+        "rel": 0.22
+      },
+      {
+        "hz": 2078,
+        "rel": 0.214
+      },
+      {
+        "hz": 608,
+        "rel": 0.211
+      },
+      {
+        "hz": 2772,
+        "rel": 0.194
+      },
+      {
+        "hz": 2035,
+        "rel": 0.181
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.001,
+      "low_120_350": 0.018,
+      "lowmid_350_800": 0.251,
+      "mid_800_2k": 0.392,
+      "hi_2k_5k": 0.335,
+      "air_5k_9k": 0.004
+    },
+    "stereoBalance": 0
+  },
+  "olistamp": {
+    "durationS": 1.07,
+    "rms": 0.197,
+    "peak": 0.775,
+    "sustainedFraction": 0.46,
+    "attackMs": 138,
+    "spectralCentroidHz": 231,
+    "spectralFlatness": 0.01,
+    "topPeaksHz": [
+      {
+        "hz": 108,
+        "rel": 1
+      },
+      {
+        "hz": 54,
+        "rel": 0.811
+      },
+      {
+        "hz": 183,
+        "rel": 0.401
+      },
+      {
+        "hz": 151,
+        "rel": 0.269
+      },
+      {
+        "hz": 221,
+        "rel": 0.2
+      },
+      {
+        "hz": 296,
+        "rel": 0.123
+      },
+      {
+        "hz": 275,
+        "rel": 0.111
+      },
+      {
+        "hz": 318,
+        "rel": 0.102
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.514,
+      "low_120_350": 0.356,
+      "lowmid_350_800": 0.094,
+      "mid_800_2k": 0.022,
+      "hi_2k_5k": 0.015,
+      "air_5k_9k": 0
+    },
+    "stereoBalance": 0
+  },
+  "phone": {
+    "durationS": 2.51,
+    "rms": 0.1139,
+    "peak": 0.503,
+    "sustainedFraction": 0.91,
+    "attackMs": 1357,
+    "spectralCentroidHz": 4461,
+    "spectralFlatness": 0.368,
+    "topPeaksHz": [
+      {
+        "hz": 5276,
+        "rel": 1
+      },
+      {
+        "hz": 2638,
+        "rel": 0.96
+      },
+      {
+        "hz": 2218,
+        "rel": 0.643
+      },
+      {
+        "hz": 4985,
+        "rel": 0.564
+      },
+      {
+        "hz": 3521,
+        "rel": 0.394
+      },
+      {
+        "hz": 3951,
+        "rel": 0.391
+      },
+      {
+        "hz": 4613,
+        "rel": 0.37
+      },
+      {
+        "hz": 5179,
+        "rel": 0.37
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.001,
+      "low_120_350": 0.001,
+      "lowmid_350_800": 0.002,
+      "mid_800_2k": 0.046,
+      "hi_2k_5k": 0.546,
+      "air_5k_9k": 0.403
+    },
+    "stereoBalance": 0
+  },
+  "pruttelauto": {
+    "durationS": 4.49,
+    "rms": 0.1712,
+    "peak": 0.933,
+    "sustainedFraction": 0.24,
+    "attackMs": 2024,
+    "spectralCentroidHz": 2254,
+    "spectralFlatness": 0.613,
+    "topPeaksHz": [
+      {
+        "hz": 102,
+        "rel": 1
+      },
+      {
+        "hz": 291,
+        "rel": 0.364
+      },
+      {
+        "hz": 151,
+        "rel": 0.343
+      },
+      {
+        "hz": 205,
+        "rel": 0.268
+      },
+      {
+        "hz": 188,
+        "rel": 0.24
+      },
+      {
+        "hz": 258,
+        "rel": 0.214
+      },
+      {
+        "hz": 231,
+        "rel": 0.173
+      },
+      {
+        "hz": 824,
+        "rel": 0.165
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.128,
+      "low_120_350": 0.12,
+      "lowmid_350_800": 0.118,
+      "mid_800_2k": 0.233,
+      "hi_2k_5k": 0.265,
+      "air_5k_9k": 0.136
+    },
+    "stereoBalance": 0
+  },
+  "quepasa": {
+    "durationS": 1.46,
+    "rms": 0.1038,
+    "peak": 0.559,
+    "sustainedFraction": 0.49,
+    "attackMs": 368,
+    "spectralCentroidHz": 1975,
+    "spectralFlatness": 0.367,
+    "topPeaksHz": [
+      {
+        "hz": 748,
+        "rel": 1
+      },
+      {
+        "hz": 732,
+        "rel": 0.948
+      },
+      {
+        "hz": 668,
+        "rel": 0.853
+      },
+      {
+        "hz": 694,
+        "rel": 0.679
+      },
+      {
+        "hz": 786,
+        "rel": 0.642
+      },
+      {
+        "hz": 1384,
+        "rel": 0.542
+      },
+      {
+        "hz": 1480,
+        "rel": 0.54
+      },
+      {
+        "hz": 1324,
+        "rel": 0.533
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.014,
+      "low_120_350": 0.046,
+      "lowmid_350_800": 0.239,
+      "mid_800_2k": 0.333,
+      "hi_2k_5k": 0.293,
+      "air_5k_9k": 0.076
+    },
+    "stereoBalance": 0
+  },
+  "schetenloop": {
+    "durationS": 10.89,
+    "rms": 0.0839,
+    "peak": 0.685,
+    "sustainedFraction": 0.11,
+    "attackMs": 5520,
+    "spectralCentroidHz": 2505,
+    "spectralFlatness": 0.701,
+    "topPeaksHz": [
+      {
+        "hz": 81,
+        "rel": 1
+      },
+      {
+        "hz": 156,
+        "rel": 0.549
+      },
+      {
+        "hz": 237,
+        "rel": 0.443
+      },
+      {
+        "hz": 183,
+        "rel": 0.427
+      },
+      {
+        "hz": 318,
+        "rel": 0.288
+      },
+      {
+        "hz": 404,
+        "rel": 0.259
+      },
+      {
+        "hz": 371,
+        "rel": 0.238
+      },
+      {
+        "hz": 425,
+        "rel": 0.216
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.105,
+      "low_120_350": 0.123,
+      "lowmid_350_800": 0.098,
+      "mid_800_2k": 0.209,
+      "hi_2k_5k": 0.29,
+      "air_5k_9k": 0.176
+    },
+    "stereoBalance": 0
+  },
+  "scheurkar": {
+    "durationS": 5.2,
+    "rms": 0.2421,
+    "peak": 0.889,
+    "sustainedFraction": 0.59,
+    "attackMs": 713,
+    "spectralCentroidHz": 902,
+    "spectralFlatness": 0.014,
+    "topPeaksHz": [
+      {
+        "hz": 178,
+        "rel": 1
+      },
+      {
+        "hz": 205,
+        "rel": 0.944
+      },
+      {
+        "hz": 118,
+        "rel": 0.519
+      },
+      {
+        "hz": 619,
+        "rel": 0.29
+      },
+      {
+        "hz": 474,
+        "rel": 0.271
+      },
+      {
+        "hz": 759,
+        "rel": 0.259
+      },
+      {
+        "hz": 727,
+        "rel": 0.255
+      },
+      {
+        "hz": 662,
+        "rel": 0.25
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.032,
+      "low_120_350": 0.294,
+      "lowmid_350_800": 0.256,
+      "mid_800_2k": 0.304,
+      "hi_2k_5k": 0.113,
+      "air_5k_9k": 0.001
+    },
+    "stereoBalance": 0
+  },
+  "shark": {
+    "durationS": 0.71,
+    "rms": 0.1678,
+    "peak": 0.727,
+    "sustainedFraction": 0.37,
+    "attackMs": 69,
+    "spectralCentroidHz": 674,
+    "spectralFlatness": 0.15,
+    "topPeaksHz": [
+      {
+        "hz": 75,
+        "rel": 1
+      },
+      {
+        "hz": 231,
+        "rel": 0.582
+      },
+      {
+        "hz": 156,
+        "rel": 0.316
+      },
+      {
+        "hz": 388,
+        "rel": 0.151
+      },
+      {
+        "hz": 118,
+        "rel": 0.111
+      },
+      {
+        "hz": 856,
+        "rel": 0.085
+      },
+      {
+        "hz": 318,
+        "rel": 0.072
+      },
+      {
+        "hz": 447,
+        "rel": 0.046
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.311,
+      "low_120_350": 0.364,
+      "lowmid_350_800": 0.137,
+      "mid_800_2k": 0.104,
+      "hi_2k_5k": 0.056,
+      "air_5k_9k": 0.029
+    },
+    "stereoBalance": 0
+  },
+  "shark_2815": {
+    "durationS": 0.71,
+    "rms": 0.168,
+    "peak": 0.727,
+    "sustainedFraction": 0.37,
+    "attackMs": 69,
+    "spectralCentroidHz": 668,
+    "spectralFlatness": 0.147,
+    "topPeaksHz": [
+      {
+        "hz": 75,
+        "rel": 1
+      },
+      {
+        "hz": 231,
+        "rel": 0.578
+      },
+      {
+        "hz": 156,
+        "rel": 0.313
+      },
+      {
+        "hz": 388,
+        "rel": 0.15
+      },
+      {
+        "hz": 118,
+        "rel": 0.115
+      },
+      {
+        "hz": 856,
+        "rel": 0.085
+      },
+      {
+        "hz": 318,
+        "rel": 0.073
+      },
+      {
+        "hz": 447,
+        "rel": 0.045
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.313,
+      "low_120_350": 0.364,
+      "lowmid_350_800": 0.136,
+      "mid_800_2k": 0.104,
+      "hi_2k_5k": 0.054,
+      "air_5k_9k": 0.029
+    },
+    "stereoBalance": 0
+  },
+  "sirene": {
+    "durationS": 0.5,
+    "rms": 0.2109,
+    "peak": 0.954,
+    "sustainedFraction": 0.57,
+    "attackMs": 276,
+    "spectralCentroidHz": 2200,
+    "spectralFlatness": 0.079,
+    "topPeaksHz": [
+      {
+        "hz": 2422,
+        "rel": 1
+      },
+      {
+        "hz": 2455,
+        "rel": 0.959
+      },
+      {
+        "hz": 2487,
+        "rel": 0.912
+      },
+      {
+        "hz": 2859,
+        "rel": 0.789
+      },
+      {
+        "hz": 2396,
+        "rel": 0.677
+      },
+      {
+        "hz": 2783,
+        "rel": 0.657
+      },
+      {
+        "hz": 2815,
+        "rel": 0.635
+      },
+      {
+        "hz": 2509,
+        "rel": 0.629
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.002,
+      "low_120_350": 0.001,
+      "lowmid_350_800": 0.046,
+      "mid_800_2k": 0.335,
+      "hi_2k_5k": 0.608,
+      "air_5k_9k": 0.007
+    },
+    "stereoBalance": 0
+  },
+  "theburbgamemix": {
+    "durationS": 8.15,
+    "rms": 0.2738,
+    "peak": 0.931,
+    "sustainedFraction": 0.29,
+    "attackMs": 1104,
+    "spectralCentroidHz": 1910,
+    "spectralFlatness": 0.537,
+    "topPeaksHz": [
+      {
+        "hz": 59,
+        "rel": 1
+      },
+      {
+        "hz": 156,
+        "rel": 0.197
+      },
+      {
+        "hz": 118,
+        "rel": 0.139
+      },
+      {
+        "hz": 178,
+        "rel": 0.125
+      },
+      {
+        "hz": 210,
+        "rel": 0.124
+      },
+      {
+        "hz": 194,
+        "rel": 0.118
+      },
+      {
+        "hz": 275,
+        "rel": 0.088
+      },
+      {
+        "hz": 231,
+        "rel": 0.082
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.189,
+      "low_120_350": 0.173,
+      "lowmid_350_800": 0.163,
+      "mid_800_2k": 0.178,
+      "hi_2k_5k": 0.147,
+      "air_5k_9k": 0.15
+    },
+    "stereoBalance": 0
+  },
+  "theburpgame2": {
+    "durationS": 3.16,
+    "rms": 0.1459,
+    "peak": 0.927,
+    "sustainedFraction": 0.15,
+    "attackMs": 345,
+    "spectralCentroidHz": 1546,
+    "spectralFlatness": 0.319,
+    "topPeaksHz": [
+      {
+        "hz": 436,
+        "rel": 1
+      },
+      {
+        "hz": 398,
+        "rel": 0.89
+      },
+      {
+        "hz": 415,
+        "rel": 0.885
+      },
+      {
+        "hz": 285,
+        "rel": 0.733
+      },
+      {
+        "hz": 490,
+        "rel": 0.575
+      },
+      {
+        "hz": 371,
+        "rel": 0.526
+      },
+      {
+        "hz": 474,
+        "rel": 0.489
+      },
+      {
+        "hz": 140,
+        "rel": 0.418
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.019,
+      "low_120_350": 0.151,
+      "lowmid_350_800": 0.258,
+      "mid_800_2k": 0.315,
+      "hi_2k_5k": 0.204,
+      "air_5k_9k": 0.052
+    },
+    "stereoBalance": 0
+  },
+  "tjoekbel": {
+    "durationS": 1.31,
+    "rms": 0.1558,
+    "peak": 1.124,
+    "sustainedFraction": 0.39,
+    "attackMs": 322,
+    "spectralCentroidHz": 1978,
+    "spectralFlatness": 0.485,
+    "topPeaksHz": [
+      {
+        "hz": 1927,
+        "rel": 1
+      },
+      {
+        "hz": 3440,
+        "rel": 0.407
+      },
+      {
+        "hz": 743,
+        "rel": 0.328
+      },
+      {
+        "hz": 102,
+        "rel": 0.289
+      },
+      {
+        "hz": 269,
+        "rel": 0.288
+      },
+      {
+        "hz": 221,
+        "rel": 0.253
+      },
+      {
+        "hz": 81,
+        "rel": 0.236
+      },
+      {
+        "hz": 151,
+        "rel": 0.225
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.075,
+      "low_120_350": 0.165,
+      "lowmid_350_800": 0.176,
+      "mid_800_2k": 0.265,
+      "hi_2k_5k": 0.2,
+      "air_5k_9k": 0.119
+    },
+    "stereoBalance": 0.09
+  },
+  "toeter1": {
+    "durationS": 0.84,
+    "rms": 0.0993,
+    "peak": 0.589,
+    "sustainedFraction": 0.31,
+    "attackMs": 46,
+    "spectralCentroidHz": 2505,
+    "spectralFlatness": 0.394,
+    "topPeaksHz": [
+      {
+        "hz": 447,
+        "rel": 1
+      },
+      {
+        "hz": 328,
+        "rel": 0.708
+      },
+      {
+        "hz": 3112,
+        "rel": 0.372
+      },
+      {
+        "hz": 2670,
+        "rel": 0.332
+      },
+      {
+        "hz": 2223,
+        "rel": 0.141
+      },
+      {
+        "hz": 3558,
+        "rel": 0.116
+      },
+      {
+        "hz": 646,
+        "rel": 0.097
+      },
+      {
+        "hz": 888,
+        "rel": 0.096
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.01,
+      "low_120_350": 0.137,
+      "lowmid_350_800": 0.24,
+      "mid_800_2k": 0.081,
+      "hi_2k_5k": 0.381,
+      "air_5k_9k": 0.15
+    },
+    "stereoBalance": 0
+  },
+  "toeter2": {
+    "durationS": 0.78,
+    "rms": 0.1682,
+    "peak": 0.707,
+    "sustainedFraction": 0.29,
+    "attackMs": 69,
+    "spectralCentroidHz": 3194,
+    "spectralFlatness": 0.376,
+    "topPeaksHz": [
+      {
+        "hz": 366,
+        "rel": 1
+      },
+      {
+        "hz": 3289,
+        "rel": 0.929
+      },
+      {
+        "hz": 2923,
+        "rel": 0.623
+      },
+      {
+        "hz": 3655,
+        "rel": 0.437
+      },
+      {
+        "hz": 2557,
+        "rel": 0.362
+      },
+      {
+        "hz": 5486,
+        "rel": 0.193
+      },
+      {
+        "hz": 3241,
+        "rel": 0.115
+      },
+      {
+        "hz": 2196,
+        "rel": 0.078
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.01,
+      "low_120_350": 0.061,
+      "lowmid_350_800": 0.134,
+      "mid_800_2k": 0.049,
+      "hi_2k_5k": 0.56,
+      "air_5k_9k": 0.186
+    },
+    "stereoBalance": 0
+  },
+  "treinhorn": {
+    "durationS": 3.6,
+    "rms": 0.2334,
+    "peak": 0.819,
+    "sustainedFraction": 0.81,
+    "attackMs": 230,
+    "spectralCentroidHz": 1438,
+    "spectralFlatness": 0.006,
+    "topPeaksHz": [
+      {
+        "hz": 657,
+        "rel": 1
+      },
+      {
+        "hz": 501,
+        "rel": 0.795
+      },
+      {
+        "hz": 581,
+        "rel": 0.784
+      },
+      {
+        "hz": 404,
+        "rel": 0.737
+      },
+      {
+        "hz": 764,
+        "rel": 0.674
+      },
+      {
+        "hz": 1206,
+        "rel": 0.128
+      },
+      {
+        "hz": 1502,
+        "rel": 0.116
+      },
+      {
+        "hz": 1739,
+        "rel": 0.105
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.002,
+      "low_120_350": 0.013,
+      "lowmid_350_800": 0.433,
+      "mid_800_2k": 0.259,
+      "hi_2k_5k": 0.294,
+      "air_5k_9k": 0
+    },
+    "stereoBalance": 0
+  },
+  "ufo2": {
+    "durationS": 1.23,
+    "rms": 0.1959,
+    "peak": 0.931,
+    "sustainedFraction": 0.62,
+    "attackMs": 828,
+    "spectralCentroidHz": 1408,
+    "spectralFlatness": 0.102,
+    "topPeaksHz": [
+      {
+        "hz": 974,
+        "rel": 1
+      },
+      {
+        "hz": 1179,
+        "rel": 0.834
+      },
+      {
+        "hz": 1039,
+        "rel": 0.762
+      },
+      {
+        "hz": 1001,
+        "rel": 0.719
+      },
+      {
+        "hz": 1340,
+        "rel": 0.66
+      },
+      {
+        "hz": 1427,
+        "rel": 0.645
+      },
+      {
+        "hz": 1324,
+        "rel": 0.559
+      },
+      {
+        "hz": 1394,
+        "rel": 0.55
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.001,
+      "low_120_350": 0.005,
+      "lowmid_350_800": 0.157,
+      "mid_800_2k": 0.662,
+      "hi_2k_5k": 0.166,
+      "air_5k_9k": 0.008
+    },
+    "stereoBalance": 0
+  },
+  "win": {
+    "durationS": 1.02,
+    "rms": 0.2025,
+    "peak": 0.861,
+    "sustainedFraction": 0.48,
+    "attackMs": 230,
+    "spectralCentroidHz": 1812,
+    "spectralFlatness": 0.062,
+    "topPeaksHz": [
+      {
+        "hz": 1244,
+        "rel": 1
+      },
+      {
+        "hz": 931,
+        "rel": 0.823
+      },
+      {
+        "hz": 1863,
+        "rel": 0.56
+      },
+      {
+        "hz": 619,
+        "rel": 0.517
+      },
+      {
+        "hz": 2487,
+        "rel": 0.345
+      },
+      {
+        "hz": 1206,
+        "rel": 0.044
+      },
+      {
+        "hz": 1292,
+        "rel": 0.024
+      },
+      {
+        "hz": 1825,
+        "rel": 0.021
+      }
+    ],
+    "bandEnergy": {
+      "sub_40_120": 0.001,
+      "low_120_350": 0.007,
+      "lowmid_350_800": 0.153,
+      "mid_800_2k": 0.628,
+      "hi_2k_5k": 0.137,
+      "air_5k_9k": 0.074
+    },
+    "stereoBalance": 0
+  }
+}

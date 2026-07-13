@@ -1,0 +1,23 @@
+{
+  "kind": "oneshot",
+  "dur": 2.19,
+  "gain": 0.8,
+  "layers": [
+    { "type": "noise", "color": "brown", "gain": 0.9,
+      "ampLfoRate": 5.2, "ampLfoDepth": 0.45, "ampLfoWave": "sine",
+      "filter": { "type": "bandpass", "freq": 420, "q": 0.7 },
+      "env": { "a": 0.9, "d": 0.2, "s": 0.4, "r": 0.5, "peak": 1 } },
+    { "type": "noise", "color": "pink", "gain": 0.55,
+      "ampLfoRate": 5.2, "ampLfoDepth": 0.5, "ampLfoWave": "sine",
+      "filterLfoOct": 0.35, "filterLfoRate": 1.1,
+      "filter": { "type": "bandpass", "freq": 1200, "q": 0.9 },
+      "env": { "a": 0.9, "d": 0.2, "s": 0.4, "r": 0.5, "peak": 1 } },
+    { "type": "noise", "color": "pink", "gain": 0.06,
+      "filter": { "type": "bandpass", "freq": 3000, "q": 0.9 },
+      "env": { "a": 0.9, "d": 0.2, "s": 0.35, "r": 0.5, "peak": 1 } },
+    { "type": "osc", "wave": "sawtooth", "freq": 129, "gain": 0.14,
+      "pitchLfoRate": 4.6, "pitchLfoCents": 35,
+      "filter": { "type": "bandpass", "freq": 600, "q": 1.4 },
+      "env": { "a": 0.9, "d": 0.2, "s": 0.4, "r": 0.5, "peak": 1 } }
+  ]
+}

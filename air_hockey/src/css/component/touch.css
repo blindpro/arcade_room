@@ -1,0 +1,230 @@
+/**
+ * Touch controls + mobile HUD (shared framework styles).
+ *
+ * The overlay is only inserted into the DOM on touch / coarse-pointer devices
+ * (see app/touch.js), so these rules never affect desktop keyboard play.
+ * Big hit targets for accessibility; anchored to the screen corners so thumbs
+ * reach them; safe-area insets keep them clear of notches and home bars.
+ */
+
+.a-touch {
+  bottom: 0;
+  left: 0;
+  pointer-events: none;      /* container is transparent to touches... */
+  position: fixed;
+  right: 0;
+  top: 0;
+  z-index: 1000;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+  visibility: hidden;
+}
+.a-touch.is-visible {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* --- announcement HUD banner --------------------------------------------- */
+.a-touch--hud {
+  background: rgba(0, 0, 0, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 0.6em;
+  color: #ffffff;
+  font-size: 1.15em;
+  font-weight: 600;
+  left: 50%;
+  letter-spacing: 0.02em;
+  line-height: 1.35;
+  max-width: min(90vw, 40em);
+  opacity: 0;
+  padding: 0.5em 0.9em;
+  pointer-events: none;
+  position: absolute;
+  text-align: center;
+  top: calc(0.6em + env(safe-area-inset-top, 0px));
+  transform: translate(-50%, -0.4em);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: pre-wrap;
+}
+.a-touch--hud.is-visible {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+.a-touch--hud.is-urgent {
+  background: rgba(120, 12, 12, 0.85);
+  border-color: rgba(255, 180, 180, 0.6);
+}
+
+/* --- control zones -------------------------------------------------------- */
+.a-touch--controls {
+  height: 100%;
+  pointer-events: none;
+  position: absolute;
+  width: 100%;
+}
+.a-touch--zone {
+  align-items: flex-end;
+  display: flex;
+  gap: 0.6em;
+  pointer-events: none;
+  position: absolute;
+}
+.a-touch--zone > * { pointer-events: auto; }
+
+/* Bottom clusters wrap upward (wrap-reverse keeps the first, primary buttons on
+   the bottom row within thumb reach) and are width-capped so a busy game's
+   buttons stack into rows instead of overlapping or colliding with the far zone. */
+.a-touch--zone-left {
+  align-content: flex-end;
+  bottom: calc(1.1em + env(safe-area-inset-bottom, 0px));
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-start;
+  left: calc(1.1em + env(safe-area-inset-left, 0px));
+  max-width: 46vw;
+}
+.a-touch--zone-right {
+  align-content: flex-end;
+  bottom: calc(1.1em + env(safe-area-inset-bottom, 0px));
+  flex-direction: row-reverse;
+  flex-wrap: wrap-reverse;
+  justify-content: flex-start;
+  max-width: 46vw;
+  right: calc(1.1em + env(safe-area-inset-right, 0px));
+}
+.a-touch--zone-center {
+  align-content: flex-end;
+  bottom: calc(1.1em + env(safe-area-inset-bottom, 0px));
+  flex-direction: row;
+  flex-wrap: wrap-reverse;
+  justify-content: center;
+  left: 50%;
+  max-width: 96vw;
+  transform: translateX(-50%);
+}
+.a-touch--zone-topLeft {
+  left: calc(0.8em + env(safe-area-inset-left, 0px));
+  top: calc(0.8em + env(safe-area-inset-top, 0px));
+}
+.a-touch--zone-topRight {
+  right: calc(0.8em + env(safe-area-inset-right, 0px));
+  top: calc(0.8em + env(safe-area-inset-top, 0px));
+}
+
+/* --- buttons -------------------------------------------------------------- */
+.a-touch--btn {
+  -webkit-tap-highlight-color: transparent;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.1);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 50%;
+  color: #ffffff;
+  display: flex;
+  font-family: inherit;
+  font-size: 0.9em;
+  font-weight: 700;
+  height: 4.6em;
+  justify-content: center;
+  letter-spacing: 0.02em;
+  line-height: 1.05;
+  min-height: 64px;
+  min-width: 64px;
+  padding: 0.2em;
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+  width: 4.6em;
+}
+.a-touch--btn.is-active {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: #ffffff;
+  transform: scale(0.94);
+}
+.a-touch--btn-primary {
+  background: rgba(60, 150, 255, 0.28);
+  border-color: rgba(140, 200, 255, 0.9);
+  height: 5.6em;
+  width: 5.6em;
+}
+.a-touch--btn-primary.is-active { background: rgba(60, 150, 255, 0.6); }
+.a-touch--btn-secondary {
+  font-size: 0.8em;
+  height: 3.8em;
+  width: 3.8em;
+}
+.a-touch--btn-danger {
+  background: rgba(200, 40, 40, 0.28);
+  border-color: rgba(255, 150, 150, 0.9);
+}
+.a-touch--btn-danger.is-active { background: rgba(200, 40, 40, 0.6); }
+.a-touch--btn-pause,
+.a-touch--btn-wide { border-radius: 0.7em; }
+.a-touch--btn-wide { width: auto; min-width: 6em; padding: 0 1em; }
+.a-touch--pausebtn {
+  height: 3.2em;
+  min-height: 48px;
+  min-width: 48px;
+  width: 3.2em;
+  opacity: 0.85;
+}
+
+/* --- directional pad ------------------------------------------------------ */
+.a-touch--dpad {
+  display: grid;
+  gap: 0.4em;
+  grid-template-columns: repeat(3, 3.6em);
+  grid-template-rows: repeat(3, 3.6em);
+}
+.a-touch--dpad-horizontal { grid-template-rows: 4.4em; }
+.a-touch--dpad-vertical { grid-template-columns: 4.4em; }
+.a-touch--dbtn {
+  -webkit-tap-highlight-color: transparent;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.12);
+  border: 2px solid rgba(255, 255, 255, 0.55);
+  border-radius: 0.55em;
+  color: #ffffff;
+  display: flex;
+  font-size: 1.4em;
+  justify-content: center;
+  min-height: 56px;
+  min-width: 56px;
+  touch-action: none;
+  user-select: none;
+}
+.a-touch--dbtn.is-active {
+  background: rgba(255, 255, 255, 0.42);
+  border-color: #ffffff;
+  transform: scale(0.94);
+}
+
+/* --- aim / drag surface --------------------------------------------------- */
+.a-touch--aim {
+  -webkit-tap-highlight-color: transparent;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 2px dashed rgba(255, 255, 255, 0.4);
+  border-radius: 1em;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  font-size: 0.8em;
+  height: 8.5em;
+  justify-content: center;
+  min-height: 96px;
+  min-width: 96px;
+  text-align: center;
+  touch-action: none;
+  user-select: none;
+  width: 8.5em;
+}
+.a-touch--aim.is-active {
+  background: rgba(255, 255, 255, 0.16);
+  border-style: solid;
+}
+
+/* Slightly smaller controls on short screens (landscape phones). */
+@media (max-height: 26em) {
+  .a-touch--btn { font-size: 0.8em; height: 3.9em; width: 3.9em; }
+  .a-touch--btn-primary { height: 4.6em; width: 4.6em; }
+  .a-touch--dpad { grid-template-columns: repeat(3, 3em); grid-template-rows: repeat(3, 3em); }
+}

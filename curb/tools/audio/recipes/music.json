@@ -1,0 +1,36 @@
+{
+  "kind": "loop",
+  "dur": 2,
+  "gain": 0.8,
+  "layers": [
+    { "type": "osc", "wave": "triangle", "freq": 110, "gain": 0.06,
+      "ampLfoRate": 0.25, "ampLfoDepth": 0.4, "ampLfoWave": "sine",
+      "filter": { "type": "lowpass", "freq": 360, "q": 0.7 } },
+    { "type": "osc", "wave": "sawtooth", "freq": 220, "unison": [-6, 5], "gain": 0.035,
+      "ampLfoRate": 0.33, "ampLfoDepth": 0.5, "ampLfoWave": "sine",
+      "filterLfoOct": 0.5, "filterLfoRate": 0.18,
+      "filter": { "type": "lowpass", "freq": 550, "q": 0.7 } },
+    { "type": "noise", "color": "pink", "gain": 0.015,
+      "filter": { "type": "bandpass", "freq": 1200, "q": 0.5 } }
+  ],
+  "seq": [
+    { "t": 0.0, "dur": 0.5, "freq": 110, "wave": "triangle", "gain": 0.3, "filter": {"type":"lowpass","freq":300,"q":0.7}, "env": {"a":0.012,"d":0.35,"s":0.0,"r":0.16} },
+    { "t": 0.5, "dur": 0.5, "freq": 110, "wave": "triangle", "gain": 0.3, "filter": {"type":"lowpass","freq":300,"q":0.7}, "env": {"a":0.012,"d":0.35,"s":0.0,"r":0.16} },
+    { "t": 1.0, "dur": 0.5, "freq": 87,  "wave": "triangle", "gain": 0.3, "filter": {"type":"lowpass","freq":300,"q":0.7}, "env": {"a":0.012,"d":0.35,"s":0.0,"r":0.16} },
+    { "t": 1.5, "dur": 0.5, "freq": 98,  "wave": "triangle", "gain": 0.3, "filter": {"type":"lowpass","freq":300,"q":0.7}, "env": {"a":0.012,"d":0.35,"s":0.0,"r":0.16} },
+
+    { "t": 0.0,   "dur": 0.4, "freq": 440, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+    { "t": 0.375, "dur": 0.4, "freq": 523, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+    { "t": 0.75,  "dur": 0.4, "freq": 659, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+    { "t": 1.125, "dur": 0.4, "freq": 587, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+    { "t": 1.5,   "dur": 0.4, "freq": 523, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+    { "t": 1.875, "dur": 0.4, "freq": 440, "wave": "triangle", "gain": 0.24, "filter": {"type":"lowpass","freq":1400,"q":0.6}, "env": {"a":0.004,"d":0.3,"s":0.0,"r":0.14} },
+
+    { "t": 0.0,   "dur": 0.36, "freq": 880,  "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} },
+    { "t": 0.375, "dur": 0.36, "freq": 1046, "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} },
+    { "t": 0.75,  "dur": 0.36, "freq": 1318, "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} },
+    { "t": 1.125, "dur": 0.36, "freq": 1174, "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} },
+    { "t": 1.5,   "dur": 0.36, "freq": 1046, "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} },
+    { "t": 1.875, "dur": 0.36, "freq": 880,  "wave": "sine", "gain": 0.05, "env": {"a":0.004,"d":0.24,"s":0.0,"r":0.1} }
+  ]
+}
