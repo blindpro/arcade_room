@@ -4,11 +4,11 @@
 content.outgoing = (() => {
   const K = () => content.constants
 
-  const ZONE_TARGETS = {
+  const ZONE_TARGETS = () => ({
     L: {x: -0.65, y: K().DETONATION_Y},
     C: {x:  0.00, y: K().DETONATION_Y},
     R: {x:  0.65, y: K().DETONATION_Y},
-  }
+  })
 
   const list = []
 
@@ -31,7 +31,7 @@ content.outgoing = (() => {
   function clear() { list.length = 0 }
   function count() { return list.length }
   function getAll() { return list }
-  function getZoneTarget(batteryId) { return ZONE_TARGETS[batteryId] || ZONE_TARGETS.C }
+  function getZoneTarget(batteryId) { const z = ZONE_TARGETS(); return z[batteryId] || z.C }
 
   return {spawn, tick, clear, count, getAll, getZoneTarget}
 })()

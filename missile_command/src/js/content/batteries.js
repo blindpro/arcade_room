@@ -1,11 +1,11 @@
 content.batteries = (() => {
   const K = () => content.constants
 
-  const LOCK_ZONES = {
+  const LOCK_ZONES = () => ({
     L: {pitch: 180, x: -0.65, y: K().DETONATION_Y},
     C: {pitch: 240, x:  0.00, y: K().DETONATION_Y},
     R: {pitch: 320, x:  0.65, y: K().DETONATION_Y},
-  }
+  })
 
   const list = []
 
@@ -15,7 +15,8 @@ content.batteries = (() => {
     const positions = content.world.BATTERY_POSITIONS
     for (let i = 0; i < positions.length; i++) {
       const p = positions[i]
-      const z = LOCK_ZONES[p.id] || LOCK_ZONES.C
+      const zones = LOCK_ZONES()
+      const z = zones[p.id] || zones.C
       list.push({
         index: i,
         id: p.id,
