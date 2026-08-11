@@ -1,0 +1,106 @@
+/* PIPE game HUD + a visual tunnel (aria-hidden; the audio + announcements are
+   the real interface). Kept readable for sighted / low-vision players: each
+   upcoming ring's opening plots as a horizontal bar at its lane offset (left,
+   width in lanes), the target ring highlighted, bonus items as dots, and a
+   marker for you. Distances read bottom-up like the view down the pipe. */
+.a-game {
+  align-items: center;
+  text-align: center;
+}
+  .a-game--hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1.4em;
+    justify-content: center;
+    font-size: 1.05em;
+    margin-bottom: 1.4rem;
+  }
+    .a-game--stat b { color: #ffd479; }
+
+  .a-game--pipe {
+    position: relative;
+    width: 24em;
+    max-width: 92vw;
+    height: 16em;
+    margin: 0 auto;
+    border-radius: 14px;
+    background: linear-gradient(to top, rgba(120, 120, 130, 0.2), rgba(190, 190, 200, 0.06));
+    border: 2px solid rgba(255, 255, 255, 0.18);
+    overflow: hidden;
+  }
+  .a-game--bar {
+    position: absolute;
+    height: 0.55em;
+    margin: -0.275em 0 0 0; /* bar sits centred on its left/bottom anchor */
+    border-radius: 3px;
+    background: #ffd479;
+    box-shadow: 0 0 10px rgba(255, 212, 121, 0.7);
+    transition: opacity 60ms linear;
+  }
+    .a-game--bar-target {
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.95);
+      outline: 2px solid #ffd479;
+    }
+  .a-game--dot {
+    position: absolute;
+    width: 0.7em;
+    height: 0.7em;
+    margin: -0.35em 0 0 -0.35em; /* centre on its left/bottom anchor */
+    border-radius: 50%;
+    background: #b6ff8c;
+    box-shadow: 0 0 10px rgba(182, 255, 140, 0.85);
+    transition: opacity 60ms linear;
+  }
+  .a-game--dot-player {
+    width: 0.9em;
+    height: 0.9em;
+    margin: -0.45em 0 0 -0.45em;
+    background: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+  }
+
+/* Help / lists */
+.a-help--text {
+  max-width: 44em;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+.a-help--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  max-width: 44em;
+  text-align: left;
+}
+  .a-help--list li {
+    margin: 0.4em 0;
+    line-height: 1.45;
+  }
+  .a-help--list kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    font-family: inherit;
+  }
+
+/* High scores */
+.a-highscores--list {
+  list-style: none;
+  margin: 0.5rem auto 1rem;
+  padding: 0;
+  max-width: 40em;
+  text-align: left;
+}
+  .a-highscores--entry,
+  .a-highscores--empty {
+    margin: 0.3em 0;
+    padding: 0.2em 0;
+  }
+
+/* Game over online status */
+.a-gameover--online-status[data-state="ok"] { color: #5ad17a; }
+.a-gameover--online-status[data-state="error"] { color: #ff8c8c; }
+.a-gameover--online-link { color: #ffd479; }

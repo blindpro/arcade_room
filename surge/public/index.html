@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="doc.title">Surge</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <!-- Screen-reader announce regions -->
+      <div class="a-app--announce u-screenReader" aria-live="polite" aria-atomic="true"></div>
+      <div class="a-app--announce-assertive u-screenReader" aria-live="assertive" aria-atomic="true"></div>
+
+      <!-- Game -->
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <div class="a-game--hud">
+            <span class="a-game--stat"><span data-i18n="hud.score">Score</span>: <b class="a-game--score-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.dist">Distance</span>: <b class="a-game--dist-value">0m</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.hp">Health</span>: <b class="a-game--hp-value">100/100</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.weapon">Weapon</span>: <b class="a-game--weapon-value">Pistol</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.mag">Ammo</span>: <b class="a-game--mag-value">12/12</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.item">Item</span>: <b class="a-game--item-value">Medkit ×2</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.env">World</span>: <b class="a-game--env-value">City</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.coins">Coins</span>: <b class="a-game--coins-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.speed">Speed</span>: <b class="a-game--speed-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.level">Level</span>: <b class="a-game--level-value">1</b></span>
+            <span class="a-game--stat a-game--mode-stat"><span data-i18n="hud.mode">Mode</span>: <b class="a-game--mode-value">Practice</b></span>
+            <span class="a-game--stat a-game--time-stat"><span data-i18n="hud.time">Time</span>: <b class="a-game--time-value"></b></span>
+          </div>
+          <div class="a-game--powerups">
+            <span class="a-game--power a-game--shield" data-i18n="ann.shieldOn" hidden>Shield</span>
+            <span class="a-game--power a-game--boost" data-i18n="ann.boostOn" hidden>Boost</span>
+            <span class="a-game--power a-game--overdrive" data-i18n="ann.overdriveOn" hidden>Overdrive</span>
+            <span class="a-game--power a-game--brake" data-i18n="ann.brakeOn" hidden>Brake</span>
+          </div>
+          <div class="a-game--hp-track"><span class="a-game--hp-bar"></span></div>
+          <div class="a-game--lane" aria-hidden="true"></div>
+          <p class="a-game--item-desc" aria-live="polite"></p>
+        </section>
+      </div>
+
+      <!-- Pause -->
+      <div class="a-app--screen a-app--pause">
+        <section class="c-screen c-menu a-pause" tabindex="-1" data-i18n-attr="aria-label:pause.aria">
+          <h1 class="c-menu--title" data-i18n="pause.title">Paused</h1>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="resume" data-i18n="pause.resume">Resume</button></li>
+            <li><button class="c-menu--button" data-action="restart" data-i18n="pause.restart">Restart run</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="pause.menu">Main menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Game over -->
+      <div class="a-app--screen a-app--gameover">
+        <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
+          <h1 class="c-menu--title" data-i18n="gameover.title">The run is over</h1>
+          <p class="c-menu--subtitle a-gameover--score">Score: 0 points</p>
+          <p class="c-menu--subtitle a-gameover--dist">0 meters</p>
+          <p class="c-menu--subtitle a-gameover--stats"></p>
+          <p class="c-menu--subtitle a-gameover--earned"></p>
+          <p class="c-menu--subtitle a-gameover--best" hidden></p>
+          <div class="a-gameover--unlocks"></div>
+          <p class="c-menu--subtitle a-gameover--rank-msg" data-i18n="gameover.subtitle" hidden>Enter your name to save your score.</p>
+          <form class="a-gameover--form">
+            <ul class="c-menu--list">
+              <li>
+                <input class="c-menu--button a-gameover--name" type="text" maxlength="24"
+                       autocomplete="off" data-i18n-attr="aria-label:gameover.name;placeholder:gameover.name" />
+              </li>
+              <li><button class="c-menu--button a-gameover--submit" type="submit" data-i18n="gameover.save">Save score</button></li>
+            </ul>
+          </form>
+          <p class="a-gameover--online-status" aria-live="polite" hidden></p>
+          <p><a class="a-gameover--online-link" href="#" target="_blank" rel="noopener" hidden></a></p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="continue" data-i18n="gameover.continue">Continue</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- How to play -->
+      <div class="a-app--screen a-app--help">
+        <section class="c-screen c-menu a-help" tabindex="-1" data-i18n-attr="aria-label:help.aria">
+          <h1 class="c-menu--title" data-i18n="help.title">How to play</h1>
+          <p class="c-menu--subtitle" data-i18n="help.subtitle">Run, jump, shoot, collect. Survive by ear.</p>
+          <p class="a-help--text" data-i18n="help.intro"></p>
+          <ul class="a-help--list">
+            <li data-i18n-html="help.h.steer"></li>
+            <li data-i18n-html="help.h.jump"></li>
+            <li data-i18n-html="help.h.fire"></li>
+            <li data-i18n-html="help.h.reload"></li>
+            <li data-i18n-html="help.h.items"></li>
+            <li data-i18n-html="help.h.fences"></li>
+            <li data-i18n-html="help.h.worlds"></li>
+            <li data-i18n-html="help.h.status"></li>
+            <li data-i18n-html="help.h.pause"></li>
+          </ul>
+          <p class="a-help--text" data-i18n="help.audio"></p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="help.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- High scores -->
+      <div class="a-app--screen a-app--highscores">
+        <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
+          <h1 class="c-menu--title" data-i18n="highscores.title">High scores</h1>
+          <p class="c-menu--subtitle" data-i18n="highscores.subtitle">Your best runs on this device.</p>
+          <ul class="a-highscores--list"></ul>
+          <p><a class="a-highscores--online" href="#" target="_blank" rel="noopener" data-i18n="online.viewBoard">View the leaderboard</a></p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Learn the sounds -->
+      <div class="a-app--screen a-app--learn">
+        <section class="c-screen c-menu a-learn" tabindex="-1" data-i18n-attr="aria-label:learn.aria">
+          <h1 class="c-menu--title" data-i18n="learn.title">Learn the sounds</h1>
+          <p class="c-menu--subtitle" data-i18n="learn.subtitle">Play each cue on its own.</p>
+          <ul class="c-menu--list a-learn--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="learn.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Stereo test -->
+      <div class="a-app--screen a-app--test">
+        <section class="c-screen c-menu a-test" tabindex="-1" data-i18n-attr="aria-label:test.aria">
+          <h1 class="c-menu--title" data-i18n="test.title">Stereo audio test</h1>
+          <p class="c-menu--subtitle" data-i18n="test.subtitle">Confirm the panning.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-dir="w" data-i18n="test.left">Play left</button></li>
+            <li><button class="c-menu--button" data-dir="c" data-i18n="test.centre">Play centre</button></li>
+            <li><button class="c-menu--button" data-dir="e" data-i18n="test.right">Play right</button></li>
+            <li><button class="c-menu--button" data-dir="sweep" data-i18n="test.sweep">Sweep left · centre · right</button></li>
+            <li><button class="c-menu--button" data-dir="ring" data-i18n="test.ring">Threat left · centre · right · centre</button></li>
+            <li><button class="c-menu--button" data-dir="ambience" data-i18n="test.ambience">City ambience (preview)</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="test.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Language -->
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Shop -->
+      <div class="a-app--screen a-app--shop">
+        <section class="c-screen c-menu a-shop" tabindex="-1" data-i18n-attr="aria-label:shop.aria">
+          <h1 class="c-menu--title" data-i18n="shop.title">Shop</h1>
+          <p class="c-menu--subtitle" data-i18n="shop.subtitle">Spend your coins, gems, cores and tokens.</p>
+          <p class="c-menu--subtitle a-shop--balance"></p>
+          <p class="a-shop--status" aria-live="polite" hidden></p>
+          <ul class="a-shop--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="shop.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Achievements -->
+      <div class="a-app--screen a-app--achievements">
+        <section class="c-screen c-menu a-achievements" tabindex="-1" data-i18n-attr="aria-label:ach.aria">
+          <h1 class="c-menu--title" data-i18n="ach.title">Achievements</h1>
+          <p class="c-menu--subtitle" data-i18n="ach.subtitle">Goals that earn you currency.</p>
+          <ul class="a-achievements--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="ach.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Daily missions -->
+      <div class="a-app--screen a-app--dailies">
+        <section class="c-screen c-menu a-dailies" tabindex="-1" data-i18n-attr="aria-label:daily.aria">
+          <h1 class="c-menu--title" data-i18n="daily.title">Daily missions</h1>
+          <p class="c-menu--subtitle" data-i18n="daily.subtitle">Three missions a day, tokens for rewards.</p>
+          <ul class="a-dailies--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="daily.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Codex -->
+      <div class="a-app--screen a-app--codex">
+        <section class="c-screen c-menu a-codex" tabindex="-1" data-i18n-attr="aria-label:codex.aria">
+          <h1 class="c-menu--title" data-i18n="codex.title">Codex</h1>
+          <p class="c-menu--subtitle" data-i18n="codex.subtitle">Every world, hazard, enemy, weapon and item in SURGE.</p>
+          <div class="a-codex--tabs" role="tablist">
+            <button class="c-menu--button a-codex--tab" data-cx="worlds" role="tab" data-i18n="codex.tab.worlds">Worlds</button>
+            <button class="c-menu--button a-codex--tab" data-cx="obstacles" role="tab" data-i18n="codex.tab.obstacles">Obstacles</button>
+            <button class="c-menu--button a-codex--tab" data-cx="enemies" role="tab" data-i18n="codex.tab.enemies">Enemies</button>
+            <button class="c-menu--button a-codex--tab" data-cx="weapons" role="tab" data-i18n="codex.tab.weapons">Weapons</button>
+            <button class="c-menu--button a-codex--tab" data-cx="items" role="tab" data-i18n="codex.tab.items">Items</button>
+          </div>
+          <ul class="a-codex--list" role="tabpanel"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="codex.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Main menu -->
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="menu.title">Surge</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">An audio-first endless runner.</p>
+          <p class="a-menu--profile"></p>
+          <ul class="c-menu--list a-menu--modes">
+            <li>
+              <button class="c-menu--button" data-mode="practice">
+                <span data-i18n="menu.practice">Practice</span>
+                <small class="c-menu--desc" data-i18n="mode.practice.desc"></small>
+              </button>
+            </li>
+            <li>
+              <button class="c-menu--button" data-mode="sprint">
+                <span data-i18n="menu.sprint">Sprint</span>
+                <small class="c-menu--desc" data-i18n="mode.sprint.desc"></small>
+              </button>
+            </li>
+            <li>
+              <button class="c-menu--button" data-mode="endless">
+                <span data-i18n="menu.endless">Endless</span>
+                <small class="c-menu--desc" data-i18n="mode.endless.desc"></small>
+              </button>
+            </li>
+            <li>
+              <button class="c-menu--button" data-mode="adventure">
+                <span data-i18n="menu.adventure">Adventure</span>
+                <small class="c-menu--desc" data-i18n="mode.adventure.desc"></small>
+              </button>
+            </li>
+          </ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="shop" data-i18n="menu.shop">Shop</button></li>
+            <li><button class="c-menu--button" data-action="achievements" data-i18n="menu.achievements">Achievements</button></li>
+            <li><button class="c-menu--button" data-action="dailies" data-i18n="menu.dailies">Daily missions</button></li>
+            <li><button class="c-menu--button" data-action="codex" data-i18n="menu.codex">Codex</button></li>
+            <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">How to play</button></li>
+            <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the sounds</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="menu.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="language.button">Language</button></li>
+            <li><button class="c-menu--button" data-action="quit" data-i18n="menu.quit">Return to Games List</button></li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>
