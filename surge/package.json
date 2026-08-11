@@ -1,0 +1,23 @@
+{
+  "name": "surge",
+  "version": "1.0.0",
+  "description": "SURGE - an audio-first endless runner. Run forward down a five-lane road; jump pits, lava and fire; dodge cars and helicopters; EMP fences; dive into manholes; shoot enemies; collect coins, gems and cores across five worlds and a campaign, with achievements, dailies and a shop.",
+  "license": "Unlicense",
+  "private": true,
+  "devDependencies": {
+    "gulp": "^5.0.1",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-footer": "^2.1.0",
+    "gulp-header": "^2.0.9",
+    "gulp-if": "^3.0.0",
+    "gulp-iife": "^0.4.0",
+    "gulp-rename": "^2.1.0",
+    "gulp-serve": "^1.4.0",
+    "gulp-uglify-es": "^3.0.0",
+    "gulp-zip": "^5.1.0",
+    "merge-stream": "^2.0.0",
+    "syngen": "^2.0.0-beta.3",
+    "yargs": "^18.0.0"
+  }
+}

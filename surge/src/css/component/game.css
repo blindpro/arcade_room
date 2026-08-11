@@ -1,0 +1,326 @@
+/* SURGE game HUD + a visual lane (aria-hidden; the audio + announcements are
+   the real interface). Kept readable for sighted / low-vision players: an
+   hp bar, the active powerups, and a perspective strip of the road ahead —
+   obstacles and enemies as lane-width bars, pickups as dots, you at the
+   bottom. Distance reads bottom-up like the view down the road. */
+.a-game {
+  align-items: center;
+  text-align: center;
+}
+  .a-game--hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1.2em;
+    justify-content: center;
+    font-size: 1em;
+    margin-bottom: 0.8rem;
+    max-width: 56em;
+  }
+    .a-game--stat b { color: #ffd479; }
+    .a-game--env-value { text-transform: capitalize; }
+    .a-game--mode-stat,
+    .a-game--time-stat { display: none; }
+    .a-game--mode-stat.is-visible,
+    .a-game--time-stat.is-visible { display: inline-block; }
+
+  .a-game--powerups {
+    display: flex;
+    gap: 0.6em;
+    justify-content: center;
+    margin-bottom: 0.5rem;
+    min-height: 1.4em;
+  }
+    .a-game--power {
+      border-radius: 999px;
+      font-size: 0.85em;
+      letter-spacing: 0.08em;
+      padding: 0.15em 0.9em;
+      text-transform: uppercase;
+    }
+    .a-game--shield { background: rgba(125, 200, 255, 0.25); border: 1px solid #7dc8ff; color: #bde6ff; }
+    .a-game--boost { background: rgba(255, 178, 107, 0.25); border: 1px solid #ffb26b; color: #ffe1c0; }
+    .a-game--overdrive { background: rgba(126, 242, 255, 0.22); border: 1px solid #7ef2ff; color: #c8f9ff; }
+    .a-game--brake { background: rgba(199, 141, 255, 0.22); border: 1px solid #c78dff; color: #e6caff; }
+
+  .a-game--hp-track {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 999px;
+    height: 0.55em;
+    margin: 0 auto 1rem;
+    overflow: hidden;
+    width: min(30em, 80vw);
+  }
+    .a-game--hp-bar {
+      background: linear-gradient(to right, #ff5d5d, #ffd479);
+      border-radius: 999px;
+      display: block;
+      height: 100%;
+      transition: width 120ms linear;
+      width: 100%;
+    }
+
+  .a-game--lane {
+    position: relative;
+    width: 22em;
+    max-width: 92vw;
+    height: 20em;
+    margin: 0 auto;
+    border-radius: 14px;
+    background:
+      linear-gradient(to right, rgba(120, 120, 130, 0.18) 0, rgba(120, 120, 130, 0) 10%, rgba(120, 120, 130, 0) 90%, rgba(120, 120, 130, 0.18) 100%),
+      linear-gradient(to top, rgba(190, 190, 200, 0.12), rgba(80, 80, 90, 0.02));
+    border: 2px solid rgba(255, 255, 255, 0.16);
+    overflow: hidden;
+  }
+  .a-game--viz-item {
+    position: absolute;
+    height: 0.45em;
+    margin: -0.225em 0 0 -1.5%;
+    border-radius: 3px;
+    box-shadow: 0 0 10px currentColor;
+    transition: opacity 60ms linear;
+  }
+    .a-game--viz-obs { filter: saturate(1.1); }
+    .a-game--viz-enemy { outline: 1px solid rgba(255, 93, 93, 0.7); }
+    .a-game--viz-pickup {
+      width: 0.7em !important;
+      height: 0.7em;
+      margin: -0.35em 0 0 -0.35em;
+      border-radius: 50%;
+    }
+    .a-game--viz-player {
+      height: 0.8em;
+      margin: -0.4em 0 0 -0.4em;
+      border-radius: 50%;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+    }
+
+  .a-game--item-desc {
+    color: #9adc8e;
+    font-size: 0.95em;
+    margin-top: 0.8rem;
+    min-height: 1.3em;
+    opacity: 0;
+    transition: opacity 200ms ease;
+  }
+    .a-game--item-desc.is-visible { opacity: 1; }
+
+/* Help / lists */
+.a-help--text {
+  max-width: 44em;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+.a-help--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  max-width: 44em;
+  text-align: left;
+}
+  .a-help--list li {
+    margin: 0.4em 0;
+    line-height: 1.45;
+  }
+  .a-help--list kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    font-family: inherit;
+  }
+
+/* High scores */
+.a-highscores--list {
+  list-style: none;
+  margin: 0.5rem auto 1rem;
+  padding: 0;
+  max-width: 40em;
+  text-align: left;
+}
+  .a-highscores--entry,
+  .a-highscores--empty {
+    margin: 0.3em 0;
+    padding: 0.2em 0;
+  }
+  .a-highscores--online { color: #ffd479; }
+
+/* Game over */
+.a-gameover--unlocks {
+  color: #ffd479;
+  font-size: 0.95em;
+  list-style: none;
+}
+  .a-gameover--unlocks ul {
+    list-style: none;
+    margin: 0 auto;
+    padding: 0;
+  }
+  .a-gameover--unlocks li { margin: 0.2em 0; }
+  .a-gameover--hint {
+    font-size: 0.85em;
+    margin-top: 0.4rem;
+    opacity: 0.8;
+  }
+.a-gameover--best { color: #5ad17a; }
+.a-gameover--online-status[data-state="ok"] { color: #5ad17a; }
+.a-gameover--online-status[data-state="error"] { color: #ff8c8c; }
+.a-gameover--online-link { color: #ffd479; }
+
+/* Shop */
+.a-shop--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  width: min(34em, 94vw);
+  text-align: left;
+}
+  .a-shop--item {
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.14);
+    border-radius: 10px;
+    margin: 0.5em 0;
+    padding: 0.7em 1em;
+  }
+  .a-shop--item-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+  }
+  .a-shop--item-name { font-weight: bold; color: #ffd479; }
+  .a-shop--tag {
+    border: 1px solid #5ad17a;
+    border-radius: 999px;
+    color: #5ad17a;
+    font-size: 0.8em;
+    padding: 0.05em 0.7em;
+  }
+  .a-shop--item-desc {
+    margin: 0.3em 0;
+    opacity: 0.85;
+  }
+  .a-shop--item-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1em;
+    margin-top: 0.4em;
+  }
+  .a-shop--item-row .c-menu--button {
+    padding: 0.35em 1.2em;
+    width: auto;
+  }
+  .a-shop--price { color: #7ef2ff; }
+  .a-shop--status.is-error { color: #ff8c8c; }
+
+/* Achievements + dailies */
+.a-achievements--list,
+.a-dailies--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  width: min(38em, 94vw);
+  text-align: left;
+}
+  .a-achievements--entry,
+  .a-dailies--entry {
+    align-items: center;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1em;
+    justify-content: space-between;
+    margin: 0.4em 0;
+    padding: 0.5em 0.9em;
+  }
+  .a-achievements--entry.is-locked { opacity: 0.55; }
+  .a-achievements--name,
+  .a-dailies--name { font-weight: bold; }
+  .a-achievements--progress,
+  .a-dailies--progress {
+    color: #9adc8e;
+    font-size: 0.9em;
+  }
+  .a-achievements--reward,
+  .a-dailies--reward {
+    color: #7ef2ff;
+    font-size: 0.9em;
+  }
+  .a-achievements--entry .c-menu--button,
+  .a-dailies--entry .c-menu--button {
+    font-size: 0.85em;
+    padding: 0.3em 1.1em;
+    width: auto;
+  }
+
+/* Menu mode cards */
+.a-menu--modes .c-menu--button {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15em;
+}
+  .c-menu--desc {
+    display: block;
+    font-size: 0.78em;
+    font-weight: normal;
+    opacity: 0.75;
+  }
+.a-menu--profile {
+  color: #7ef2ff;
+  font-size: 0.95em;
+  letter-spacing: 0.08em;
+  margin-top: 0.6rem;
+}
+
+/* Codex */
+.a-codex--tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5em;
+  justify-content: center;
+  margin: 0.6rem auto 0.8rem;
+  max-width: 44em;
+}
+  .a-codex--tab {
+    padding: 0.4em 1.1em;
+    width: auto;
+    opacity: 0.7;
+  }
+  .a-codex--tab.is-active {
+    opacity: 1;
+    outline: 1px solid #7ef2ff;
+  }
+.a-codex--list {
+  list-style: none;
+  margin: 0 auto 1rem;
+  padding: 0;
+  width: min(42em, 94vw);
+  text-align: left;
+}
+  .a-codex--entry {
+    align-items: baseline;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.3em 1em;
+    justify-content: space-between;
+    margin: 0.4em 0;
+    padding: 0.5em 0.9em;
+  }
+  .a-codex--name {
+    font-weight: bold;
+    text-transform: capitalize;
+  }
+  .a-codex--detail {
+    color: rgba(255, 255, 255, 0.75);
+    font-size: 0.9em;
+    line-height: 1.45;
+    text-align: right;
+    flex: 1 1 22em;
+  }
