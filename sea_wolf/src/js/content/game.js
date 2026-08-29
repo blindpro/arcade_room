@@ -3,8 +3,18 @@
 // You drive a submarine around a full 360 degree ocean. Convoys cross it on
 // their own courses; you hear them, work out where they are going, and get the
 // boat into a firing position before they are past. Speed is noise, so the
-// intercept costs you stealth. Escorts home on the noise, and once they are
-// overhead you go deep and time the depth charges.
+// intercept costs you stealth. Escorts home on the noise and then fight you
+// with torpedoes of their own.
+//
+// Depth is a continuous axis with four ordered stops (0, 100, 200, 300 metres)
+// that the boat crawls between. An escort's torpedo runs at the depth you were
+// at when it was fired, so changing level is the dodge — but at 21 m/s down
+// and 15 m/s up you have to commit to it long before the fish arrives, and
+// everything you give up down there (the tubes, the battery, your speed) is
+// the price of the dodge.
+//
+// Steel also meets steel: above SHIP_DRAFT the boat and a ship occupy the same
+// water, and running into one damages both of you.
 //
 // Geometry: world coordinates, +x east and +y north. `heading` is degrees
 // clockwise from north (0 = north), so the bow unit vector is
@@ -33,8 +43,11 @@ content.game = (() => {
     rudder: 0,          // -1..1 held
     periscope: 0,       // degrees relative to the bow
 
-    depth: 'periscope', // periscope | diving | deep | surfacing
-    depthTimer: 0,
+    // Depth in metres below the surface, and the level the planes are set
+    // for. `depth` chases `depthTarget` at DIVE_RATE/RISE_RATE.
+    depth: 0,
+    depthTarget: 0,
+    depthSettled: true,
     battery: 0,
     hull: 0,
     noise: 0,           // 0..1 how well the escorts have you
@@ -54,7 +67,7 @@ content.game = (() => {
 
   let contacts = []
   let torpedoes = []
-  let charges = []
+  let enemyTorpedoes = []
   let nextId = 1
   let convoyTimer = 0
   let warned = new Set()
@@ -94,9 +107,24 @@ content.game = (() => {
     }
   }
 
+  // How far under we are, 0..1. Speed, noise, battery and the muffling of the
+  // passive set all read off this rather than off a discrete level, so the
+  // trip between two levels is felt the whole way down.
+  function depthFrac() { return K().depthFraction(state.depth) }
+
+  // Periscope depth: the tubes work, the battery charges, and a keel can find
+  // you.
+  function atPeriscope() { return state.depth <= K().PERISCOPE_BAND }
+
   function maxSpeed() {
     const k = K()
-    return state.depth === 'periscope' ? k.SPEED_MAX_SHALLOW : k.SPEED_MAX_DEEP
+    return k.lerp(k.SPEED_MAX_SHALLOW, k.SPEED_MAX_DEEP, depthFrac())
+  }
+
+  // Seconds for the boat to get from `from` to `to`. Down is faster than up.
+  function travelTime(from, to) {
+    const k = K()
+    return to > from ? (to - from) / k.DIVE_RATE : (from - to) / k.RISE_RATE
   }
 
   // ---- spawning ---------------------------------------------------------------
@@ -159,8 +187,10 @@ content.game = (() => {
         vx: Math.sin(ch) * speed,
         vy: Math.cos(ch) * speed,
         alive: true,
+        hull: spec.hull,
         hunting: false,
-        chargeTimer: 0,
+        fireTimer: 0,
+        ramCooldown: 0,
         nextBeep: Math.random() * 0.5,
       })
     }
@@ -172,14 +202,16 @@ content.game = (() => {
 
   function updateHunt(delta) {
     const k = K()
-    const deep = state.depth === 'deep'
+    // Both halves of the noise economy now scale smoothly with depth, so
+    // dropping to 100 helps a little and dropping to 300 helps a lot.
+    const df = depthFrac()
 
     // Speed is the constant term in the noise economy: a boat at flank is
     // loud all the time, which is the price of running an intercept.
     const speedFrac = maxSpeed() > 0 ? k.clamp(state.speed / maxSpeed(), 0, 1) : 0
     const made = Math.pow(speedFrac, k.SPEED_NOISE_POWER) * k.SPEED_NOISE *
-      (deep ? k.DEEP_NOISE_MULT : 1) * delta
-    const shed = k.NOISE_DECAY * (deep ? k.NOISE_DECAY_DEEP_MULT : 1) * delta
+      k.lerp(1, k.DEEP_NOISE_MULT, df) * delta
+    const shed = k.NOISE_DECAY * k.lerp(1, k.NOISE_DECAY_DEEP_MULT, df) * delta
     state.noise = k.clamp(state.noise + made - shed, 0, 1)
 
     const wasHunted = state.hunted
@@ -198,17 +230,21 @@ content.game = (() => {
         // Turn toward the boat and open up. The escort was screening the
         // convoy at convoy pace; now it sprints, so being found is audible as
         // a change of pace as well as a swing across the field.
+        //
+        // It runs in to torpedo range and then holds off: an escort wants a
+        // firing solution, not a collision, so it sheers away rather than
+        // sitting on top of you. If it does end up alongside that is your
+        // doing, and updateCollisions will charge you both for it.
         const r = rangeTo(c) || 1
-        c.vx = ((state.x - c.x) / r) * c.sprint
-        c.vy = ((state.y - c.y) / r) * c.sprint
+        const away = r < k.ESCORT_FIRE_MIN ? -1 : 1
+        c.vx = ((state.x - c.x) / r) * c.sprint * away
+        c.vy = ((state.y - c.y) / r) * c.sprint * away
         if (!wasHunting) E().emit('escort-turn', {local: localOf(c.x, c.y), range: r})
 
-        if (r < k.ESCORT_ATTACK_RANGE) {
-          c.chargeTimer -= delta
-          if (c.chargeTimer <= 0) {
-            c.chargeTimer = k.CHARGE_INTERVAL
-            dropCharge(c)
-          }
+        c.fireTimer -= delta
+        if (c.fireTimer <= 0 && r >= k.ESCORT_FIRE_MIN && r <= k.ESCORT_FIRE_RANGE) {
+          c.fireTimer = k.ESCORT_FIRE_INTERVAL
+          escortFire(c)
         }
       } else if (wasHunting) {
         // Give up and resume the convoy's course.
@@ -219,56 +255,181 @@ content.game = (() => {
     }
   }
 
-  // A pattern lands near the boat but not on it. How wide it scatters depends
-  // on how well they have you, so a noisy boat gets tighter and tighter
-  // patterns until it goes quiet.
-  function dropCharge(escort) {
+  // ---- what the escorts shoot back with ---------------------------------------
+  // An escort solves the same lead problem the player does — where will the
+  // boat be when the fish gets there — scatters the answer by how well it has
+  // you, and launches. The fish is unguided and runs at the depth the boat is
+  // at RIGHT NOW, which is what makes changing level a real dodge.
+  function escortFire(escort) {
     const k = K()
-    const spread = k.CHARGE_SPREAD_LOOSE -
-      state.noise * (k.CHARGE_SPREAD_LOOSE - k.CHARGE_SPREAD_TIGHT)
-    charges.push({
+    const range = rangeTo(escort)
+
+    const bow = bowVector()
+    const bvx = bow.x * state.speed
+    const bvy = bow.y * state.speed
+    let flight = range / k.ENEMY_TORPEDO_SPEED
+    for (let i = 0; i < 2; i++) {
+      const lx = state.x + bvx * flight
+      const ly = state.y + bvy * flight
+      flight = Math.hypot(lx - escort.x, ly - escort.y) / k.ENEMY_TORPEDO_SPEED
+    }
+    const aimX = state.x + bvx * flight
+    const aimY = state.y + bvy * flight
+
+    // How firmly they hold you decides the scatter, so going quiet makes their
+    // shooting worse before it makes them give up altogether.
+    const grip = k.clamp((state.noise - k.LOSE_THRESHOLD) / (1 - k.LOSE_THRESHOLD), 0, 1)
+    const spread = k.lerp(k.ESCORT_AIM_ERROR, k.ESCORT_AIM_ERROR_MIN, grip)
+    // Their depth estimate is worse the deeper you are and the more loosely
+    // they hold you, so depth protects you twice: once passively, by making
+    // this guess bad, and once actively, when you change level after the fish
+    // is already in the water on the old number.
+    const depthErr = k.ESCORT_DEPTH_ERROR * k.depthFraction(state.depth) * k.lerp(1, 0.6, grip)
+    const setFor = k.clamp(state.depth + k.rand(-depthErr, depthErr), 0, k.MAX_DEPTH)
+    const course = deg(Math.atan2(aimX - escort.x, aimY - escort.y)) + k.rand(-spread, spread)
+    const ch = rad(course)
+
+    enemyTorpedoes.push({
       id: nextId++,
-      x: state.x + k.rand(-spread, spread),
-      y: state.y + k.rand(-spread, spread),
-      fuse: k.CHARGE_FALL_TIME,
+      x: escort.x,
+      y: escort.y,
+      ox: escort.x,
+      oy: escort.y,
+      vx: Math.sin(ch) * k.ENEMY_TORPEDO_SPEED,
+      vy: Math.cos(ch) * k.ENEMY_TORPEDO_SPEED,
+      depth: setFor,
+      life: k.ENEMY_TORPEDO_LIFE,
+      missed: false,
     })
-    E().emit('charge-splash', {local: localOf(escort.x, escort.y), range: rangeTo(escort)})
+
+    E().emit('escort-fire', {
+      local: localOf(escort.x, escort.y),
+      range,
+      flight,
+      depth: setFor,
+    })
   }
 
-  function updateCharges(delta) {
+  function updateEnemyTorpedoes(delta) {
     const k = K()
-    for (const ch of charges) {
-      ch.fuse -= delta
-      if (ch.fuse > 0) continue
-      ch.done = true
+    for (const t of enemyTorpedoes) {
+      // Same substepping as our own fish, for the same reason: at 105 m/s a
+      // whole frame is three hull-widths.
+      const steps = Math.max(1,
+        Math.ceil((k.ENEMY_TORPEDO_SPEED * delta) / (k.ENEMY_TORPEDO_HIT_RADIUS * 0.8)))
+      const dt = delta / steps
 
-      const dist = Math.hypot(ch.x - state.x, ch.y - state.y)
-      const prox = k.clamp(1 - dist / k.CHARGE_KILL_RADIUS, 0, 1)
-      const deep = state.depth === 'deep'
-      const damage = k.CHARGE_DAMAGE * prox * (deep ? k.DEEP_DAMAGE_MULT : 1)
+      for (let i = 0; i < steps && !t.done; i++) {
+        t.x += t.vx * dt
+        t.y += t.vy * dt
+        t.life -= dt
 
-      E().emit('charge-detonate', {
-        local: localOf(ch.x, ch.y),
-        distance: dist,
-        proximity: prox,
-        deep,
-        damage,
-      })
+        const flat = Math.hypot(t.x - state.x, t.y - state.y)
+        const armed = Math.hypot(t.x - t.ox, t.y - t.oy) >= k.ENEMY_TORPEDO_ARM
 
-      if (damage > 0.5) {
-        state.hull = Math.max(0, state.hull - damage)
-        E().emit('damage', {hull: state.hull, amount: damage})
-        if (state.hull <= 0) { beginGameOver('sunk'); return }
+        if (armed && flat <= k.ENEMY_TORPEDO_HIT_RADIUS) {
+          const vertical = Math.abs(t.depth - state.depth)
+          if (vertical <= k.ENEMY_TORPEDO_DEPTH_BAND) {
+            t.done = true
+            state.hull = Math.max(0, state.hull - k.ENEMY_TORPEDO_DAMAGE)
+            E().emit('enemy-hit', {
+              local: localOf(t.x, t.y),
+              damage: k.ENEMY_TORPEDO_DAMAGE,
+              hull: state.hull,
+            })
+            E().emit('damage', {hull: state.hull, amount: k.ENEMY_TORPEDO_DAMAGE})
+            if (state.hull <= 0) { beginGameOver('sunk'); return }
+          } else if (!t.missed) {
+            // It ran over or under. Say so — the whole point of paying for a
+            // dive is hearing that it bought you something.
+            t.missed = true
+            E().emit('torpedo-passed', {
+              local: localOf(t.x, t.y),
+              above: t.depth < state.depth,
+              separation: vertical,
+            })
+          }
+        }
+
+        if (t.life <= 0 && !t.done) {
+          t.done = true
+          E().emit('torpedo-spent', {local: localOf(t.x, t.y), hostile: true})
+        }
       }
     }
-    if (charges.some((c) => c.done)) charges = charges.filter((c) => !c.done)
+    if (enemyTorpedoes.some((t) => t.done)) enemyTorpedoes = enemyTorpedoes.filter((t) => !t.done)
+  }
+
+  // ---- ramming ----------------------------------------------------------------
+  // Only above SHIP_DRAFT: deeper than that the boat passes clean underneath
+  // everything. Both sides take damage, scaled by how hard they met, and both
+  // are shoved apart so a scrape does not become a grinding contact.
+  function updateCollisions(delta) {
+    const k = K()
+    const shallow = state.depth < k.SHIP_DRAFT
+    const bow = bowVector()
+
+    for (const c of contacts) {
+      if (c.ramCooldown > 0) c.ramCooldown = Math.max(0, c.ramCooldown - delta)
+      if (!shallow || !c.alive || c.ramCooldown > 0) continue
+
+      const dist = Math.hypot(c.x - state.x, c.y - state.y)
+      if (dist > k.COLLIDE_RADIUS) continue
+
+      const closing = Math.hypot(c.vx - bow.x * state.speed, c.vy - bow.y * state.speed)
+      const force = k.clamp(closing / 25, k.COLLIDE_MIN_MULT, 1)
+      const toShip = k.COLLIDE_DAMAGE_SHIP * force
+      const toBoat = k.COLLIDE_DAMAGE_SUB * force
+
+      c.ramCooldown = k.COLLIDE_COOLDOWN
+      c.hull -= toShip
+      state.hull = Math.max(0, state.hull - toBoat)
+      addNoise(k.COLLIDE_NOISE)
+
+      E().emit('collision', {
+        local: localOf(c.x, c.y),
+        type: c.type,
+        escort: c.escort,
+        force,
+        toShip,
+        toBoat,
+        hull: state.hull,
+      })
+      E().emit('damage', {hull: state.hull, amount: toBoat})
+
+      // Shove them apart so the next frame is not another collision.
+      const push = (k.COLLIDE_RADIUS + 6) - dist
+      if (dist > 0.001 && push > 0) {
+        c.x += ((c.x - state.x) / dist) * push
+        c.y += ((c.y - state.y) / dist) * push
+      }
+
+      if (c.hull <= 0) {
+        c.alive = false
+        state.tonnage += c.tonnage
+        state.sunk++
+        E().emit('hit', {
+          id: c.id,
+          local: localOf(c.x, c.y),
+          range: rangeTo(c),
+          type: c.type,
+          tonnage: c.tonnage,
+          total: state.tonnage,
+          escort: c.escort,
+          rammed: true,
+        })
+      }
+
+      if (state.hull <= 0) { beginGameOver('sunk'); return }
+    }
+    contacts = contacts.filter((c) => c.alive)
   }
 
   // ---- torpedoes --------------------------------------------------------------
   function fire() {
     const k = K()
     if (state.phase !== 'play') return false
-    if (state.depth !== 'periscope') { E().emit('fire-blocked', {reason: 'depth'}); return false }
+    if (!atPeriscope()) { E().emit('fire-blocked', {reason: 'depth'}); return false }
     if (state.reload > 0) { E().emit('fire-blocked', {reason: 'reload'}); return false }
     if (state.torpedoes <= 0) { E().emit('fire-blocked', {reason: 'empty'}); return false }
 
@@ -368,38 +529,59 @@ content.game = (() => {
   }
 
   // ---- depth ------------------------------------------------------------------
-  function setDepth(want) {
-    if (state.phase !== 'play') return
-    if (want === 'deep' && state.depth === 'periscope') {
-      state.depth = 'diving'
-      state.depthTimer = K().DIVE_TIME
-      E().emit('depth-change', {to: 'deep'})
-    } else if (want === 'periscope' && state.depth === 'deep') {
-      state.depth = 'surfacing'
-      state.depthTimer = K().DIVE_TIME
-      E().emit('depth-change', {to: 'periscope'})
-    }
+  // Page up and page down step between DEPTH_LEVELS. The order is commanded
+  // instantly and the boat then takes as long as it takes to get there, which
+  // is what makes depth a plan rather than a button.
+  function setDepthLevel(index) {
+    const k = K()
+    if (state.phase !== 'play') return false
+    const i = Math.round(k.clamp(index, 0, k.DEPTH_LEVELS.length - 1))
+    const want = k.DEPTH_LEVELS[i]
+    if (want === state.depthTarget) { E().emit('depth-limit', {depth: want}); return false }
+
+    const down = want > state.depthTarget
+    state.depthTarget = want
+    state.depthSettled = false
+    E().emit('depth-change', {
+      to: want,
+      from: state.depth,
+      down,
+      eta: travelTime(state.depth, want),
+    })
+    return true
   }
-  function toggleDepth() {
-    if (state.depth === 'periscope') setDepth('deep')
-    else if (state.depth === 'deep') setDepth('periscope')
+
+  // Steps from the COMMANDED level, so two quick presses on a dive queue up
+  // 200 metres rather than the second one being swallowed mid-descent.
+  function stepDepth(dir) {
+    if (state.phase !== 'play') return false
+    const k = K()
+    const i = k.DEPTH_LEVELS.indexOf(state.depthTarget)
+    const from = i >= 0 ? i : k.nearestLevel(state.depthTarget)
+    return setDepthLevel(from + (dir > 0 ? 1 : -1))
   }
 
   function updateDepth(delta) {
     const k = K()
-    if (state.depth === 'diving' || state.depth === 'surfacing') {
-      state.depthTimer -= delta
-      if (state.depthTimer <= 0) {
-        state.depth = state.depth === 'diving' ? 'deep' : 'periscope'
-        E().emit('depth-settled', {depth: state.depth})
-      }
+
+    if (state.depth < state.depthTarget) {
+      state.depth = Math.min(state.depthTarget, state.depth + k.DIVE_RATE * delta)
+    } else if (state.depth > state.depthTarget) {
+      state.depth = Math.max(state.depthTarget, state.depth - k.RISE_RATE * delta)
+    }
+    if (!state.depthSettled && state.depth === state.depthTarget) {
+      state.depthSettled = true
+      E().emit('depth-settled', {depth: state.depth})
     }
 
-    if (state.depth === 'deep' || state.depth === 'diving') {
-      state.battery = Math.max(0, state.battery - k.BATTERY_DRAIN * delta)
-      if (state.battery <= 0 && state.depth === 'deep') {
+    if (!atPeriscope()) {
+      // Deeper costs more: a fixed price for being under, plus a term that
+      // grows with depth.
+      const drain = k.BATTERY_DRAIN_BASE + k.BATTERY_DRAIN_DEPTH * depthFrac()
+      state.battery = Math.max(0, state.battery - drain * delta)
+      if (state.battery <= 0 && state.depthTarget > 0) {
         E().emit('battery-dead', {})
-        setDepth('periscope')
+        setDepthLevel(0)
       } else if (state.battery <= k.BATTERY_LOW && !batteryWarned) {
         batteryWarned = true
         E().emit('battery-low', {battery: state.battery})
@@ -464,8 +646,9 @@ content.game = (() => {
     state.rudder = 0
     state.periscope = 0
 
-    state.depth = 'periscope'
-    state.depthTimer = 0
+    state.depth = 0
+    state.depthTarget = 0
+    state.depthSettled = true
     state.battery = k.BATTERY_MAX
     state.hull = k.HULL_MAX
     state.noise = 0
@@ -484,7 +667,7 @@ content.game = (() => {
 
     contacts = []
     torpedoes = []
-    charges = []
+    enemyTorpedoes = []
     nextId = 1
     warned = new Set()
     batteryWarned = false
@@ -536,21 +719,14 @@ content.game = (() => {
       for (const c of contacts) {
         c.x += c.vx * delta
         c.y += c.vy * delta
-        // An escort that runs the boat down would otherwise sit on top of us
-        // and spin; hold it off at a small stand-off.
-        if (c.hunting) {
-          const r = rangeTo(c)
-          if (r < 60 && r > 0.001) {
-            c.x = state.x + ((c.x - state.x) / r) * 60
-            c.y = state.y + ((c.y - state.y) / r) * 60
-          }
-        }
       }
       contacts = contacts.filter((c) => rangeTo(c) < k.DESPAWN_RANGE)
 
       updateTorpedoes(delta)
       updateHunt(delta)
-      updateCharges(delta)
+      updateEnemyTorpedoes(delta)
+      if (state.phase !== 'play') return
+      updateCollisions(delta)
       if (state.phase !== 'play') return
 
       convoyTimer -= delta
@@ -575,7 +751,7 @@ content.game = (() => {
           local: localOf(c.x, c.y),
           range,
           escort: c.escort,
-          muffled: state.depth !== 'periscope',
+          muffled: depthFrac(),
         })
       }
 
@@ -586,10 +762,18 @@ content.game = (() => {
           .map((c) => ({id: c.id, local: localOf(c.x, c.y), range: rangeTo(c), voice: c.voice, escort: c.escort})),
         torpedoes: torpedoes.map((t) => ({
           id: t.id, local: localOf(t.x, t.y), range: Math.hypot(t.x - state.x, t.y - state.y),
-        })),
+          hostile: false,
+        })).concat(enemyTorpedoes.map((t) => ({
+          id: t.id, local: localOf(t.x, t.y), range: Math.hypot(t.x - state.x, t.y - state.y),
+          // How far off in depth it is running decides how muted the whine is:
+          // a fish set for your level is the one you need to hear clearly.
+          hostile: true,
+          offDepth: K().clamp(Math.abs(t.depth - state.depth) / K().MAX_DEPTH, 0, 1),
+        }))),
         speed: state.speed,
         maxSpeed: maxSpeed(),
         depth: state.depth,
+        depthFrac: depthFrac(),
         noise: state.noise,
       })
 
@@ -699,6 +883,9 @@ content.game = (() => {
       hull: Math.round(state.hull),
       battery: Math.round(state.battery),
       depth: state.depth,
+      depthTarget: state.depthTarget,
+      changingDepth: state.depth !== state.depthTarget,
+      atPeriscope: atPeriscope(),
       heading: state.heading,
       speed: state.speed,
       maxSpeed: maxSpeed(),
@@ -719,8 +906,8 @@ content.game = (() => {
     update,
     fire,
     ping,
-    setDepth,
-    toggleDepth,
+    setDepthLevel,
+    stepDepth,
     setRudder,
     nudgeThrottle,
     setPeriscope,
@@ -735,6 +922,9 @@ content.game = (() => {
     aimedContact,
     contactList,
     torpedoCount: () => torpedoes.length,
+    incoming: () => enemyTorpedoes.length,
+    getDepth: () => state.depth,
+    getDepthTarget: () => state.depthTarget,
     status,
   }
 })()

@@ -21,13 +21,16 @@
 //      so closing fast is what gets you found.
 //   2. the LEAD — a torpedo takes range/TORPEDO_SPEED to arrive and the target
 //      keeps moving, so you fire at where the ship will be.
+//   3. the EVASION — escorts shoot back with torpedoes of their own, aimed at
+//      the depth you were at when they fired. Changing depth is the dodge, and
+//      it is slow (see DIVE_RATE), so it is a decision you commit to early.
 content.constants = (() => {
   // ---- the boat -------------------------------------------------------------
   // Submarine handling: heavy, slow to answer the rudder, and it cannot turn
   // at all when stopped. Speeds are arcade, not realistic — a real boat would
   // take an hour to reach anything.
   const SPEED_MAX_SHALLOW = 18   // m/s at periscope depth
-  const SPEED_MAX_DEEP = 10      // m/s deep; running deep costs you the chase
+  const SPEED_MAX_DEEP = 10      // m/s at MAX_DEPTH; running deep costs the chase
   const ACCEL = 3.2              // m/s^2 toward the throttle's target speed
   const DECEL = 2.0              // m/s^2 when the throttle is below your speed
   const THROTTLE_STEP = 0.9      // throttle units/second while held
@@ -84,12 +87,28 @@ content.constants = (() => {
   const RELOAD_TIME = 3.5        // seconds between shots
 
   // ---- depth ----------------------------------------------------------------
-  const DIVE_TIME = 2.2
+  // Depth is a real axis now, not a toggle. Four ordered levels, and the boat
+  // travels between them at a fixed rate - a run from periscope depth to the
+  // cellar is the better part of fifteen seconds, and the same again coming
+  // back. That slowness is the point: an escort's torpedo is aimed at the
+  // depth you were at when it left the tube, so depth is how you dodge, but
+  // you have to start the dodge long before you are sure you need it.
+  const DEPTH_LEVELS = [0, 100, 200, 300]   // metres
+  const MAX_DEPTH = DEPTH_LEVELS[DEPTH_LEVELS.length - 1]
+  const DIVE_RATE = 21           // m/s going down
+  const RISE_RATE = 15           // m/s coming up; blowing tanks is the slow way
+  // Within this many metres of the surface the periscope is up: you can shoot,
+  // the battery charges, and a ship's keel can find you.
+  const PERISCOPE_BAND = 12
+  const SHIP_DRAFT = 45          // below this nothing on the surface can reach you
+
   const BATTERY_MAX = 100
-  const BATTERY_DRAIN = 4.0      // %/s while deep
+  // Drain is a fixed cost for being under plus a term that grows with depth,
+  // so sitting at 300 is much more expensive than sitting at 100.
+  const BATTERY_DRAIN_BASE = 0.8  // %/s below the periscope band
+  const BATTERY_DRAIN_DEPTH = 1.7 // %/s more, at MAX_DEPTH; a round trip to 300 is most of a full charge
   const BATTERY_CHARGE = 3.0     // %/s at periscope depth
   const BATTERY_LOW = 25
-  const DEEP_DAMAGE_MULT = 0.25
 
   // ---- active sonar ---------------------------------------------------------
   const SOUND_SPEED = 1500       // m/s; round-trip delay = 2 * range / this
@@ -115,13 +134,49 @@ content.constants = (() => {
   const HIT_NOISE = 0.30
   const HUNT_THRESHOLD = 0.5
   const LOSE_THRESHOLD = 0.24
-  const ESCORT_ATTACK_RANGE = 380
-  const CHARGE_INTERVAL = 3.4
-  const CHARGE_FALL_TIME = 2.6
-  const CHARGE_KILL_RADIUS = 120
-  const CHARGE_DAMAGE = 26
-  const CHARGE_SPREAD_LOOSE = 210
-  const CHARGE_SPREAD_TIGHT = 95
+  // ---- what the escorts shoot back with -------------------------------------
+  // Escorts fight the way you do: they run in and launch torpedoes. An escort
+  // torpedo is unguided - it leaves on a lead solution for where the boat will
+  // be, running at the depth the boat was at when it fired - so every one of
+  // them can be beaten by changing course, speed or depth after you hear it
+  // launch. That makes an incoming run a puzzle rather than a die roll, which
+  // is what the old depth-charge pattern was.
+  const ESCORT_FIRE_RANGE = 1400  // they will shoot from this far out
+  // ...and they hold off at least this far, which is the number that makes the
+  // whole fight work: at ENEMY_TORPEDO_SPEED a shot from 600 metres takes the
+  // better part of six seconds to arrive, and six seconds is just enough to
+  // change one level of depth. Let an escort in closer than this and the flight
+  // time drops below the dive time, at which point nothing you do matters.
+  const ESCORT_FIRE_MIN = 600
+  const ESCORT_FIRE_INTERVAL = 7.5
+  const ESCORT_AIM_ERROR = 7      // degrees of scatter when they barely have you
+  const ESCORT_AIM_ERROR_MIN = 1.6 // ...and when they have you cold
+  // They have to guess your depth as well as your position, and a deep boat is
+  // much harder to fix: this is the metres of error at MAX_DEPTH, scaling to
+  // nothing at the surface. Read against ENEMY_TORPEDO_DEPTH_BAND it sets the
+  // shape of the whole ladder - at 100 metres they still have you, at 200 you
+  // beat about a third of their shots, and at 300 you beat well over half.
+  // That gradient is what makes the bottom of the ladder worth the battery,
+  // the speed and the fourteen seconds it costs to get there.
+  const ESCORT_DEPTH_ERROR = 160
+  const ENEMY_TORPEDO_SPEED = 105
+  const ENEMY_TORPEDO_LIFE = 17
+  const ENEMY_TORPEDO_HIT_RADIUS = 30
+  // Vertical miss distance. A fish set for periscope depth passes harmlessly
+  // over a boat at 100 metres, which is the whole reason to dive.
+  const ENEMY_TORPEDO_DEPTH_BAND = 40
+  const ENEMY_TORPEDO_ARM = 140   // it has not armed this close to its launcher
+  const ENEMY_TORPEDO_DAMAGE = 28
+
+  // ---- ramming --------------------------------------------------------------
+  // Steel meets steel and both sides pay. Only possible above SHIP_DRAFT, so a
+  // deep boat can neither be rammed nor do the ramming.
+  const COLLIDE_RADIUS = 34
+  const COLLIDE_DAMAGE_SUB = 34   // to the boat, at a head-on closing speed
+  const COLLIDE_DAMAGE_SHIP = 58  // to the ship
+  const COLLIDE_MIN_MULT = 0.35   // even a gentle scrape costs this much of it
+  const COLLIDE_COOLDOWN = 2.5    // seconds before the same ship can hit you again
+  const COLLIDE_NOISE = 0.45      // a ram is about the loudest thing you can do
 
   // ---- the hull -------------------------------------------------------------
   const HULL_MAX = 100
@@ -137,11 +192,14 @@ content.constants = (() => {
   //
   // `voice` is the close-aboard screw pitch: low for a loaded tanker, high for
   // an escort's fast screws.
+  //
+  // `hull` only matters for ramming - a torpedo sinks anything it reaches. A
+  // loaded tanker shrugs off a scrape; an escort does not.
   const SHIP_TYPES = {
-    freighter: {tonnage: 4200, speed: [11, 14], voice: 62,  escort: false},
-    tanker:    {tonnage: 9800, speed: [8, 11],  voice: 44,  escort: false},
-    liner:     {tonnage: 6500, speed: [15, 18], voice: 78,  escort: false},
-    escort:    {tonnage: 1800, speed: [12, 16], voice: 128, escort: true, sprint: [20, 25]},
+    freighter: {tonnage: 4200, speed: [11, 14], voice: 62,  escort: false, hull: 100},
+    tanker:    {tonnage: 9800, speed: [8, 11],  voice: 44,  escort: false, hull: 130},
+    liner:     {tonnage: 6500, speed: [15, 18], voice: 78,  escort: false, hull: 90},
+    escort:    {tonnage: 1800, speed: [12, 16], voice: 128, escort: true, sprint: [20, 25], hull: 55},
   }
 
   const CONVOY_GAP = [26, 40]    // seconds between convoys
@@ -171,6 +229,20 @@ content.constants = (() => {
   function beepInterval(range) { return lerp(BEEP_SLOW, BEEP_FAST, closeness(range)) }
 
   function echoDelay(range) { return (2 * range) / SOUND_SPEED }
+
+  // 0 at the surface, 1 in the cellar. Everything that scales with depth -
+  // speed, noise, battery - reads it from here.
+  function depthFraction(depth) { return clamp(depth / MAX_DEPTH, 0, 1) }
+
+  // Index of the ordered level nearest a depth, so page up/down can step from
+  // wherever the boat actually is rather than from where it was told to go.
+  function nearestLevel(depth) {
+    let best = 0
+    for (let i = 1; i < DEPTH_LEVELS.length; i++) {
+      if (Math.abs(DEPTH_LEVELS[i] - depth) < Math.abs(DEPTH_LEVELS[best] - depth)) best = i
+    }
+    return best
+  }
 
   function rand(lo, hi) { return lo + Math.random() * (hi - lo) }
   function randInt(lo, hi) { return Math.floor(rand(lo, hi + 1)) }
@@ -203,12 +275,17 @@ content.constants = (() => {
     TORPEDO_HIT_RADIUS,
     TORPEDO_LOAD,
     RELOAD_TIME,
-    DIVE_TIME,
+    DEPTH_LEVELS,
+    MAX_DEPTH,
+    DIVE_RATE,
+    RISE_RATE,
+    PERISCOPE_BAND,
+    SHIP_DRAFT,
     BATTERY_MAX,
-    BATTERY_DRAIN,
+    BATTERY_DRAIN_BASE,
+    BATTERY_DRAIN_DEPTH,
     BATTERY_CHARGE,
     BATTERY_LOW,
-    DEEP_DAMAGE_MULT,
     SOUND_SPEED,
     PING_COOLDOWN,
     PING_NOISE,
@@ -221,13 +298,24 @@ content.constants = (() => {
     HIT_NOISE,
     HUNT_THRESHOLD,
     LOSE_THRESHOLD,
-    ESCORT_ATTACK_RANGE,
-    CHARGE_INTERVAL,
-    CHARGE_FALL_TIME,
-    CHARGE_KILL_RADIUS,
-    CHARGE_DAMAGE,
-    CHARGE_SPREAD_LOOSE,
-    CHARGE_SPREAD_TIGHT,
+    ESCORT_FIRE_RANGE,
+    ESCORT_FIRE_MIN,
+    ESCORT_FIRE_INTERVAL,
+    ESCORT_AIM_ERROR,
+    ESCORT_AIM_ERROR_MIN,
+    ESCORT_DEPTH_ERROR,
+    ENEMY_TORPEDO_SPEED,
+    ENEMY_TORPEDO_LIFE,
+    ENEMY_TORPEDO_HIT_RADIUS,
+    ENEMY_TORPEDO_DEPTH_BAND,
+    ENEMY_TORPEDO_ARM,
+    ENEMY_TORPEDO_DAMAGE,
+    COLLIDE_RADIUS,
+    COLLIDE_DAMAGE_SUB,
+    COLLIDE_DAMAGE_SHIP,
+    COLLIDE_MIN_MULT,
+    COLLIDE_COOLDOWN,
+    COLLIDE_NOISE,
     HULL_MAX,
     PATROL_TIME,
     TIME_WARNINGS,
@@ -243,6 +331,8 @@ content.constants = (() => {
     closeness,
     beepInterval,
     echoDelay,
+    depthFraction,
+    nearestLevel,
     rand,
     randInt,
     MAX_SCORE: 9999999,

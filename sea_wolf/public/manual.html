@@ -167,7 +167,7 @@
     <main>
       <section>
         <h2>Introduction</h2>
-        <p>Sea Wolf is an audio-first submarine hunt, playable entirely by ear. You drive the boat &mdash; rudder, throttle and depth &mdash; around an open ocean while convoys cross it on their own courses. Your job is to hear one, work out which way it is going, get into a firing position, and put a torpedo where the ship is going to be.</p>
+        <p>Sea Wolf is an audio-first submarine hunt, playable entirely by ear. You drive the boat &mdash; rudder, throttle and depth &mdash; around an open ocean while convoys cross it on their own courses. Your job is to hear one, work out which way it is going, get into a firing position, and put a torpedo where the ship is going to be. Their escorts fight back with torpedoes of their own, and the only reliable answer is depth &mdash; which the boat takes its time to change.</p>
         <p>Every positional sound is placed <strong>binaurally</strong> around the boat, so a ship is not simply to your left or your right: it is ahead of you, or behind you, or off the quarter, and it travels through that field as you turn. Front-to-back is a real cue here, which is why headphones matter more in this game than in most.</p>
         <p>The way you find anything is the <strong>contact beep</strong>. Every ship within hearing beeps every so often, and two things about that beep carry all the information. The <strong>gap between beeps is the range</strong> &mdash; lazy and slow at the edge of hearing, a fast flutter when a ship is right alongside. The <strong>pitch is ahead or astern</strong> &mdash; a bright high tone while the contact is forward of the beam, dropping to a low tone the moment it slips behind you. So you steer toward the beeps, and you know you are steering the right way because they speed up. If one drops to the low tone, you have run past it.</p>
         <p>Underneath all of it your own motor hums, and its pitch tracks your speed, so you always know how fast you are going. Speed is also noise. The faster you run, the sooner the escorts find you, and closing on a convoy at flank speed is a decision rather than a free move.</p>
@@ -212,7 +212,11 @@
         <p><strong>Getting the range.</strong> Press <kbd>P</kbd> to ping. Count the wait: a return that comes straight back is close, one that takes a couple of seconds is a long way out. A ping reaches much further than the passive beeps do, so it is how you find a convoy that is still out of earshot &mdash; but it is a shout in a quiet room.</p>
         <p><strong>Firing.</strong> Torpedoes leave on the periscope bearing, which you train with <kbd>Q</kbd> and <kbd>E</kbd> up to forty-five degrees either side of the bow. The boat does the coarse aiming and the periscope does the fine. The skill is the <em>lead</em>: a torpedo runs at 145 metres a second, so a ship half a kilometre away is three and a half seconds of travel, and in three and a half seconds it has moved. Aim at where it is going, not where it is. <kbd>F2</kbd> reads out the firing solution &mdash; bearing, range, run time and the lead bearing &mdash; but you still have to steer onto it.</p>
         <p>A ship crossing your bow needs a lot of lead; one you are chasing from directly astern is running down your sight line and needs almost none. That is the trade: the easy shot is the one you had to work hardest to get into position for.</p>
-        <p><strong>Being hunted.</strong> Noise is what gives you away, and speed is the biggest part of it. Below about three quarters throttle you are shedding noise faster than you make it and can run indefinitely; above that you are on a clock. Pings, shots and the explosion of a hit are spikes on top. When the escorts have you, one will turn and open up &mdash; you will hear it change pace as well as bearing &mdash; and then comes the splash and the long falling whistle of depth charges. Go deep on the whistle. Charges mostly miss a deep boat, but the tubes will not fire down there, you are slower, and the battery only charges at periscope depth, so you cannot simply hide. Run quiet and they lose you.</p>
+        <p><strong>Being hunted.</strong> Noise is what gives you away, and speed is the biggest part of it. Below about three quarters throttle you are shedding noise faster than you make it and can run indefinitely; above that you are on a clock. Pings, shots and the explosion of a hit are spikes on top. When the escorts have you, one will turn and open up &mdash; you will hear it change pace as well as bearing &mdash; and then it starts shooting. The escorts carry torpedoes, not depth charges: you hear the launch thump on its bearing, then a low warbling run closing on you. How well they have you decides how tightly they aim, so going quiet spoils their shooting before it makes them lose you altogether.</p>
+
+        <p><strong>Depth.</strong> The boat sits at one of four levels &mdash; periscope depth, 100, 200 and 300 metres &mdash; and <kbd>Page Down</kbd> and <kbd>Page Up</kbd> step it one rung at a time. It sinks at 21 metres a second and rises at 15, so a run from the top of the ladder to the bottom is about fourteen seconds and the trip back is twenty. Every escort torpedo is unguided and set for the depth you were at <em>when it left the tube</em>, so a change of level beats it outright &mdash; a fish set for periscope depth passes harmlessly over a boat at 100 metres, and you will hear it go over. But you must order the change when you hear the <em>launch</em>, not when you hear the run; by then the boat cannot get out of the way in time. That is the trade the whole endgame turns on. Deep you are quieter, harder to hit and safe from being rammed, but the tubes will not fire below periscope depth, you are slower, and the battery drains faster the deeper you sit and only charges back up at the top.</p>
+
+        <p><strong>Ramming.</strong> Above forty-five metres you are in the same water as the ships. Collide with one and you both take damage in proportion to how hard you met &mdash; enough of it will put a freighter down, which counts as tonnage, and rather less of it will sink you. It is also about the loudest thing you can do, so the escorts will know exactly where you are.</p>
 
       <section>
         <h2>Controls</h2>
@@ -254,8 +258,12 @@
                 <td><kbd>P</kbd></td>
               </tr>
               <tr>
-                <td>Dive deep / return to periscope depth</td>
-                <td><kbd>X</kbd></td>
+                <td>Go down one depth level (periscope, 100, 200, 300 m)</td>
+                <td><kbd>Page Down</kbd> (or <kbd>X</kbd>)</td>
+              </tr>
+              <tr>
+                <td>Come up one depth level</td>
+                <td><kbd>Page Up</kbd> (or <kbd>C</kbd>)</td>
               </tr>
               <tr>
                 <td>Status (tonnage, torpedoes, heading, speed, hull, battery)</td>

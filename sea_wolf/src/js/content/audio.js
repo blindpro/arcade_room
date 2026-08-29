@@ -25,7 +25,12 @@
 //   ping and echoes  the transmit, then one bright return per contact after
 //                    2*range/SOUND_SPEED seconds. Delay IS range, and it
 //                    reaches further than the passive beeps.
-//   the fight        tube launch, torpedo run, explosions, depth charges.
+//   the fight        tube launch, torpedo run, explosions - and the escorts'
+//                    own torpedoes, which get a harsher, warbling run voice
+//                    so an incoming fish is never mistaken for one of yours.
+//                    A hostile run is also dulled by how far off your depth
+//                    it is set, so as you dive away from one you hear it lose
+//                    interest in you.
 content.audio = (() => {
   const K = () => content.constants
 
@@ -87,6 +92,8 @@ content.audio = (() => {
   // dead ahead. Pitch flips at the beam: forward of you it is bright and
   // high, abaft of you it drops to a low tone. That octave drop is what tells
   // you the convoy has slipped past and you need to come about.
+  // `muffled` is 0..1 — how deep the boat is. The passive set gets duller the
+  // further under you are, so depth costs you the picture as well as speed.
   function beep(local, range, escort, muffled) {
     const k = K()
     const t0 = now()
@@ -106,7 +113,7 @@ content.audio = (() => {
     const dur = 0.10
     // Close contacts are louder, but not by much — the RATE is doing the
     // distance work, so gain only has to keep a far contact audible.
-    const peak = (0.16 + k.closeness(range) * 0.22) * (muffled ? 0.55 : 1)
+    const peak = (0.16 + k.closeness(range) * 0.22) * k.lerp(1, 0.5, muffled || 0)
     g.gain.setValueAtTime(0, t0)
     g.gain.linearRampToValueAtTime(peak, t0 + 0.006)
     g.gain.linearRampToValueAtTime(0, t0 + dur)
@@ -180,7 +187,7 @@ content.audio = (() => {
     } catch (e) {}
     motor = null
   }
-  function updateMotor(speed, maxSpeed, deep) {
+  function updateMotor(speed, maxSpeed, deep) { // `deep` is 0..1
     if (!motor) return
     const t = now()
     const frac = maxSpeed > 0 ? K().clamp(speed / maxSpeed, 0, 1) : 0
@@ -189,7 +196,8 @@ content.audio = (() => {
     engine.fn.setParam(motor.rumbleBp.frequency, 150 + frac * 320, 0.15)
     engine.fn.setParam(motor.rumbleGain.gain, 0.02 + frac * 0.10, 0.15)
     engine.fn.setParam(motor.gain.gain, 0.05 + frac * 0.14, 0.2)
-    engine.fn.setParam(motor.lp.frequency, deep ? 240 : 340 + frac * 420, 0.3)
+    engine.fn.setParam(motor.lp.frequency,
+      K().lerp(340 + frac * 420, 210, K().clamp(deep || 0, 0, 1)), 0.3)
   }
 
   // ===========================================================================
@@ -270,7 +278,8 @@ content.audio = (() => {
       const prox = k.clamp(1 - c.range / k.CLOSE_VOICE_RANGE, 0, 1)
       const dist = Math.hypot(c.local.forward, c.local.starboard) || 1
       const behind = k.clamp(-c.local.forward / dist, 0, 1)
-      engine.fn.setParam(v.gain.gain, (0.02 + prox * 0.16) * (muffled ? 0.5 : 1), 0.12)
+      engine.fn.setParam(v.gain.gain,
+        (0.02 + prox * 0.16) * k.lerp(1, 0.45, k.clamp(muffled || 0, 0, 1)), 0.12)
       engine.fn.setParam(v.muffle.frequency, k.lerp(2600, 700, behind), 0.12)
       engine.fn.setParam(v.osc.detune, -110 * behind, 0.12)
     }
@@ -371,6 +380,13 @@ content.audio = (() => {
 
   // Each running fish gets its own binaural whine, so with two in the water
   // you can hear them diverge.
+  //
+  // A HOSTILE fish sounds different in three ways, because it is the one piece
+  // of information that decides whether you live: it runs lower and rougher,
+  // it warbles (a slow LFO on the band, which nothing else in the game does),
+  // and it is dulled in proportion to how far off your depth it is set. So a
+  // fish coming for you is a rising, insistent warble, and one you have dived
+  // clear of goes flat and distant even while it is still close aboard.
   function updateRuns(list) {
     const seen = new Set()
     for (const t of list) {
@@ -382,21 +398,41 @@ content.audio = (() => {
         gain.gain.value = 0.0001
         const bp = c.createBiquadFilter()
         bp.type = 'bandpass'
-        bp.frequency.value = 1500
-        bp.Q.value = 3.4
+        bp.frequency.value = t.hostile ? 700 : 1500
+        bp.Q.value = t.hostile ? 6.0 : 3.4
         const s = noiseSource()
         s.connect(bp).connect(gain)
         s.start()
         const ear = engine.ear.binaural.create()
         ear.from(gain)
         ear.to(out())
-        v = {gain, bp, s, ear}
+        v = {gain, bp, s, ear, hostile: !!t.hostile}
+
+        if (t.hostile) {
+          const lfo = c.createOscillator()
+          lfo.type = 'sine'
+          lfo.frequency.value = 5.5
+          const lfoGain = c.createGain()
+          lfoGain.gain.value = 240
+          lfo.connect(lfoGain).connect(bp.frequency)
+          lfo.start()
+          v.lfo = lfo
+          v.lfoGain = lfoGain
+        }
         runVoices.set(t.id, v)
       }
       moveEar(v.ear, t.local)
       const close = K().clamp(1 - t.range / 1600, 0, 1)
-      engine.fn.setParam(v.gain.gain, 0.05 + close * 0.10, 0.08)
-      engine.fn.setParam(v.bp.frequency, 900 + close * 1400, 0.08)
+      if (v.hostile) {
+        // 1 when it is set for your depth, 0 when it is a level away.
+        const onDepth = K().clamp(1 - (t.offDepth || 0) * 3.4, 0, 1)
+        engine.fn.setParam(v.gain.gain, (0.06 + close * 0.16) * (0.3 + onDepth * 0.7), 0.08)
+        engine.fn.setParam(v.bp.frequency, 520 + close * 900 * (0.4 + onDepth * 0.6), 0.08)
+        if (v.lfoGain) engine.fn.setParam(v.lfoGain.gain, 90 + onDepth * 260, 0.15)
+      } else {
+        engine.fn.setParam(v.gain.gain, 0.05 + close * 0.10, 0.08)
+        engine.fn.setParam(v.bp.frequency, 900 + close * 1400, 0.08)
+      }
     }
     for (const id of [...runVoices.keys()]) {
       if (seen.has(id)) continue
@@ -409,6 +445,7 @@ content.audio = (() => {
         v.gain.gain.linearRampToValueAtTime(0.0001, t + 0.2)
       } catch (e) {}
       setTimeout(() => {
+        try { if (v.lfo) v.lfo.stop() } catch (e) {}
         try { v.s.stop(); v.gain.disconnect(); v.bp.disconnect(); v.ear.destroy() } catch (e) {}
       }, 300)
     }
@@ -417,6 +454,7 @@ content.audio = (() => {
     for (const id of [...runVoices.keys()]) {
       const v = runVoices.get(id)
       runVoices.delete(id)
+      try { if (v.lfo) v.lfo.stop() } catch (e) {}
       try { v.s.stop(); v.gain.disconnect(); v.bp.disconnect(); v.ear.destroy() } catch (e) {}
     }
   }
@@ -477,8 +515,10 @@ content.audio = (() => {
     }, 640)
   }
 
-  function torpedoSpent(local) {
-    boom(local, {peak: 0.05, dur: 0.5, cutoff: 900, sweepTo: 220, tone: 420, toneTo: 180, tonePeak: 0.07})
+  function torpedoSpent(local, hostile) {
+    boom(local, hostile
+      ? {peak: 0.07, dur: 0.6, cutoff: 600, sweepTo: 140, tone: 240, toneTo: 90, tonePeak: 0.09}
+      : {peak: 0.05, dur: 0.5, cutoff: 900, sweepTo: 220, tone: 420, toneTo: 180, tonePeak: 0.07})
   }
 
   function fireBlocked(reason) {
@@ -535,43 +575,67 @@ content.audio = (() => {
       tone: 200, toneTo: 420, tonePeak: 0.16})
   }
 
-  // Charges in the water: the splash where the escort is, then a long
-  // descending whistle that ends in the bang. The whistle is your dive cue.
-  function chargeSplash(local, fall) {
-    boom(local, {peak: 0.24, dur: 0.32, cutoff: 4200, sweepTo: 700, type: 'bandpass', q: 0.8})
-    const t = fall || K().CHARGE_FALL_TIME
-    const t0 = now() + 0.12
-    const c = ctx()
-    const ear = earAt(local, {gainModel: engine.ear.gainModel.normalize})
-    const g = c.createGain()
-    g.gain.value = 0
-    ear.from(g)
-    const o = c.createOscillator()
-    o.type = 'triangle'
-    o.frequency.setValueAtTime(900, t0)
-    o.frequency.exponentialRampToValueAtTime(130, t0 + t)
-    o.connect(g)
-    g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(0.11, t0 + 0.08)
-    g.gain.setValueAtTime(0.11, t0 + t * 0.7)
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + t)
-    o.start(t0)
-    o.stop(t0 + t + 0.05)
-    o.onended = () => {
-      try { g.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
-    }
+  // An escort launching. The compressed-air thump is placed at the escort, so
+  // it tells you which way the fish is coming FROM before you can hear the
+  // run itself — and it is your cue to start changing depth, which takes long
+  // enough that waiting until you hear the run is already too late.
+  function escortFire(local) {
+    boom(local, {peak: 0.26, dur: 0.26, cutoff: 3000, sweepTo: 420, type: 'bandpass', q: 0.9,
+      tone: 190, toneTo: 70, tonePeak: 0.20})
+    // Two short rising blips: an unmistakable "that was aimed at you".
+    later(() => {
+      const t0 = now()
+      const c = ctx()
+      const ear = earAt(local, {gainModel: engine.ear.gainModel.normalize})
+      const g = c.createGain()
+      g.gain.value = 0
+      ear.from(g)
+      const o = c.createOscillator()
+      o.type = 'square'
+      o.frequency.setValueAtTime(300, t0)
+      o.frequency.exponentialRampToValueAtTime(560, t0 + 0.26)
+      o.connect(g)
+      g.gain.setValueAtTime(0, t0)
+      g.gain.linearRampToValueAtTime(0.15, t0 + 0.01)
+      g.gain.setValueAtTime(0.15, t0 + 0.10)
+      g.gain.linearRampToValueAtTime(0.0001, t0 + 0.12)
+      g.gain.linearRampToValueAtTime(0.15, t0 + 0.15)
+      g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.28)
+      o.start(t0)
+      o.stop(t0 + 0.3)
+      o.onended = () => {
+        try { g.disconnect() } catch (e) {}
+        try { ear.destroy() } catch (e) {}
+      }
+    }, 150)
   }
 
-  function chargeDetonate(local, proximity, deep) {
-    const near = K().clamp(proximity, 0, 1)
-    const loud = 0.10 + near * (deep ? 0.30 : 0.55)
+  // One of theirs going off against the hull. Nothing else in the game is this
+  // loud or this close.
+  function enemyHit(local) {
+    boom(local, {peak: 0.85, dur: 0.9, cutoff: 2600, sweepTo: 80, tone: 84, toneTo: 26, tonePeak: 0.7})
+    later(() => tone(170, {dur: 0.9, peak: 0.14, type: 'sawtooth', glideTo: 230}), 240)
+  }
+
+  // A fish running past at the wrong depth: a fast doppler-ish swish and then
+  // nothing. This is the sound of a dive having been worth it.
+  function torpedoPassed(local, above) {
     boom(local, {
-      peak: loud, dur: 0.35 + near * 0.5,
-      cutoff: deep ? 900 : 2200, sweepTo: 90,
-      tone: 70 + near * 40, toneTo: 28, tonePeak: loud,
+      peak: 0.20, dur: 0.55,
+      cutoff: above ? 1500 : 700, sweepTo: above ? 400 : 200,
+      type: 'bandpass', q: 1.4,
+      tone: above ? 520 : 240, toneTo: above ? 190 : 90, tonePeak: 0.09,
     })
-    if (near > 0.35) later(() => tone(190, {dur: 0.7, peak: 0.10 * near, type: 'sawtooth', glideTo: 240}), 260)
+  }
+
+  // Steel on steel. A long, ugly, non-positional groan — it is happening TO
+  // you, not somewhere near you — over a binaural crunch where the ship is.
+  function collision(local, force) {
+    const f = K().clamp(force, 0, 1)
+    boom(local, {peak: 0.45 + f * 0.35, dur: 0.7 + f * 0.5, cutoff: 1400, sweepTo: 70,
+      tone: 120, toneTo: 34, tonePeak: 0.4 + f * 0.3, q: 1.2})
+    tone(74, {dur: 1.3 + f, peak: 0.22 + f * 0.16, type: 'sawtooth', glideTo: 46})
+    later(() => tone(340, {dur: 0.5, peak: 0.10 + f * 0.08, type: 'square', glideTo: 210}), 180)
   }
 
   function damage() {
@@ -581,8 +645,13 @@ content.audio = (() => {
   // ===========================================================================
   // depth, run state, ui
   // ===========================================================================
-  function depthChange(to) {
+  // Ordering a change of level: venting or blowing, and a tone that sweeps the
+  // way the boat is about to go. It runs for as long as the trip will actually
+  // take, so the sound IS the wait — you hear how big a commitment you just
+  // made, and it does not stop until the boat is there.
+  function depthChange(down, eta) {
     const t0 = now()
+    const dur = K().clamp(eta || 1.2, 0.6, 8)
     const c = ctx()
     const g = c.createGain()
     g.gain.value = 0
@@ -591,18 +660,29 @@ content.audio = (() => {
     const f = c.createBiquadFilter()
     f.type = 'bandpass'
     f.Q.value = 0.7
-    f.frequency.setValueAtTime(to === 'deep' ? 2600 : 500, t0)
-    f.frequency.exponentialRampToValueAtTime(to === 'deep' ? 420 : 3000, t0 + 1.0)
+    f.frequency.setValueAtTime(down ? 2600 : 500, t0)
+    f.frequency.exponentialRampToValueAtTime(down ? 420 : 3000, t0 + dur)
     s.connect(f).connect(g)
     g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(0.24, t0 + 0.05)
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.05)
+    g.gain.linearRampToValueAtTime(0.20, t0 + 0.05)
+    g.gain.setValueAtTime(0.20, t0 + dur * 0.8)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
     s.start(t0)
-    s.stop(t0 + 1.1)
-    tone(to === 'deep' ? 240 : 90, {dur: 0.9, peak: 0.13, type: 'sine', glideTo: to === 'deep' ? 90 : 260})
-    setTimeout(() => { try { g.disconnect() } catch (e) {} }, 1400)
+    s.stop(t0 + dur + 0.05)
+    tone(down ? 240 : 90, {dur: Math.min(dur, 1.1), peak: 0.13, type: 'sine', glideTo: down ? 90 : 260})
+    setTimeout(() => { try { g.disconnect() } catch (e) {} }, (dur + 0.4) * 1000)
   }
-  function depthSettled(depth) { tone(depth === 'deep' ? 180 : 420, {dur: 0.11, peak: 0.13}) }
+
+  // Levelled off. The pitch says which level, so the four stops are four
+  // different chimes and you learn where you are without reading the HUD.
+  function depthSettled(depth) {
+    const k = K()
+    const f = k.lerp(520, 150, k.depthFraction(depth))
+    tone(f, {dur: 0.12, peak: 0.14})
+  }
+
+  // Ordered past the top or the bottom of the ladder.
+  function depthLimit() { tone(130, {dur: 0.14, peak: 0.13, type: 'square'}) }
 
   function batteryLow() {
     tone(620, {dur: 0.10, peak: 0.16})
@@ -687,12 +767,15 @@ content.audio = (() => {
 
   // Pumped every frame from the game screen.
   function frame(delta, st) {
-    const deep = st.depth === 'deep' || st.depth === 'diving'
+    const k = K()
+    // The sea closes over you gradually as you go down rather than at a
+    // threshold, so the descent between two levels is audible the whole way.
+    const df = k.clamp(st.depthFrac != null ? st.depthFrac : k.depthFraction(st.depth || 0), 0, 1)
     if (sea) {
-      engine.fn.setParam(sea.g.gain, deep ? 0.028 : 0.018, 0.4)
-      engine.fn.setParam(sea.lp.frequency, deep ? 170 : 460 + (st.noise || 0) * 220, 0.4)
+      engine.fn.setParam(sea.g.gain, k.lerp(0.018, 0.030, df), 0.4)
+      engine.fn.setParam(sea.lp.frequency, k.lerp(460 + (st.noise || 0) * 220, 150, df), 0.4)
     }
-    updateMotor(st.speed || 0, st.maxSpeed || 1, deep)
+    updateMotor(st.speed || 0, st.maxSpeed || 1, df)
   }
 
   function silenceAll() {
@@ -714,19 +797,19 @@ content.audio = (() => {
     const CLOSE = {forward: 140, starboard: 60}
 
     switch (which) {
-      case 'beepAhead': beep(AHEAD, 600, false, false); break
-      case 'beepPort': beep(PORT, 600, false, false); break
-      case 'beepStarboard': beep(STBD, 600, false, false); break
-      case 'beepAstern': beep(ASTERN, 600, false, false); break
-      case 'beepNear': beep(CLOSE, 160, false, false); break
-      case 'beepFar': beep({forward: 2000, starboard: 300}, 2020, false, false); break
-      case 'beepEscort': beep(AHEAD, 600, true, false); break
+      case 'beepAhead': beep(AHEAD, 600, false, 0); break
+      case 'beepPort': beep(PORT, 600, false, 0); break
+      case 'beepStarboard': beep(STBD, 600, false, 0); break
+      case 'beepAstern': beep(ASTERN, 600, false, 0); break
+      case 'beepNear': beep(CLOSE, 160, false, 0); break
+      case 'beepFar': beep({forward: 2000, starboard: 300}, 2020, false, 0); break
+      case 'beepEscort': beep(AHEAD, 600, true, 0); break
       // A run of beeps at closing range, so the rate ramp is audible as a ramp.
       case 'beepClosing': {
         const steps = [2100, 1700, 1300, 1000, 750, 550, 400, 280, 190]
         let at = 0
         steps.forEach((r) => {
-          later(() => beep({forward: r, starboard: r * 0.15}, r, false, false), at * 1000)
+          later(() => beep({forward: r, starboard: r * 0.15}, r, false, 0), at * 1000)
           at += k.beepInterval(r)
         })
         break
@@ -738,17 +821,17 @@ content.audio = (() => {
         break
       }
       case 'motorSlow': {
-        startMotor(); updateMotor(4, 16, false)
+        startMotor(); updateMotor(4, 16, 0)
         later(() => { if (!sea) stopMotor() }, 1600)
         break
       }
       case 'motorFlank': {
-        startMotor(); updateMotor(16, 16, false)
+        startMotor(); updateMotor(16, 16, 0)
         later(() => { if (!sea) stopMotor() }, 1600)
         break
       }
       case 'closeAboard': {
-        updateClose([{id: 'demo', local: CLOSE, range: 150, voice: k.SHIP_TYPES.tanker.voice, escort: false}], false)
+        updateClose([{id: 'demo', local: CLOSE, range: 150, voice: k.SHIP_TYPES.tanker.voice, escort: false}], 0)
         later(() => destroyCloseVoice('demo'), 2200)
         break
       }
@@ -762,14 +845,38 @@ content.audio = (() => {
         break
       }
       case 'hit': hit({forward: 700, starboard: -300}, 760, false); break
-      case 'spent': torpedoSpent({forward: 900, starboard: 200}); break
+      case 'spent': torpedoSpent({forward: 900, starboard: 200}, false); break
       case 'acquired': acquired(); break
       case 'escortTurn': escortTurn(STBD); break
-      case 'splash': chargeSplash({forward: 200, starboard: 120}, k.CHARGE_FALL_TIME); break
-      case 'detonateNear': chargeDetonate({forward: 60, starboard: -40}, 0.9, false); break
-      case 'detonateDeep': chargeDetonate({forward: 60, starboard: -40}, 0.9, true); break
-      case 'diveDeep': depthChange('deep'); break
-      case 'risePeriscope': depthChange('periscope'); break
+      case 'escortFire': escortFire(STBD); break
+      // An incoming fish set for your depth, closing from the starboard bow.
+      case 'incoming': {
+        const track = [1500, 1150, 820, 540, 320, 160]
+        track.forEach((r, i) => later(() => updateRuns([
+          {id: 'demoHostile', hostile: true, offDepth: 0,
+            local: {forward: r * 0.9, starboard: r * 0.45}, range: r},
+        ]), i * 320))
+        later(() => updateRuns([]), track.length * 320 + 200)
+        break
+      }
+      // The same fish, after you have dived a level clear of it.
+      case 'incomingOffDepth': {
+        const track = [1200, 850, 520, 260, 120]
+        track.forEach((r, i) => later(() => updateRuns([
+          {id: 'demoHostile', hostile: true, offDepth: 0.34,
+            local: {forward: r * 0.9, starboard: r * 0.45}, range: r},
+        ]), i * 320))
+        later(() => updateRuns([]), track.length * 320 + 200)
+        break
+      }
+      case 'passedAbove': torpedoPassed({forward: 40, starboard: 30}, true); break
+      case 'enemyHit': enemyHit({forward: 20, starboard: -10}); break
+      case 'collision': collision({forward: 26, starboard: 14}, 0.8); break
+      case 'dive100': depthChange(true, 100 / k.DIVE_RATE); break
+      case 'dive300': depthChange(true, 300 / k.DIVE_RATE); break
+      case 'risePeriscope': depthChange(false, 300 / k.RISE_RATE); break
+      case 'levelPeriscope': depthSettled(0); break
+      case 'level300': depthSettled(300); break
       case 'battery': batteryLow(); break
       case 'damage': damage(); break
       case 'klaxon': dive(); break
@@ -811,11 +918,14 @@ content.audio = (() => {
     acquired,
     lostContact,
     escortTurn,
-    chargeSplash,
-    chargeDetonate,
+    escortFire,
+    enemyHit,
+    torpedoPassed,
+    collision,
     damage,
     depthChange,
     depthSettled,
+    depthLimit,
     batteryLow,
     batteryDead,
     countTone,

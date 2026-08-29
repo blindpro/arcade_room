@@ -40,7 +40,9 @@ app.screen.game = app.screenManager.invent({
     fine:      ['ShiftLeft', 'ShiftRight'],
     fire:      ['Space', 'Enter', 'NumpadEnter'],
     ping:      ['KeyP', 'Numpad0'],
-    depth:     ['KeyX', 'KeyC', 'NumpadDecimal'],
+    // Depth is a ladder now, so it needs two keys rather than a toggle.
+    deeper:    ['PageDown', 'KeyX', 'NumpadDecimal'],
+    shallower: ['PageUp', 'KeyC', 'Numpad3'],
   },
   PADS: {
     port:      [14],
@@ -53,7 +55,8 @@ app.screen.game = app.screenManager.invent({
     fine:      [6],
     fire:      [0, 7],
     ping:      [2],
-    depth:     [1],
+    deeper:    [1],
+    shallower: [3],
   },
 
   onReady: function () {
@@ -71,7 +74,8 @@ app.screen.game = app.screenManager.invent({
     window.addEventListener('keydown', (e) => {
       if (!app.screenManager.is('game')) return
       if (['F1', 'F2', 'F3', 'F5'].includes(e.key)) e.preventDefault()
-      if ([' ', 'Spacebar', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) e.preventDefault()
+      if ([' ', 'Spacebar', 'ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight',
+        'PageUp', 'PageDown'].includes(e.key)) e.preventDefault()
     })
 
     this.wireEvents()
@@ -101,7 +105,7 @@ app.screen.game = app.screenManager.invent({
 
     // --- per-frame continuous voices -----------------------------------------
     content.events.on('frame', (e) => {
-      A().updateClose(e.close, e.depth !== 'periscope')
+      A().updateClose(e.close, e.depthFrac)
       A().updateRuns(e.torpedoes)
     })
 
@@ -135,12 +139,12 @@ app.screen.game = app.screenManager.invent({
         bearing: self.bearingWord(e.periscope), remaining: e.remaining,
       }))
     })
-    content.events.on('torpedo-spent', (e) => A().torpedoSpent(e.local))
+    content.events.on('torpedo-spent', (e) => A().torpedoSpent(e.local, e.hostile))
     content.events.on('hit', (e) => {
       A().hit(e.local, e.range, e.escort)
       self.rumble(1.0, 0.6, 380)
       self.refreshHud()
-      app.announce.assertive(t('ann.hit', {
+      app.announce.assertive(t(e.rammed ? 'ann.rammedDown' : 'ann.hit', {
         type: t('type.' + e.type), tonnage: e.tonnage, total: e.total,
       }))
     })
@@ -160,13 +164,33 @@ app.screen.game = app.screenManager.invent({
       app.announce.polite(t('ann.lostContact'))
     })
     content.events.on('escort-turn', (e) => A().escortTurn(e.local))
-    content.events.on('charge-splash', (e) => {
-      A().chargeSplash(e.local, content.constants.CHARGE_FALL_TIME)
-      app.announce.assertive(t('ann.charges'))
+
+    // An escort has fired. The announcement carries the bearing it came from
+    // and the depth it is set for, because both are what you act on: turn off
+    // the track, and change level away from that number.
+    content.events.on('escort-fire', (e) => {
+      A().escortFire(e.local)
+      self.rumble(0.4, 0.5, 200)
+      app.announce.assertive(t('ann.incoming', {
+        bearing: self.bearingWord(self.localBearing(e.local)),
+        depth: self.depthWord(e.depth),
+      }))
     })
-    content.events.on('charge-detonate', (e) => {
-      A().chargeDetonate(e.local, e.proximity, e.deep)
-      if (e.proximity > 0.2) self.rumble(e.proximity, e.proximity * 0.6, 300)
+    content.events.on('enemy-hit', (e) => {
+      A().enemyHit(e.local)
+      self.rumble(1.0, 0.9, 600)
+    })
+    // The dive worked. Worth saying out loud — it is the payoff for a
+    // commitment made ten seconds earlier.
+    content.events.on('torpedo-passed', (e) => {
+      A().torpedoPassed(e.local, e.above)
+      app.announce.polite(t(e.above ? 'ann.passedAbove' : 'ann.passedBelow'))
+    })
+    content.events.on('collision', (e) => {
+      A().collision(e.local, e.force)
+      self.rumble(1.0, 0.8, 520)
+      self.refreshHud()
+      app.announce.assertive(t('ann.collision', {type: t('type.' + e.type)}))
     })
     content.events.on('damage', (e) => {
       A().damage()
@@ -176,13 +200,18 @@ app.screen.game = app.screenManager.invent({
 
     // --- depth ---------------------------------------------------------------
     content.events.on('depth-change', (e) => {
-      A().depthChange(e.to)
-      app.announce.polite(t(e.to === 'deep' ? 'ann.diving' : 'ann.surfacing'))
+      A().depthChange(e.down, e.eta)
+      app.announce.polite(t(e.down ? 'ann.diving' : 'ann.surfacing', {
+        depth: self.depthWord(e.to),
+        eta: Math.round(e.eta),
+      }))
     })
     content.events.on('depth-settled', (e) => {
       A().depthSettled(e.depth)
       self.refreshHud()
+      app.announce.polite(t('ann.levelAt', {depth: self.depthWord(e.depth)}))
     })
+    content.events.on('depth-limit', () => A().depthLimit())
     content.events.on('battery-low', () => {
       A().batteryLow()
       app.announce.assertive(t('ann.batteryLow'))
@@ -276,7 +305,11 @@ app.screen.game = app.screenManager.invent({
       if (this.edge('ping', this.held('ping', k, gp))) {
         if (!content.game.ping()) content.audio.fireBlocked('reload')
       }
-      if (this.edge('depth', this.held('depth', k, gp))) content.game.toggleDepth()
+      // Page down takes her down a level, page up brings her up one. The
+      // order is a step on the ladder, not a hold — the boat then takes as
+      // long as it takes.
+      if (this.edge('deeper', this.held('deeper', k, gp))) content.game.stepDepth(1)
+      if (this.edge('shallower', this.held('shallower', k, gp))) content.game.stepDepth(-1)
 
       content.game.update(delta)
 
@@ -319,6 +352,21 @@ app.screen.game = app.screenManager.invent({
     }
   },
 
+  // Spoken depth. Periscope depth is a place, not a number, so it gets a name;
+  // everything else is metres, rounded while the boat is still on its way.
+  depthWord: function (depth) {
+    const k = content.constants
+    if (depth <= k.PERISCOPE_BAND) return app.i18n.t('depth.periscope')
+    return app.i18n.t('depth.metres', {depth: Math.round(depth / 10) * 10})
+  },
+
+  // The relative bearing of a listener-local point, for events that carry a
+  // position but no bearing of their own.
+  localBearing: function (local) {
+    return content.constants.wrapDeg(
+      Math.atan2(local.starboard, local.forward) * content.constants.DEG)
+  },
+
   // Relative bearings, spoken the way a lookout would: "green four zero" is
   // clumsy for a screen reader, so plain words. The full circle needs astern.
   bearingWord: function (bearing) {
@@ -338,7 +386,10 @@ app.screen.game = app.screenManager.invent({
       torpedoes: s.torpedoes,
       hull: s.hull,
       battery: s.battery,
-      depth: app.i18n.t('depth.' + (s.depth === 'diving' || s.depth === 'surfacing' ? 'changing' : s.depth)),
+      depth: s.changingDepth
+        ? app.i18n.t('depth.passing', {
+          depth: this.depthWord(s.depth), target: this.depthWord(s.depthTarget)})
+        : this.depthWord(s.depth),
       heading: Math.round((s.heading + 360) % 360),
       speed: s.speed.toFixed(1),
       time: Math.ceil(s.timeLeft),
@@ -390,8 +441,12 @@ app.screen.game = app.screenManager.invent({
     if (this.state.hullEl) this.state.hullEl.textContent = String(s.hull)
     if (this.state.batteryEl) this.state.batteryEl.textContent = String(s.battery)
     if (this.state.depthEl) {
-      this.state.depthEl.textContent = app.i18n.t(
-        'depth.' + (s.depth === 'diving' || s.depth === 'surfacing' ? 'changing' : s.depth))
+      const at = s.atPeriscope && !s.changingDepth
+        ? app.i18n.t('depth.periscope')
+        : String(Math.round(s.depth)) + ' m'
+      this.state.depthEl.textContent = s.changingDepth
+        ? at + ' \u2192 ' + String(s.depthTarget) + ' m'
+        : at
     }
     if (this.state.headingEl) this.state.headingEl.textContent = String(Math.round((s.heading + 360) % 360))
     if (this.state.speedEl) this.state.speedEl.textContent = s.speed.toFixed(1)
