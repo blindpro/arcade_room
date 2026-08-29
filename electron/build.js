@@ -24,13 +24,20 @@ const ignorePatterns = [
   /^\/template(\/|$)/,            // never ship the empty starter
   /^\/![^/]*(\/|$)/,              // hidden games (directories prefixed with !)
   /^\/README\.md$/,
+  /^\/build_all\.bat$/,
   /^\/index\.html$/,              // Caddy-templated launcher (web-only)
+  // @electron/packager only applies its own DEFAULT_IGNORES when `ignore` is
+  // an array, so a function-style ignore has to repeat them here.
+  /\/(package-lock\.json|yarn\.lock|pnpm-lock\.yaml)$/,
+  /\/node_modules\/\.bin(\/|$)/,
+  /\.o(bj)?$/,
+  /\/node_gyp_bins(\/|$)/,
 ]
 
 for (const g of GAME_DIRS) {
   // Inside each game, everything outside public/ is build-time noise.
-  ignorePatterns.push(new RegExp(`^/${g}/(src|docs|assets|node_modules|electron|template)(/|$)`))
-  ignorePatterns.push(new RegExp(`^/${g}/(Gulpfile\\.js|package\\.json|package-lock\\.json|CLAUDE\\.md|README\\.md|LICENSE|\\.gitignore)$`))
+  ignorePatterns.push(new RegExp(`^/${g}/(src|docs|assets|node_modules|electron|template|tools|dist)(/|$)`))
+  ignorePatterns.push(new RegExp(`^/${g}/(Gulpfile\\.js|package\\.json|AGENTS\\.md|CLAUDE[^/]*\\.md|README\\.md|LICENSE|\\.gitignore)$`))
 }
 
 // Skip noise inside any other nested node_modules.
