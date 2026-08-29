@@ -11,6 +11,37 @@ const GAME_DIRS = fs.readdirSync(ROOT, {withFileTypes: true})
   .map(d => d.name)
   .sort()
 
+// Every game's index.html loads ./scripts.min.js and ./styles.min.css, which
+// gulp writes into public/ and .gitignore keeps out of the repo. Shipping a
+// game without them produces a menu entry that opens a blank screen, so treat
+// an unbuilt game as a hard error unless the caller opts out.
+const isBuilt = (g) =>
+  fs.existsSync(path.join(ROOT, g, 'public', 'scripts.min.js')) &&
+  fs.existsSync(path.join(ROOT, g, 'public', 'styles.min.css'))
+
+const UNBUILT = GAME_DIRS.filter(g => !isBuilt(g))
+
+if (UNBUILT.length) {
+  const allowUnbuilt = process.argv.includes('--allow-unbuilt')
+  console.error(`${UNBUILT.length} of ${GAME_DIRS.length} games have no built bundle in public/:`)
+  for (const g of UNBUILT) console.error('  ' + g)
+  console.error('Run build_all.bat (or `npx gulp build` in each game) first.')
+
+  if (!allowUnbuilt) {
+    console.error('Refusing to package. Pass --allow-unbuilt to skip them instead.')
+    process.exit(1)
+  }
+  console.error('--allow-unbuilt: excluding them from the bundle.')
+}
+
+// Games that are actually playable once packaged.
+const SHIPPED = GAME_DIRS.filter(isBuilt)
+
+if (!SHIPPED.length) {
+  console.error('No built games to package.')
+  process.exit(1)
+}
+
 // `ignore` runs against POSIX-style paths relative to the project root,
 // each starting with `/`. Anything matching a regex is dropped from the
 // bundle.
@@ -34,7 +65,13 @@ const ignorePatterns = [
   /\/node_gyp_bins(\/|$)/,
 ]
 
-for (const g of GAME_DIRS) {
+for (const g of UNBUILT) {
+  // Only reachable under --allow-unbuilt; drop the whole directory so the
+  // packaged menu never offers a game that cannot start.
+  ignorePatterns.push(new RegExp(`^/${g}(/|$)`))
+}
+
+for (const g of SHIPPED) {
   // Inside each game, everything outside public/ is build-time noise.
   ignorePatterns.push(new RegExp(`^/${g}/(src|docs|assets|node_modules|electron|template|tools|dist)(/|$)`))
   ignorePatterns.push(new RegExp(`^/${g}/(Gulpfile\\.js|package\\.json|AGENTS\\.md|CLAUDE[^/]*\\.md|README\\.md|LICENSE|\\.gitignore)$`))

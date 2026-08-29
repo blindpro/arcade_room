@@ -27,6 +27,9 @@ function readGameList() {
     return fs.readdirSync(root, {withFileTypes: true})
       .filter(d => d.isDirectory() && !skip.has(d.name) && !d.name.startsWith('.') && !d.name.startsWith('!'))
       .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'index.html')))
+      // scripts.min.js is gulp output, not source. Without it the game's
+      // index.html loads to a blank screen, so keep it out of the menu.
+      .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'scripts.min.js')))
       .map(d => d.name)
       .sort()
   } catch (_err) {
