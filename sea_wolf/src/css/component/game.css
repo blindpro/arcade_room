@@ -1,0 +1,101 @@
+/* SEA WOLF game HUD + a visual sonar arc (aria-hidden; the audio +
+   announcements are the real interface). Kept readable for sighted / low-vision
+   players: contacts plot by bearing (left) and range (bottom), escorts in red
+   and a hunting escort brighter still, with a marker for the periscope
+   bearing along the bottom. */
+.a-game {
+  align-items: center;
+  text-align: center;
+}
+  .a-game--hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1.4em;
+    justify-content: center;
+    font-size: 1.05em;
+    margin-bottom: 1.4rem;
+  }
+    .a-game--stat b { color: #ffd479; }
+
+  .a-game--sonar {
+    position: relative;
+    width: 24em;
+    max-width: 92vw;
+    height: 16em;
+    margin: 0 auto;
+    border-radius: 14px;
+    background: radial-gradient(ellipse at 50% 0%, rgba(74, 200, 255, 0.16), rgba(10, 40, 70, 0.10) 70%);
+    overflow: hidden;
+  }
+  .a-game--dot {
+    position: absolute;
+    width: 0.8em;
+    height: 0.8em;
+    margin: -0.4em 0 0 -0.4em; /* centre on its left/bottom anchor */
+    border-radius: 50%;
+    background: #6fd3ff;
+    box-shadow: 0 0 10px rgba(111, 211, 255, 0.7);
+    transition: opacity 60ms linear;
+  }
+    .a-game--dot[data-type="merchant"] { background: #6fd3ff; box-shadow: 0 0 12px rgba(111, 211, 255, 0.8); }
+    .a-game--dot[data-type="escort"] { background: #ffb066; box-shadow: 0 0 12px rgba(255, 176, 102, 0.85); }
+    .a-game--dot[data-type="hunting"] {
+      background: #ff6b6b;
+      box-shadow: 0 0 16px rgba(255, 107, 107, 0.95);
+      outline: 2px solid rgba(255, 255, 255, 0.65);
+      outline-offset: 2px;
+    }
+    /* The periscope bearing, riding along the bottom of the arc. */
+    .a-game--dot-aim {
+      width: 0.5em;
+      height: 1.5em;
+      margin: 0 0 0 -0.25em;
+      border-radius: 3px;
+      background: #ffffff;
+      box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+    }
+
+/* Help / lists */
+.a-help--text {
+  max-width: 44em;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+.a-help--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  max-width: 44em;
+  text-align: left;
+}
+  .a-help--list li {
+    margin: 0.4em 0;
+    line-height: 1.45;
+  }
+  .a-help--list kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    font-family: inherit;
+  }
+
+/* High scores */
+.a-highscores--list {
+  list-style: none;
+  margin: 0.5rem auto 1rem;
+  padding: 0;
+  max-width: 40em;
+  text-align: left;
+}
+  .a-highscores--entry,
+  .a-highscores--empty {
+    margin: 0.3em 0;
+    padding: 0.2em 0;
+  }
+
+/* Game over online status */
+.a-gameover--online-status[data-state="ok"] { color: #5ad17a; }
+.a-gameover--online-status[data-state="error"] { color: #ff8c8c; }
+.a-gameover--online-link { color: #ffd479; }

@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>SEA WOLF</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <style>
+      *, *::after, *::before {
+        background: transparent;
+        border: 0;
+        box-sizing: border-box;
+        color: inherit;
+        font: inherit;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        background-color: #FFFFFF;
+        font-family: sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+
+      main ::selection {
+        background-color: #FF0069;
+        color: #FFFFFF;
+        text-decoration-color: #FFFFFF;
+      }
+
+      a {
+        color: #FF0069;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      code {
+        font-family: monospace;
+      }
+
+      details > * + * {
+        margin-top: 1.25em;
+      }
+
+      em {
+        font-family: sans-serif;
+        font-style: italic;
+      }
+
+      h2 {
+        font-size: 2em;
+      }
+
+      h3 {
+        font-size: 1.5em;
+        margin-top: 3rem;
+      }
+
+      h4 {
+        font-size: 1.25em;
+        margin-top: 3rem;
+      }
+
+      kbd {
+        border: 1px solid #FF0069;
+        border-radius: 0.25em;
+        display: inline-block;
+        font-family: monospace;
+        padding: 0 0.5em;
+      }
+
+      strong, th {
+        font-family: sans-serif;
+        font-weight: 700;
+      }
+
+      section {
+        margin: 0 auto;
+        max-width: calc(60ch + 4em);
+        padding: 3em 1em;
+      }
+
+      section + section {
+        border-top: 1px dotted #CCCCCC;
+      }
+
+      section > * + *:not(h3):not(h4) {
+        margin-top: 1.25em;
+      }
+
+      section > h2 + *,
+      section > h3 + *,
+      section > h4 + * {
+        margin-top: 0.75em !important;
+      }
+
+      table, td, th {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+      }
+
+      td, th {
+        padding: 0.25em 0.5em;
+      }
+
+      th {
+        text-align: left;
+      }
+
+      ul {
+        list-style-position: inside;
+        padding-left: 1.5em;
+      }
+
+      .hero {
+        align-items: center;
+        background-color: #000000;
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.25;
+        padding: 4em 1em;
+        text-align: center;
+      }
+        .hero--author {
+          font-family: monospace;
+          margin-top: 2em;
+        }
+        .hero--logo {
+          font-family: monospace;
+          font-size: 3em;
+          text-transform: uppercase;
+        }
+
+      .scrollable {
+        max-width: 100%;
+        overflow: auto;
+        white-space: nowrap;
+      }
+
+      @media (min-width: 20rem) {
+        :root {
+          font-size: calc(1rem + ((1vw - 0.2rem) * 0.25));
+        }
+      }
+
+      @media (min-width: 48rem) {
+        section {
+          padding-left: 2em;
+          padding-right: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <h1>
+        <div class="hero--lockup">
+          <div class="hero--logo">Sea Wolf</div>
+          <div class="hero--author">an audio-first submarine hunt</div>
+        </div>
+      </h1>
+    </header>
+
+    <main>
+      <section>
+        <h2>Introduction</h2>
+        <p>Sea Wolf is an audio-first submarine hunt, playable entirely by ear. You sit submerged in a shipping lane and convoys cross your bow. Everything you hear sits on a forward half circle — ninety degrees to port on your left, dead ahead in the centre, ninety degrees to starboard on your right — so where a sound sits in the stereo field <em>is</em> its bearing. There is no front-to-back to get confused about, which is why the game is a periscope and not a full circle.</p>
+        <p>Passive sonar runs constantly and never lies to you about direction: every ship beats out its screw, low and slow for a loaded tanker, high and fast for an escort, dull and quiet when it is far away and bright and loud when it is close. Because that beat drifts across the stereo field as the ship moves, you can hear which way it is going. What passive sonar will not tell you is <em>how far</em>.</p>
+        <p>For that you ping — and the ping is the heart of the game. The transmit goes out, and each ship answers with a bright return that arrives later the further away it is. The delay <em>is</em> the range. But a ping is a shout in a quiet room, and the escorts hear it too.</p>
+      </section>
+
+      <section>
+        <h2>System Requirements</h2>
+        <p>This is best experienced with headphones and a gamepad.</p>
+        <p>Real-time synthesis is an <em>extremely</em> CPU-intensive process. It will attempt to run on any machine that meets its minimum requirements; however, you may experience stuttering or drop-outs when running below the recommended requirements.</p>
+
+        <h3>Minimum System Requirements</h3>
+        <table>
+          <tr>
+            <th>CPU</th>
+            <td>SSE2 capable (64-bit)</td>
+          </tr>
+          <tr>
+            <th>RAM</th>
+            <td>2 GB</td>
+          </tr>
+        </table>
+
+        <h3>Recommended System Requirements</h3>
+        <table>
+          <tr>
+            <th>CPU</th>
+            <td>3.5 GHz Quad-Core (64-bit)</td>
+          </tr>
+          <tr>
+            <th>RAM</th>
+            <td>4 GB</td>
+          </tr>
+        </table>
+
+        <h3>Browser Support</h3>
+        <p>The HTML5 build is intended to be played in a recent version of a Chromium-based browser, such as Google Chrome, Microsoft Edge, or Opera. Browser extensions that alter page behavior are not recommended. Other browsers must support modern JavaScript features and the current Web Audio API specification.</p>
+      </section>
+
+      <section>
+        <h2>How to Play</h2>
+        <p>You have twelve torpedoes and five minutes. Your score is tonnage sunk.</p>
+        <p><strong>Finding a target.</strong> Slew the periscope with Left and Right. The thin tone you always hear is your own aim: its pitch rises from left to right across the arc, so you can read your bearing by ear without looking at anything, and it clicks each time you sweep across a contact. Hold Shift to slow the slew for a fine bearing.</p>
+        <p><strong>Getting the range.</strong> Press P to ping. Count the wait: a return that comes straight back is close, one that takes a couple of seconds is a long way out. Every contact answers on its own bearing, so a single ping paints the whole arc.</p>
+        <p><strong>Firing.</strong> This is the skill the game is built around. A torpedo runs at 150 metres a second, so a ship a kilometre away is roughly six seconds of travel — and in six seconds a freighter has moved a long way across your bow. Aim at where the ship <em>will be</em>, not where it is. Press F2 for the firing solution on whatever the periscope is on: it gives you the bearing, the range, the run time and the lead bearing, but you still have to slew onto it.</p>
+        <p><strong>Being hunted.</strong> Pings and torpedo shots make noise. Enough noise and the escorts turn toward you — you will hear them swing across the arc and grow, and the tension bed under everything sours. Once one is overhead it starts dropping depth charges: a splash, a long falling whistle, then the bang. Go deep on the whistle. Charges mostly miss a deep boat, but the tubes will not fire down there and the battery only charges at periscope depth, so you cannot simply hide. Run quiet and they eventually lose you.</p>
+      </section>
+
+      <section>
+        <h2>Controls</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr>
+                <th>Action</th>
+                <th>Button</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Slew periscope to port</td>
+                <td><kbd>Left</kbd> / <kbd>A</kbd> / <kbd>Num&nbsp;4</kbd></td>
+              </tr>
+              <tr>
+                <td>Slew periscope to starboard</td>
+                <td><kbd>Right</kbd> / <kbd>D</kbd> / <kbd>Num&nbsp;6</kbd></td>
+              </tr>
+              <tr>
+                <td>Fine bearing (hold)</td>
+                <td><kbd>Shift</kbd></td>
+              </tr>
+              <tr>
+                <td>Fire torpedo</td>
+                <td><kbd>Space</kbd> / <kbd>Enter</kbd></td>
+              </tr>
+              <tr>
+                <td>Active ping</td>
+                <td><kbd>P</kbd> / <kbd>E</kbd></td>
+              </tr>
+              <tr>
+                <td>Go deep</td>
+                <td><kbd>Down</kbd> / <kbd>S</kbd></td>
+              </tr>
+              <tr>
+                <td>Up to periscope depth</td>
+                <td><kbd>Up</kbd> / <kbd>W</kbd></td>
+              </tr>
+              <tr>
+                <td>Status (tonnage, torpedoes, hull, battery, depth, time)</td>
+                <td><kbd>F1</kbd></td>
+              </tr>
+              <tr>
+                <td>Firing solution for the aimed contact</td>
+                <td><kbd>F2</kbd></td>
+              </tr>
+              <tr>
+                <td>All contacts, nearest first</td>
+                <td><kbd>F3</kbd></td>
+              </tr>
+              <tr>
+                <td>Pause</td>
+                <td><kbd>Escape</kbd></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>
