@@ -1,9 +1,13 @@
 // Headless bundle-boot harness for SEA WOLF. Loads the REAL built bundle into
 // a jsdom document (the real index.html) against a fake Web Audio API, boots it
 // like a browser would, then drives the screen FSM: menu -> learn the sounds ->
-// back -> Start -> a full patrol played through the actual key handlers (slew,
-// ping, fire, dive) -> game over -> save -> continue. Any error a screen
-// swallows into console.error fails the run.
+// back -> Start -> a full patrol played through the actual key handlers (helm,
+// throttle, periscope, ping, fire, dive) -> game over -> save -> continue. Any
+// error a screen swallows into console.error fails the run.
+//
+// It also covers the binaural layer: every positional sound goes through
+// engine.ear.binaural, which the fake Web Audio below has to satisfy, so a
+// missing or misused ear API shows up here rather than in the player's ears.
 //
 // This covers what tools/sim.js cannot see: content/audio.js and the game
 // screen only ever run in a browser, so every synthesis call and every event
@@ -149,19 +153,54 @@ function clean(label) {
   check('countdown and klaxon ran clean', clean('countdown'))
 
   // ---- drive the actual controls -------------------------------------------
+  // Throttle first: the boat has to be moving before the rudder does anything.
   errors.length = 0
-  key('ArrowRight')
-  frames(60)
-  const aimRight = content.game.getAim()
-  keyUp('ArrowRight')
-  key('ArrowLeft')
+  key('ArrowUp')
   frames(120)
-  const aimLeft = content.game.getAim()
+  keyUp('ArrowUp')
+  const speed = content.game.getSpeed()
+  check('holding up builds speed', speed > 6, speed.toFixed(1) + ' m/s')
+
+  const h0 = content.game.getHeading()
+  key('ArrowRight')
+  frames(90)
+  keyUp('ArrowRight')
+  const turned = content.constants.wrapDeg(content.game.getHeading() - h0)
+  check('holding right puts the rudder over to starboard', turned > 10,
+    turned.toFixed(1) + ' deg')
+
+  const h1 = content.game.getHeading()
+  key('ArrowLeft')
+  frames(180)
   keyUp('ArrowLeft')
-  check('holding right slews to starboard', aimRight > 5, 'aim=' + aimRight.toFixed(1))
-  check('holding left slews back to port', aimLeft < aimRight,
-    aimLeft.toFixed(1) + ' < ' + aimRight.toFixed(1))
-  check('slewing and its cross clicks ran clean', clean('slew'))
+  const back = content.constants.wrapDeg(content.game.getHeading() - h1)
+  check('holding left brings her back to port', back < -10, back.toFixed(1) + ' deg')
+  check('the helm ran clean', clean('helm'))
+
+  // The periscope is the fine aim, independent of the boat.
+  errors.length = 0
+  key('KeyE')
+  frames(45)
+  keyUp('KeyE')
+  const scope = content.game.getPeriscope()
+  check('E trains the periscope to starboard', scope > 3, scope.toFixed(1) + ' deg')
+  check('the periscope stops at its limit',
+    Math.abs(scope) <= content.constants.PERISCOPE_LIMIT + 0.01, scope.toFixed(1))
+  key('KeyR')
+  frames(3)
+  keyUp('KeyR')
+  check('R centres the periscope', Math.abs(content.game.getPeriscope()) < 0.01,
+    content.game.getPeriscope().toFixed(2))
+  check('the periscope ran clean', clean('periscope'))
+
+  // The beeps are the navigation interface; make sure they are firing and
+  // that the binaural path survives them.
+  errors.length = 0
+  let beeps = 0
+  content.events.on('beep', () => { beeps++ })
+  frames(300)
+  check('contacts are beeping', beeps > 0, beeps + ' beeps in 5s')
+  check('the beeps ran clean', clean('beeps'))
 
   // Ping. The echo scheduling is the one piece of game logic that lives in the
   // screen rather than in content, so it can only be exercised here.
@@ -175,7 +214,8 @@ function clean(label) {
   await new Promise((r) => setTimeout(r, 400)) // let the scheduled echoes land
   check('ping and its echoes ran clean', clean('ping'))
 
-  // Fire, then let the fish run to a hit or to exhaustion.
+  // Fire, then let the fish run to a hit or to exhaustion. The running whine
+  // is a per-torpedo binaural voice created and torn down by the frame event.
   errors.length = 0
   const before = content.game.status().torpedoes
   key('Space')
@@ -188,16 +228,16 @@ function clean(label) {
 
   // Depth.
   errors.length = 0
-  key('ArrowDown'); frames(6); keyUp('ArrowDown')
+  key('KeyX'); frames(6); keyUp('KeyX')
   frames(200)
-  check('Down takes her deep', content.game.status().depth === 'deep',
+  check('X takes her deep', content.game.status().depth === 'deep',
     content.game.status().depth)
   const blocked = content.game.status().torpedoes
   key('Space'); frames(6); keyUp('Space')
   check('the tubes will not fire from deep', content.game.status().torpedoes === blocked)
-  key('ArrowUp'); frames(6); keyUp('ArrowUp')
+  key('KeyX'); frames(6); keyUp('KeyX')
   frames(200)
-  check('Up returns to periscope depth', content.game.status().depth === 'periscope',
+  check('X again returns to periscope depth', content.game.status().depth === 'periscope',
     content.game.status().depth)
   check('depth changes ran clean', clean('depth'))
 

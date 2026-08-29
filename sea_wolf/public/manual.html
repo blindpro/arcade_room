@@ -167,10 +167,10 @@
     <main>
       <section>
         <h2>Introduction</h2>
-        <p>Sea Wolf is an audio-first submarine hunt, playable entirely by ear. You sit submerged in a shipping lane and convoys cross your bow. Everything you hear sits on a forward half circle — ninety degrees to port on your left, dead ahead in the centre, ninety degrees to starboard on your right — so where a sound sits in the stereo field <em>is</em> its bearing. There is no front-to-back to get confused about, which is why the game is a periscope and not a full circle.</p>
-        <p>Passive sonar runs constantly and never lies to you about direction: every ship beats out its screw, low and slow for a loaded tanker, high and fast for an escort, dull and quiet when it is far away and bright and loud when it is close. Because that beat drifts across the stereo field as the ship moves, you can hear which way it is going. What passive sonar will not tell you is <em>how far</em>.</p>
-        <p>For that you ping — and the ping is the heart of the game. The transmit goes out, and each ship answers with a bright return that arrives later the further away it is. The delay <em>is</em> the range. But a ping is a shout in a quiet room, and the escorts hear it too.</p>
-      </section>
+        <p>Sea Wolf is an audio-first submarine hunt, playable entirely by ear. You drive the boat &mdash; rudder, throttle and depth &mdash; around an open ocean while convoys cross it on their own courses. Your job is to hear one, work out which way it is going, get into a firing position, and put a torpedo where the ship is going to be.</p>
+        <p>Every positional sound is placed <strong>binaurally</strong> around the boat, so a ship is not simply to your left or your right: it is ahead of you, or behind you, or off the quarter, and it travels through that field as you turn. Front-to-back is a real cue here, which is why headphones matter more in this game than in most.</p>
+        <p>The way you find anything is the <strong>contact beep</strong>. Every ship within hearing beeps every so often, and two things about that beep carry all the information. The <strong>gap between beeps is the range</strong> &mdash; lazy and slow at the edge of hearing, a fast flutter when a ship is right alongside. The <strong>pitch is ahead or astern</strong> &mdash; a bright high tone while the contact is forward of the beam, dropping to a low tone the moment it slips behind you. So you steer toward the beeps, and you know you are steering the right way because they speed up. If one drops to the low tone, you have run past it.</p>
+        <p>Underneath all of it your own motor hums, and its pitch tracks your speed, so you always know how fast you are going. Speed is also noise. The faster you run, the sooner the escorts find you, and closing on a convoy at flank speed is a decision rather than a free move.</p>
 
       <section>
         <h2>System Requirements</h2>
@@ -207,12 +207,12 @@
 
       <section>
         <h2>How to Play</h2>
-        <p>You have twelve torpedoes and five minutes. Your score is tonnage sunk.</p>
-        <p><strong>Finding a target.</strong> Slew the periscope with Left and Right. The thin tone you always hear is your own aim: its pitch rises from left to right across the arc, so you can read your bearing by ear without looking at anything, and it clicks each time you sweep across a contact. Hold Shift to slow the slew for a fine bearing.</p>
-        <p><strong>Getting the range.</strong> Press P to ping. Count the wait: a return that comes straight back is close, one that takes a couple of seconds is a long way out. Every contact answers on its own bearing, so a single ping paints the whole arc.</p>
-        <p><strong>Firing.</strong> This is the skill the game is built around. A torpedo runs at 150 metres a second, so a ship a kilometre away is roughly six seconds of travel — and in six seconds a freighter has moved a long way across your bow. Aim at where the ship <em>will be</em>, not where it is. Press F2 for the firing solution on whatever the periscope is on: it gives you the bearing, the range, the run time and the lead bearing, but you still have to slew onto it.</p>
-        <p><strong>Being hunted.</strong> Pings and torpedo shots make noise. Enough noise and the escorts turn toward you — you will hear them swing across the arc and grow, and the tension bed under everything sours. Once one is overhead it starts dropping depth charges: a splash, a long falling whistle, then the bang. Go deep on the whistle. Charges mostly miss a deep boat, but the tubes will not fire down there and the battery only charges at periscope depth, so you cannot simply hide. Run quiet and they eventually lose you.</p>
-      </section>
+        <p>You have fourteen torpedoes and six minutes. Your score is tonnage sunk.</p>
+        <p><strong>Finding a convoy.</strong> Listen for the beeps and put the boat on them. The rudder needs water over it, so a stopped boat will barely turn &mdash; get some throttle on before you try to come about. As you close, the beeps should get faster and stay high; if one goes low, it is behind you.</p>
+        <p><strong>Getting the range.</strong> Press <kbd>P</kbd> to ping. Count the wait: a return that comes straight back is close, one that takes a couple of seconds is a long way out. A ping reaches much further than the passive beeps do, so it is how you find a convoy that is still out of earshot &mdash; but it is a shout in a quiet room.</p>
+        <p><strong>Firing.</strong> Torpedoes leave on the periscope bearing, which you train with <kbd>Q</kbd> and <kbd>E</kbd> up to forty-five degrees either side of the bow. The boat does the coarse aiming and the periscope does the fine. The skill is the <em>lead</em>: a torpedo runs at 145 metres a second, so a ship half a kilometre away is three and a half seconds of travel, and in three and a half seconds it has moved. Aim at where it is going, not where it is. <kbd>F2</kbd> reads out the firing solution &mdash; bearing, range, run time and the lead bearing &mdash; but you still have to steer onto it.</p>
+        <p>A ship crossing your bow needs a lot of lead; one you are chasing from directly astern is running down your sight line and needs almost none. That is the trade: the easy shot is the one you had to work hardest to get into position for.</p>
+        <p><strong>Being hunted.</strong> Noise is what gives you away, and speed is the biggest part of it. Below about three quarters throttle you are shedding noise faster than you make it and can run indefinitely; above that you are on a clock. Pings, shots and the explosion of a hit are spikes on top. When the escorts have you, one will turn and open up &mdash; you will hear it change pace as well as bearing &mdash; and then comes the splash and the long falling whistle of depth charges. Go deep on the whistle. Charges mostly miss a deep boat, but the tubes will not fire down there, you are slower, and the battery only charges at periscope depth, so you cannot simply hide. Run quiet and they lose you.</p>
 
       <section>
         <h2>Controls</h2>
@@ -226,12 +226,20 @@
             </thead>
             <tbody>
               <tr>
-                <td>Slew periscope to port</td>
-                <td><kbd>Left</kbd> / <kbd>A</kbd> / <kbd>Num&nbsp;4</kbd></td>
+                <td>Rudder to port / starboard</td>
+                <td><kbd>Left</kbd> / <kbd>Right</kbd> (or <kbd>A</kbd> / <kbd>D</kbd>)</td>
               </tr>
               <tr>
-                <td>Slew periscope to starboard</td>
-                <td><kbd>Right</kbd> / <kbd>D</kbd> / <kbd>Num&nbsp;6</kbd></td>
+                <td>Throttle up / down</td>
+                <td><kbd>Up</kbd> / <kbd>Down</kbd> (or <kbd>W</kbd> / <kbd>S</kbd>)</td>
+              </tr>
+              <tr>
+                <td>Train periscope to port / starboard</td>
+                <td><kbd>Q</kbd> / <kbd>E</kbd></td>
+              </tr>
+              <tr>
+                <td>Centre the periscope on the bow</td>
+                <td><kbd>R</kbd></td>
               </tr>
               <tr>
                 <td>Fine bearing (hold)</td>
@@ -243,18 +251,14 @@
               </tr>
               <tr>
                 <td>Active ping</td>
-                <td><kbd>P</kbd> / <kbd>E</kbd></td>
+                <td><kbd>P</kbd></td>
               </tr>
               <tr>
-                <td>Go deep</td>
-                <td><kbd>Down</kbd> / <kbd>S</kbd></td>
+                <td>Dive deep / return to periscope depth</td>
+                <td><kbd>X</kbd></td>
               </tr>
               <tr>
-                <td>Up to periscope depth</td>
-                <td><kbd>Up</kbd> / <kbd>W</kbd></td>
-              </tr>
-              <tr>
-                <td>Status (tonnage, torpedoes, hull, battery, depth, time)</td>
+                <td>Status (tonnage, torpedoes, heading, speed, hull, battery)</td>
                 <td><kbd>F1</kbd></td>
               </tr>
               <tr>

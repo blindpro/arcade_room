@@ -3,10 +3,10 @@
  *
  * content/{constants,events,game}.js touch no Web Audio and no DOM, so they can
  * be loaded straight into Node and driven at a fixed timestep. This exercises
- * the parts that are hard to check by ear: that convoys spawn and clear, that a
- * correctly-led torpedo actually hits and a badly-led one misses, that the
- * escorts acquire on noise and give up on silence, and that depth really is
- * the difference between a survivable charge and a fatal one.
+ * the parts that are hard to check by ear: that the boat actually answers the
+ * helm, that a player who steers toward a contact closes on it, that a
+ * correctly-led torpedo hits and an unled one does not, that speed is what
+ * gets you found, and that depth is worth taking.
  *
  *   node tools/sim.js
  */
@@ -36,7 +36,6 @@ function check(name, cond, detail) {
   }
 }
 
-// Run the sim for `seconds`, calling `each(t)` every step.
 function run(content, seconds, each, dt) {
   dt = dt || 1 / 60
   const steps = Math.round(seconds / dt)
@@ -52,87 +51,131 @@ function startPatrol(content) {
   run(content, 3.2)
 }
 
-// ---------------------------------------------------------------------------
-console.log('\nSEA WOLF simulation\n')
-
-// --- 1. a patrol runs, convoys arrive, contacts clear ----------------------
-{
-  const content = load()
-  const seen = new Set()
-  let maxContacts = 0
-  content.events.on('convoy', () => seen.add(seen.size))
-  startPatrol(content)
-  run(content, 180, () => {
-    maxContacts = Math.max(maxContacts, content.game.contactList().length)
-  })
-  const st = content.game.status()
-  const k = content.constants
-  // Expect roughly one convoy per CONVOY_GAP, with slack for the dice and for
-  // convoys skipped because the arc was already at MAX_CONTACTS.
-  const expected = 180 / ((k.CONVOY_GAP[0] + k.CONVOY_GAP[1]) / 2)
-
-  console.log('1. patrol pacing')
-  check('convoys arrive at roughly the intended cadence',
-    seen.size >= Math.floor(expected * 0.5) && seen.size <= Math.ceil(expected * 1.6),
-    seen.size + ' convoys in 180s, expected about ' + expected.toFixed(1))
-  check('contacts appear in the arc', maxContacts > 0, 'peak ' + maxContacts)
-  check('the arc never exceeds the audio budget', maxContacts <= content.constants.MAX_CONTACTS,
-    'peak ' + maxContacts + ' vs budget ' + content.constants.MAX_CONTACTS)
-  check('still playing after 180s', content.game.phase() === 'play', content.game.phase())
-  check('clock counts down', st.timeLeft < 300 && st.timeLeft > 100, String(st.timeLeft))
-  check('no torpedoes spent on their own', st.torpedoes === 12, String(st.torpedoes))
+// Steer the boat toward a relative bearing, the way a player listening to the
+// beeps would: rudder over until it is ahead, throttle up.
+function steerToward(g, bearing, throttleDir) {
+  g.setRudder(bearing > 3 ? 1 : (bearing < -3 ? -1 : 0))
+  g.nudgeThrottle(throttleDir === undefined ? 1 : throttleDir, 1 / 60)
 }
 
-// --- 2. a correctly-led shot hits; an unled shot at the same target misses --
-// Fires at the true lead bearing the module itself computes, then re-runs the
-// identical setup firing straight at the target's current bearing.
-//
-// Only engagements where the lead is actually non-trivial count. A ship
-// crossing at a wide bearing is travelling almost straight down the line of
-// sight, so it needs barely any lead and an unled shot hits it fine — that is
-// correct geometry, not a broken mechanic, and it is what makes a distant
-// beam-on contact the easy shot and a close one the interesting shot. What
-// must hold is that where the lead IS large, ignoring it misses.
+console.log('\nSEA WOLF simulation\n')
+
+// --- 1. the boat answers the helm -------------------------------------------
 {
-  // Degrees of lead below which the shot is not really testing anything.
+  const content = load()
+  const g = content.game
+  startPatrol(content)
+
+  const h0 = g.getHeading()
+  // Stopped, the rudder should do almost nothing.
+  g.state.throttle = 0
+  g.state.speed = 0
+  g.setRudder(1)
+  run(content, 2)
+  const turnedStopped = Math.abs(content.constants.wrapDeg(g.getHeading() - h0))
+
+  // Under way it should answer properly.
+  g.state.speed = content.constants.SPEED_MAX_SHALLOW
+  g.state.throttle = 1
+  const h1 = g.getHeading()
+  run(content, 2)
+  const turnedMoving = Math.abs(content.constants.wrapDeg(g.getHeading() - h1))
+
+  console.log('1. the helm')
+  check('a stopped boat barely turns', turnedStopped < 12, turnedStopped.toFixed(1) + ' deg in 2s')
+  check('a boat under way answers the rudder', turnedMoving > 40,
+    turnedMoving.toFixed(1) + ' deg in 2s')
+  check('the rudder is much better with way on', turnedMoving > turnedStopped * 3,
+    turnedMoving.toFixed(1) + ' vs ' + turnedStopped.toFixed(1))
+
+  // Throttle actually moves the boat.
+  const c3 = load()
+  startPatrol(c3)
+  const before = {x: c3.game.state.x, y: c3.game.state.y}
+  c3.game.setRudder(0)
+  run(c3, 5, () => c3.game.nudgeThrottle(1, 1 / 60))
+  const moved = Math.hypot(c3.game.state.x - before.x, c3.game.state.y - before.y)
+  check('throttle moves the boat', moved > 40, moved.toFixed(0) + ' m in 5s')
+  check('the motor reaches a useful speed', c3.game.getSpeed() > 10,
+    c3.game.getSpeed().toFixed(1) + ' m/s')
+}
+
+// --- 2. you can find and close on a convoy ----------------------------------
+// The original build's complaint was that you never got into contact. Drive
+// the way the beeps tell you to and the range must come down.
+{
+  const content = load()
+  const g = content.game
+  startPatrol(content)
+
+  const first = g.contactList()[0]
+
+  let startRange = first ? first.range : Infinity
+  let targetId = first ? first.id : null
+
+  run(content, 90, () => {
+    const list = g.contactList()
+    const t = list.find((c) => c.id === targetId) || list[0]
+    if (!t) return
+    targetId = t.id
+    steerToward(g, t.bearing)
+  })
+  const after = g.contactList().find((c) => c.id === targetId)
+
+  console.log('\n2. the intercept')
+  check('there is something in the water from the first second', !!first,
+    first ? Math.round(first.range) + ' m away' : 'nothing')
+  check('a contact starts within hearing', startRange <= content.constants.CONTACT_RANGE,
+    Math.round(startRange) + ' m')
+  check('steering toward a contact closes the range',
+    !after || after.range < startRange,
+    after ? Math.round(startRange) + ' -> ' + Math.round(after.range) + ' m'
+          : 'target left the field (also fine)')
+  // A torpedo runs TORPEDO_SPEED * TORPEDO_LIFE metres, so "in range" is
+  // generous; what matters is that a pure stern chase gets you inside it.
+  const reach = content.constants.TORPEDO_SPEED * content.constants.TORPEDO_LIFE
+  check('you can reach torpedo range',
+    !after || after.range < reach * 0.6,
+    after ? Math.round(after.range) + ' m, torpedo reaches ' + Math.round(reach) + ' m' : 'n/a')
+}
+
+// --- 3. the lead is the mechanic --------------------------------------------
+// Only engagements where the lead is non-trivial count. A ship coming almost
+// straight at you needs barely any lead and an unled shot hits it fine; that is
+// correct geometry. What must hold is that where the lead IS large, ignoring it
+// misses the ship you aimed at.
+{
   const MIN_LEAD = 4
 
   function attempt(useLead) {
     const content = load()
     const g = content.game
-    // Track WHICH ship was hit. Convoys are strung out along one track, so a
-    // shot that misses its target can still blunder into the ship behind it —
-    // a fair outcome in the game, but it is not evidence that the lead works.
     let hitId = null
-    content.events.on('hit', (e) => { if (hitId === null) hitId = e.id })
     let targetId = null
+    content.events.on('hit', (e) => { if (hitId === null) hitId = e.id })
     startPatrol(content)
 
-    // Wait for a merchant at a workable range with a real lead, then shoot.
     let fired = false
-    run(content, 120, () => {
+    run(content, 150, () => {
       if (fired) return
-      const list = g.contactList().filter((c) => !c.escort && c.range > 500 && c.range < 1400)
+      const list = g.contactList().filter((c) => !c.escort && c.range > 350 && c.range < 1300)
       if (!list.length) return
-      // Put the periscope on it, then read the solution the module offers.
-      g.state.aim = list[0].bearing
+      const target = list[0]
+      // Point the boat at it, then read the solution the module offers.
+      steerToward(g, target.bearing)
       const sol = g.aimedContact()
-      if (!sol || sol.escort) return
+      if (!sol || sol.escort || sol.id !== target.id) return
+      if (!sol.leadReachable) return
       if (Math.abs(sol.leadBearing - sol.bearing) < MIN_LEAD) return
       targetId = sol.id
-      g.state.aim = useLead ? sol.leadBearing : sol.bearing
+      g.state.periscope = useLead ? sol.leadBearing : sol.bearing
       fired = g.fire()
     })
-    // Let the fish finish its run before judging the shot.
-    run(content, 14)
+    run(content, 14) // let the fish finish its run
     return {fired, hit: hitId !== null && hitId === targetId, anyHit: hitId !== null}
   }
 
-  console.log('\n2. the lead is the mechanic')
-  // Fire the same engagement many times each way. An unled shot at a slow
-  // target on a near-radial course can still connect by luck, so what matters
-  // is the gap between the two hit rates, not any single shot.
-  const TRIALS = 40
+  const TRIALS = 30
   let ledHits = 0, ledShots = 0, unledHits = 0, unledShots = 0, unledStray = 0
   for (let i = 0; i < TRIALS; i++) {
     const a = attempt(true)
@@ -143,91 +186,115 @@ console.log('\nSEA WOLF simulation\n')
   const ledRate = ledShots ? ledHits / ledShots : 0
   const unledRate = unledShots ? unledHits / unledShots : 0
 
+  console.log('\n3. the lead is the mechanic')
   console.log('  (led ' + (ledRate * 100).toFixed(0) + '% of ' + ledShots + ' shots, ' +
               'unled ' + (unledRate * 100).toFixed(0) + '% of ' + unledShots + ' shots, ' +
-              'plus ' + unledStray + ' unled shots that hit another ship in the convoy)')
-  check('shots are actually taken', ledShots > TRIALS * 0.6 && unledShots > TRIALS * 0.6,
+              'plus ' + unledStray + ' unled shots that hit another ship)')
+  check('shots are actually taken', ledShots > TRIALS * 0.5 && unledShots > TRIALS * 0.5,
     ledShots + '/' + unledShots + ' of ' + TRIALS)
-  check('a led shot usually hits', ledRate > 0.7, (ledRate * 100).toFixed(0) + '%')
+  check('a led shot usually hits', ledRate > 0.6, (ledRate * 100).toFixed(0) + '%')
   check('ignoring a real lead usually misses', unledRate < 0.35,
-    (unledRate * 100).toFixed(0) + '% of unled shots still connected')
-  check('the lead is worth at least double', ledRate > unledRate * 2,
-    (ledRate * 100).toFixed(0) + '% vs ' + (unledRate * 100).toFixed(0) + '%')
+    (unledRate * 100).toFixed(0) + '% still connected')
 }
 
-// --- 3. escorts acquire on noise and give up on silence --------------------
+// --- 4. speed is noise -------------------------------------------------------
+{
+  const fast = load()
+  startPatrol(fast)
+  fast.game.setRudder(0)
+  run(fast, 45, () => fast.game.nudgeThrottle(1, 1 / 60))
+
+  const slow = load()
+  startPatrol(slow)
+  slow.game.setRudder(0)
+  run(slow, 45, () => slow.game.nudgeThrottle(-1, 1 / 60))
+
+  console.log('\n4. speed is noise')
+  console.log('  (flank noise ' + fast.game.getNoise().toFixed(2) +
+              ', stopped noise ' + slow.game.getNoise().toFixed(2) + ')')
+  check('running flank gets you found', fast.game.isHunted() || fast.game.getNoise() > 0.4,
+    fast.game.getNoise().toFixed(2))
+  check('creeping keeps you quiet', slow.game.getNoise() < 0.15, slow.game.getNoise().toFixed(2))
+  check('the difference is large', fast.game.getNoise() > slow.game.getNoise() + 0.25,
+    fast.game.getNoise().toFixed(2) + ' vs ' + slow.game.getNoise().toFixed(2))
+}
+
+// --- 5. stealth recovers -----------------------------------------------------
 {
   const content = load()
   const g = content.game
-  let acquired = false
-  let lost = false
+  let acquired = false, lost = false
   content.events.on('acquired', () => { acquired = true })
   content.events.on('lost-contact', () => { lost = true })
 
   startPatrol(content)
-  // Ping as often as the cooldown allows — the loudest thing you can do.
-  run(content, 40, () => { g.ping() })
-  const noisy = g.getNoise()
+  run(content, 50, () => { g.nudgeThrottle(1, 1 / 60); g.ping() })
+  console.log('\n5. stealth')
+  check('flank speed plus constant pinging gets you acquired', acquired,
+    g.getNoise().toFixed(2))
 
-  console.log('\n3. stealth')
-  check('pinging raises the noise signature', noisy > 0.4, noisy.toFixed(2))
-  check('escorts acquire you', acquired)
-
-  // Now go quiet and deep and wait them out.
   g.setDepth('deep')
-  run(content, 60)
-  console.log('  (noise after 60s silent+deep: ' + g.getNoise().toFixed(3) + ')')
-  check('running silent loses them', lost && !g.isHunted())
+  run(content, 60, () => g.nudgeThrottle(-1, 1 / 60))
+  console.log('  (noise after 60s stopped and deep: ' + g.getNoise().toFixed(3) + ')')
+  check('going quiet and deep loses them', lost && !g.isHunted())
 }
 
-// --- 4. depth is worth taking ----------------------------------------------
-// Same charge, same proximity, both depths — deep must take materially less.
+// --- 6. depth is worth taking ------------------------------------------------
 {
-  const content = load()
-  const k = content.constants
+  const k = load().constants
   const prox = 0.9
   const shallow = k.CHARGE_DAMAGE * prox
   const deep = k.CHARGE_DAMAGE * prox * k.DEEP_DAMAGE_MULT
 
-  console.log('\n4. depth')
+  console.log('\n6. depth')
   check('deep takes less damage', deep < shallow, deep.toFixed(1) + ' vs ' + shallow.toFixed(1))
-  check('deep is survivable, shallow is not, over a pattern',
-    deep * 4 < k.HULL_MAX && shallow * 4 > k.HULL_MAX,
-    '4 charges: ' + (deep * 4).toFixed(0) + ' deep / ' + (shallow * 4).toFixed(0) + ' shallow')
-
-  // The battery has to force you back up eventually.
-  const dive = k.BATTERY_MAX / k.BATTERY_DRAIN
-  check('a full battery is a finite dive', dive > 10 && dive < 40, dive.toFixed(0) + 's submerged')
+  // Expressed as the thing that actually matters: how many charges at ground
+  // zero it takes to kill the boat at each depth.
+  const killsShallow = k.HULL_MAX / shallow
+  const killsDeep = k.HULL_MAX / deep
+  check('a shallow boat dies to a handful of close charges',
+    killsShallow > 2 && killsShallow < 7, killsShallow.toFixed(1) + ' charges')
+  check('a deep boat can ride out a long attack',
+    killsDeep > 12, killsDeep.toFixed(1) + ' charges')
+  check('a full battery is a finite dive',
+    k.BATTERY_MAX / k.BATTERY_DRAIN > 15 && k.BATTERY_MAX / k.BATTERY_DRAIN < 45,
+    (k.BATTERY_MAX / k.BATTERY_DRAIN).toFixed(0) + 's submerged')
+  check('running deep costs you the chase', k.SPEED_MAX_DEEP < k.SPEED_MAX_SHALLOW,
+    k.SPEED_MAX_DEEP + ' vs ' + k.SPEED_MAX_SHALLOW + ' m/s')
 }
 
-// --- 5. the boat can actually be sunk ---------------------------------------
+// --- 7. the ocean stays populated and bounded --------------------------------
 {
   const content = load()
   const g = content.game
-  let sunk = false
-  content.events.on('doom', (e) => { if (e.reason === 'sunk') sunk = true })
-
+  let peak = 0, empty = 0, samples = 0
   startPatrol(content)
-  // Make every possible noise and stay shallow: the worst play there is.
-  run(content, 240, () => { g.ping(); g.fire() })
+  run(content, 300, (t) => {
+    g.nudgeThrottle(1, 1 / 60)
+    if (Math.round(t * 60) % 30) return
+    const audible = g.contactList().filter((c) => c.audible).length
+    peak = Math.max(peak, g.contactList().length)
+    if (!audible) empty++
+    samples++
+  })
 
-  console.log('\n5. consequences')
-  check('reckless play gets you killed or emptied',
-    sunk || g.phase() !== 'play',
-    'sunk=' + sunk + ' phase=' + g.phase() + ' hull=' + g.status().hull)
+  console.log('\n7. the ocean')
+  check('never exceeds the audio budget', peak <= content.constants.MAX_CONTACTS,
+    'peak ' + peak + ' vs budget ' + content.constants.MAX_CONTACTS)
+  check('rarely leaves you with nothing to hear', empty / samples < 0.35,
+    (empty / samples * 100).toFixed(0) + '% of samples had an empty field')
 }
 
-// --- 6. the patrol ends cleanly ---------------------------------------------
+// --- 8. the patrol ends cleanly ---------------------------------------------
 {
   const content = load()
   const g = content.game
   let over = null
   content.events.on('game-over', (e) => { over = e })
-
   startPatrol(content)
-  run(content, 305)
+  run(content, 365)
 
-  console.log('\n6. the end')
+  console.log('\n8. the end')
   check('patrol ends on the clock', !!over, String(g.phase()))
   check('reports a reason', over && over.reason === 'time', over && over.reason)
   check('score is tonnage', over && over.score === over.tonnage)

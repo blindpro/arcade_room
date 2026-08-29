@@ -1,8 +1,8 @@
-/* SEA WOLF game HUD + a visual sonar arc (aria-hidden; the audio +
-   announcements are the real interface). Kept readable for sighted / low-vision
-   players: contacts plot by bearing (left) and range (bottom), escorts in red
-   and a hunting escort brighter still, with a marker for the periscope
-   bearing along the bottom. */
+/* SEA WOLF game HUD + a 360-degree plot (aria-hidden; the audio and the
+   announcements are the real interface). Kept readable for sighted /
+   low-vision players: the boat sits at the centre facing up, contacts are
+   placed by relative bearing and range, escorts in orange and a hunting
+   escort in red, with a marker on the ring for the periscope bearing. */
 .a-game {
   align-items: center;
   text-align: center;
@@ -17,21 +17,46 @@
   }
     .a-game--stat b { color: #ffd479; }
 
-  .a-game--sonar {
+  .a-game--plot {
     position: relative;
-    width: 24em;
-    max-width: 92vw;
-    height: 16em;
+    width: 20em;
+    max-width: 86vw;
+    aspect-ratio: 1 / 1;
     margin: 0 auto;
-    border-radius: 14px;
-    background: radial-gradient(ellipse at 50% 0%, rgba(74, 200, 255, 0.16), rgba(10, 40, 70, 0.10) 70%);
+    border-radius: 50%;
+    border: 1px solid rgba(111, 211, 255, 0.28);
+    background:
+      radial-gradient(circle at 50% 50%, rgba(74, 200, 255, 0.14), rgba(10, 40, 70, 0.10) 72%);
     overflow: hidden;
   }
+    /* The bow line, so "up is where you are pointing" is obvious. */
+    .a-game--plot::before {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 4%;
+      width: 1px;
+      height: 46%;
+      background: rgba(255, 255, 255, 0.30);
+    }
+    /* The boat itself. */
+    .a-game--plot::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 0.55em;
+      height: 0.55em;
+      margin: -0.275em 0 0 -0.275em;
+      border-radius: 50%;
+      background: #ffffff;
+      box-shadow: 0 0 12px rgba(255, 255, 255, 0.85);
+    }
   .a-game--dot {
     position: absolute;
     width: 0.8em;
     height: 0.8em;
-    margin: -0.4em 0 0 -0.4em; /* centre on its left/bottom anchor */
+    margin: -0.4em 0 0 -0.4em; /* centre on its left/top anchor */
     border-radius: 50%;
     background: #6fd3ff;
     box-shadow: 0 0 10px rgba(111, 211, 255, 0.7);
@@ -45,14 +70,14 @@
       outline: 2px solid rgba(255, 255, 255, 0.65);
       outline-offset: 2px;
     }
-    /* The periscope bearing, riding along the bottom of the arc. */
-    .a-game--dot-aim {
-      width: 0.5em;
-      height: 1.5em;
-      margin: 0 0 0 -0.25em;
-      border-radius: 3px;
-      background: #ffffff;
-      box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+    /* The periscope bearing, out on the ring. */
+    .a-game--dot-scope {
+      width: 0.42em;
+      height: 0.42em;
+      margin: -0.21em 0 0 -0.21em;
+      border-radius: 2px;
+      background: #ffe9a8;
+      box-shadow: 0 0 12px rgba(255, 233, 168, 0.95);
     }
 
 /* Help / lists */

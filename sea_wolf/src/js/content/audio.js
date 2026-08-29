@@ -1,28 +1,43 @@
-// SEA WOLF audio. Everything sits on a plain STEREO field that maps directly
-// onto the forward arc: pan = bearing / 90, so a ship hard to port is hard
-// left and a ship dead ahead is centred. There is no front/back to confuse,
-// which is the whole reason the game is a periscope and not a full circle.
+// SEA WOLF audio.
 //
-// The layers, quietest to loudest:
-//   sea        — a low wash under everything, muffled when you are deep
-//   aim tone   — a thin continuous tone at YOUR periscope bearing; its pitch
-//                rises left-to-right, so you can read your own aim by ear
-//   screw beat — one pulse per ship per beat, panned to its bearing, pitched
-//                by hull size (tanker low, escort high) and beating faster the
-//                faster the ship. This is passive sonar and it never stops.
-//   ping/echo  — the transmit, then one bright return per contact after
-//                2*range/SOUND_SPEED seconds. Delay IS range.
-//   the fight  — tube launch, torpedo run, explosions, depth charges.
+// Everything positional goes through a syngen BINAURAL EAR, fed listener-local
+// coordinates — x forward over the bow, y to starboard — exactly the way
+// dogfight places its cars. That is what gives front/back and distance as real
+// perceptual cues. The first build of this game used a bare StereoPanner, and
+// a panned drone turned out to carry almost no information: you could tell
+// left from right and nothing else.
+//
+// The layers, in order of how much they actually tell you:
+//
+//   proximity beeps  THE navigation interface. One beep per contact, binaural
+//                    at its position, with the GAP BETWEEN BEEPS as the range
+//                    (slow and lazy at the edge of hearing, a flutter when it
+//                    is alongside) and the PITCH as ahead-or-astern. Escorts
+//                    beep on a square wave so a threat never sounds like a
+//                    prize. This replaces the old continuous screw hum.
+//   own boat         a motor voice whose pitch and rumble track your own
+//                    speed, so throttle is audible without looking.
+//   close aboard     a continuous screw voice, but only inside
+//                    CLOSE_VOICE_RANGE — a permanent drone for every distant
+//                    ship is the uninformative wash we just removed, so the
+//                    continuous layer is only allowed where it means
+//                    something. Set CLOSE_VOICE_RANGE to 0 to switch it off.
+//   ping and echoes  the transmit, then one bright return per contact after
+//                    2*range/SOUND_SPEED seconds. Delay IS range, and it
+//                    reaches further than the passive beeps.
+//   the fight        tube launch, torpedo run, explosions, depth charges.
 content.audio = (() => {
   const K = () => content.constants
 
-  let sea = null          // {s, lp, g} looping sea wash
-  let aim = null          // {o, g, p} the periscope tone
-  let run = null          // {s, bp, g, p} torpedo run whine
+  let sea = null      // {noise, lp, gain} the sea wash (non-positional)
+  let motor = null    // {carrier, sub, noiseGain, lp, gain} your own boat
+  const closeVoices = new Map() // contactId -> continuous screw voice
+  const runVoices = new Map()   // torpedoId -> running whine
   let pendingTimeouts = []
 
   function ctx() { return engine.context() }
-  function out() { return engine.mixer.input() }
+  function out() { return engine.mixer.output() }
+  function now() { return engine.time() }
 
   // ---- shared noise buffer ----
   let _noise = null
@@ -43,61 +58,6 @@ content.audio = (() => {
     return s
   }
 
-  // ---- helpers ----
-  function panOf(bearing) { return K().panOf(bearing) }
-
-  function env(param, t0, {a = 0.005, hold = 0, r = 0.08, peak = 1}) {
-    param.cancelScheduledValues(t0)
-    param.setValueAtTime(0.0001, t0)
-    param.linearRampToValueAtTime(peak, t0 + a)
-    param.setValueAtTime(peak, t0 + a + hold)
-    param.linearRampToValueAtTime(0.0001, t0 + a + hold + r)
-  }
-
-  // One voice, optionally panned. osc -> gain -> panner -> mix.
-  function voice({type = 'sine', freq, glideTo, t0, a = 0.004, hold = 0.03, r = 0.08, peak = 0.3, pan = 0, dest}) {
-    const c = ctx()
-    const o = c.createOscillator()
-    const g = c.createGain()
-    o.type = type
-    o.frequency.setValueAtTime(Math.max(20, freq), t0)
-    if (glideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, glideTo), t0 + a + hold + r)
-    env(g.gain, t0, {a, hold, r, peak})
-    o.connect(g)
-    if (pan !== 0) {
-      const sp = c.createStereoPanner()
-      sp.pan.value = K().clamp(pan, -1, 1)
-      g.connect(sp).connect(dest || out())
-    } else {
-      g.connect(dest || out())
-    }
-    o.start(t0)
-    o.stop(t0 + a + hold + r + 0.05)
-  }
-
-  function noiseBurst(t0, {peak = 0.25, dur = 0.06, cutoff = 3200, pan = 0, type = 'lowpass', q = 0.7, sweepTo = 0, dest} = {}) {
-    const c = ctx()
-    const s = noiseSource()
-    const f = c.createBiquadFilter()
-    f.type = type
-    f.frequency.setValueAtTime(cutoff, t0)
-    f.Q.value = q
-    if (sweepTo) f.frequency.exponentialRampToValueAtTime(Math.max(60, sweepTo), t0 + dur)
-    const g = c.createGain()
-    env(g.gain, t0, {a: 0.002, hold: 0, r: dur, peak})
-    s.connect(f).connect(g)
-    if (pan !== 0) {
-      const sp = c.createStereoPanner()
-      sp.pan.value = K().clamp(pan, -1, 1)
-      g.connect(sp).connect(dest || out())
-    } else {
-      g.connect(dest || out())
-    }
-    s.start(t0)
-    s.stop(t0 + dur + 0.05)
-    setTimeout(() => { try { g.disconnect() } catch (e) {} }, (dur + 0.25) * 1000)
-  }
-
   function later(fn, ms) {
     const id = setTimeout(() => {
       pendingTimeouts = pendingTimeouts.filter((x) => x !== id)
@@ -107,368 +67,594 @@ content.audio = (() => {
     return id
   }
 
+  // A binaural ear at a listener-local point. `local` is {forward, starboard}
+  // from content.game; syngen wants {x: forward, y: left-positive}, so
+  // starboard is negated once, here, and nowhere else.
+  function earAt(local, options) {
+    const ear = engine.ear.binaural.create(options)
+    ear.to(out())
+    ear.update({x: local.forward, y: -local.starboard, z: 0})
+    return ear
+  }
+  function moveEar(ear, local) {
+    ear.update({x: local.forward, y: -local.starboard, z: 0})
+  }
+
   // ===========================================================================
-  // passive sonar — the screw beat
+  // proximity beeps — the navigation interface
   // ===========================================================================
-  // One pulse per ship per beat. Pitch is the hull (tanker 44 Hz, escort
-  // 128 Hz), so type is audible; gain and brightness fall off with range, so
-  // distance is audible; pan is the bearing. Deep muffles everything.
-  function hum(bearing, range, pitch, escort, muffled) {
+  // Placed binaurally so you can turn the boat until the contact swings to
+  // dead ahead. Pitch flips at the beam: forward of you it is bright and
+  // high, abaft of you it drops to a low tone. That octave drop is what tells
+  // you the convoy has slipped past and you need to come about.
+  function beep(local, range, escort, muffled) {
     const k = K()
-    const close = k.closeness(range)
-    const pan = panOf(bearing)
-    const t0 = ctx().currentTime
-    const duck = muffled ? 0.4 : 1
-
-    // The thump of the engine.
-    voice({
-      type: escort ? 'square' : 'sine',
-      freq: pitch,
-      t0,
-      a: 0.006,
-      hold: escort ? 0.02 : 0.05,
-      r: 0.06 + close * 0.10,
-      peak: (0.03 + close * 0.13) * duck,
-      pan,
-    })
-    // The wash of the screw over it — brighter and more present up close,
-    // which is most of what makes a ship feel near.
-    noiseBurst(t0, {
-      peak: (0.012 + close * 0.055) * duck,
-      dur: 0.09 + close * 0.06,
-      cutoff: (escort ? 1400 : 700) * (0.35 + close * 0.9) * (muffled ? 0.4 : 1),
-      pan,
-      type: 'bandpass',
-      q: escort ? 1.6 : 0.9,
-    })
-  }
-
-  // Sweeping the periscope across a contact's bearing.
-  function cross(bearing, escort) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    voice({type: 'square', freq: escort ? 1500 : 1050, t0, a: 0.001, hold: 0.008, r: 0.03, peak: 0.11, pan})
-  }
-
-  // ===========================================================================
-  // the periscope tone — your own bearing, always audible
-  // ===========================================================================
-  function startAim() {
-    if (aim) return
+    const t0 = now()
     const c = ctx()
-    const o = c.createOscillator()
+    const ahead = local.forward >= 0
+
+    const ear = earAt(local)
     const g = c.createGain()
-    const p = c.createStereoPanner()
-    o.type = 'triangle'
-    o.frequency.value = K().aimPitch(0)
-    g.gain.value = 0.0001
-    o.connect(g).connect(p).connect(out())
-    o.start()
-    aim = {o, g, p}
+    g.gain.value = 0
+    ear.from(g)
+
+    const o = c.createOscillator()
+    o.type = escort ? k.BEEP_ESCORT_TYPE : k.BEEP_MERCHANT_TYPE
+    o.frequency.value = ahead ? k.BEEP_AHEAD : k.BEEP_ASTERN
+    o.connect(g)
+
+    const dur = 0.10
+    // Close contacts are louder, but not by much — the RATE is doing the
+    // distance work, so gain only has to keep a far contact audible.
+    const peak = (0.16 + k.closeness(range) * 0.22) * (muffled ? 0.55 : 1)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.006)
+    g.gain.linearRampToValueAtTime(0, t0 + dur)
+
+    o.start(t0)
+    o.stop(t0 + dur + 0.02)
+    o.onended = () => {
+      try { g.disconnect() } catch (e) {}
+      try { ear.destroy() } catch (e) {}
+    }
   }
-  function stopAim() {
-    if (!aim) return
-    const a = aim
-    const t = ctx().currentTime
+
+  // ===========================================================================
+  // your own boat — motor pitch tracks speed
+  // ===========================================================================
+  // Non-positional: it is you. Without it there is no way to tell "ahead
+  // slow" from "stopped" by ear, which was the other half of the old build
+  // feeling inert.
+  function startMotor() {
+    if (motor) return
+    const c = ctx()
+
+    const gain = c.createGain()
+    gain.gain.value = 0.0001
+    const lp = c.createBiquadFilter()
+    lp.type = 'lowpass'
+    lp.frequency.value = 380
+    lp.Q.value = 0.6
+    lp.connect(gain).connect(out())
+
+    const carrier = c.createOscillator()
+    carrier.type = 'triangle'
+    carrier.frequency.value = 44
+    const carrierGain = c.createGain()
+    carrierGain.gain.value = 0.5
+    carrier.connect(carrierGain).connect(lp)
+    carrier.start()
+
+    const sub = c.createOscillator()
+    sub.type = 'sine'
+    sub.frequency.value = 22
+    const subGain = c.createGain()
+    subGain.gain.value = 0.4
+    sub.connect(subGain).connect(lp)
+    sub.start()
+
+    const rumble = noiseSource()
+    const rumbleBp = c.createBiquadFilter()
+    rumbleBp.type = 'bandpass'
+    rumbleBp.frequency.value = 180
+    rumbleBp.Q.value = 0.8
+    const rumbleGain = c.createGain()
+    rumbleGain.gain.value = 0.0001
+    rumble.connect(rumbleBp).connect(rumbleGain).connect(lp)
+    rumble.start()
+
+    motor = {gain, lp, carrier, sub, rumble, rumbleBp, rumbleGain}
+  }
+  function stopMotor() {
+    if (!motor) return
+    const m = motor
+    const t = now()
     try {
-      a.g.gain.cancelScheduledValues(t)
-      a.g.gain.setValueAtTime(a.g.gain.value, t)
-      a.g.gain.linearRampToValueAtTime(0.0001, t + 0.2)
-      setTimeout(() => { try { a.o.stop(); a.g.disconnect(); a.p.disconnect() } catch (e) {} }, 300)
+      m.gain.gain.cancelScheduledValues(t)
+      m.gain.gain.setValueAtTime(m.gain.gain.value, t)
+      m.gain.gain.linearRampToValueAtTime(0.0001, t + 0.3)
+      setTimeout(() => {
+        try { m.carrier.stop(); m.sub.stop(); m.rumble.stop() } catch (e) {}
+        try { m.gain.disconnect(); m.lp.disconnect() } catch (e) {}
+      }, 400)
     } catch (e) {}
-    aim = null
+    motor = null
   }
-  // `moving` lifts the tone while you are actually slewing, so the periscope
-  // is prominent when you are aiming and stays out of the way when you are not.
-  function updateAim(bearing, moving, canFire) {
-    if (!aim) return
-    const t = ctx().currentTime
-    aim.o.frequency.setTargetAtTime(K().aimPitch(bearing), t, 0.02)
-    aim.p.pan.setTargetAtTime(panOf(bearing), t, 0.02)
-    const base = canFire ? 0.016 : 0.007
-    aim.g.gain.setTargetAtTime(moving ? base * 2.4 : base, t, 0.06)
+  function updateMotor(speed, maxSpeed, deep) {
+    if (!motor) return
+    const t = now()
+    const frac = maxSpeed > 0 ? K().clamp(speed / maxSpeed, 0, 1) : 0
+    engine.fn.setParam(motor.carrier.frequency, 38 + frac * 46, 0.15)
+    engine.fn.setParam(motor.sub.frequency, 19 + frac * 23, 0.15)
+    engine.fn.setParam(motor.rumbleBp.frequency, 150 + frac * 320, 0.15)
+    engine.fn.setParam(motor.rumbleGain.gain, 0.02 + frac * 0.10, 0.15)
+    engine.fn.setParam(motor.gain.gain, 0.05 + frac * 0.14, 0.2)
+    engine.fn.setParam(motor.lp.frequency, deep ? 240 : 340 + frac * 420, 0.3)
+  }
+
+  // ===========================================================================
+  // close-aboard screw voices
+  // ===========================================================================
+  // Only for ships inside CLOSE_VOICE_RANGE. Binaural, with a behind-muffle
+  // borrowed from dogfight's engine voice: the low-pass closes and the pitch
+  // drops slightly as a ship passes astern, which reinforces the beep's
+  // octave drop.
+  function ensureCloseVoice(id, voicePitch, escort) {
+    let v = closeVoices.get(id)
+    if (v) return v
+    const c = ctx()
+
+    const gain = c.createGain()
+    gain.gain.value = 0.0001
+    const muffle = c.createBiquadFilter()
+    muffle.type = 'lowpass'
+    muffle.frequency.value = 2600
+    muffle.Q.value = 0.5
+    gain.connect(muffle)
+
+    const ear = engine.ear.binaural.create()
+    ear.from(muffle)
+    ear.to(out())
+
+    const osc = c.createOscillator()
+    osc.type = escort ? 'square' : 'sine'
+    osc.frequency.value = voicePitch
+    const oscGain = c.createGain()
+    oscGain.gain.value = 0.5
+    osc.connect(oscGain).connect(gain)
+    osc.start()
+
+    const wash = noiseSource()
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.frequency.value = escort ? 900 : 480
+    bp.Q.value = escort ? 1.6 : 0.9
+    const washGain = c.createGain()
+    washGain.gain.value = 0.35
+    wash.connect(bp).connect(washGain).connect(gain)
+    wash.start()
+
+    v = {gain, muffle, ear, osc, wash, bp}
+    closeVoices.set(id, v)
+    return v
+  }
+  function destroyCloseVoice(id) {
+    const v = closeVoices.get(id)
+    if (!v) return
+    closeVoices.delete(id)
+    const t = now()
+    try {
+      v.gain.gain.cancelScheduledValues(t)
+      v.gain.gain.setValueAtTime(v.gain.gain.value, t)
+      v.gain.gain.linearRampToValueAtTime(0.0001, t + 0.25)
+    } catch (e) {}
+    setTimeout(() => {
+      try { v.osc.stop(); v.wash.stop() } catch (e) {}
+      try { v.gain.disconnect(); v.muffle.disconnect() } catch (e) {}
+      try { v.ear.destroy() } catch (e) {}
+    }, 350)
+  }
+
+  // Called once per frame with everything currently close aboard.
+  function updateClose(list, muffled) {
+    const k = K()
+    if (!k.CLOSE_VOICE_RANGE) { // continuous layer disabled
+      for (const id of [...closeVoices.keys()]) destroyCloseVoice(id)
+      return
+    }
+    const seen = new Set()
+    for (const c of list) {
+      seen.add(c.id)
+      const v = ensureCloseVoice(c.id, c.voice, c.escort)
+      moveEar(v.ear, c.local)
+      const prox = k.clamp(1 - c.range / k.CLOSE_VOICE_RANGE, 0, 1)
+      const dist = Math.hypot(c.local.forward, c.local.starboard) || 1
+      const behind = k.clamp(-c.local.forward / dist, 0, 1)
+      engine.fn.setParam(v.gain.gain, (0.02 + prox * 0.16) * (muffled ? 0.5 : 1), 0.12)
+      engine.fn.setParam(v.muffle.frequency, k.lerp(2600, 700, behind), 0.12)
+      engine.fn.setParam(v.osc.detune, -110 * behind, 0.12)
+    }
+    for (const id of [...closeVoices.keys()]) {
+      if (!seen.has(id)) destroyCloseVoice(id)
+    }
   }
 
   // ===========================================================================
   // active sonar
   // ===========================================================================
   function pingOut() {
-    const t0 = ctx().currentTime
-    // The classic transmit: a bright tone that drops away.
-    voice({type: 'sine', freq: 1180, glideTo: 940, t0, a: 0.004, hold: 0.10, r: 0.55, peak: 0.30})
-    voice({type: 'sine', freq: 2360, t0, a: 0.004, hold: 0.05, r: 0.30, peak: 0.07})
+    const t0 = now()
+    const c = ctx()
+    const g = c.createGain()
+    g.gain.value = 0
+    g.connect(out())
+    const o = c.createOscillator()
+    o.type = 'sine'
+    o.frequency.setValueAtTime(1180, t0)
+    o.frequency.exponentialRampToValueAtTime(940, t0 + 0.6)
+    o.connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.30, t0 + 0.01)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.62)
+    o.start(t0)
+    o.stop(t0 + 0.65)
+    o.onended = () => { try { g.disconnect() } catch (e) {} }
   }
 
-  // A return. Bright, short, panned to the contact — and it lands late in
-  // proportion to range, which is the point of the whole mechanic.
-  function echo(bearing, range, escort) {
+  // A return, binaural at the contact. It lands late in proportion to range,
+  // which is the point of the whole mechanic.
+  function echo(local, range, escort) {
     const k = K()
-    const close = k.closeness(range)
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    voice({
-      type: 'sine',
-      freq: escort ? 1560 : 1040,
-      t0,
-      a: 0.002,
-      hold: 0.03,
-      r: 0.16 + close * 0.10,
-      peak: 0.09 + close * 0.20,
-      pan,
-    })
-    noiseBurst(t0, {peak: 0.02 + close * 0.05, dur: 0.10, cutoff: 2600, pan, type: 'bandpass', q: 2.2})
+    const t0 = now()
+    const c = ctx()
+    const ear = earAt(local)
+    const g = c.createGain()
+    g.gain.value = 0
+    ear.from(g)
+
+    const o = c.createOscillator()
+    o.type = 'sine'
+    o.frequency.value = escort ? 1560 : 1040
+    o.connect(g)
+
+    const close = k.clamp(1 - range / k.DESPAWN_RANGE, 0, 1)
+    const peak = 0.14 + close * 0.24
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.004)
+    g.gain.linearRampToValueAtTime(0, t0 + 0.20)
+    o.start(t0)
+    o.stop(t0 + 0.22)
+    o.onended = () => {
+      try { g.disconnect() } catch (e) {}
+      try { ear.destroy() } catch (e) {}
+    }
   }
 
   // ===========================================================================
   // torpedoes
   // ===========================================================================
-  function fire(bearing) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    // Compressed air slamming the fish out of the tube.
-    noiseBurst(t0, {peak: 0.42, dur: 0.28, cutoff: 620, sweepTo: 160, pan, type: 'lowpass', q: 0.8})
-    voice({type: 'sine', freq: 150, glideTo: 55, t0, a: 0.002, hold: 0.04, r: 0.30, peak: 0.34, pan})
-  }
-
-  function startRun() {
-    if (run) return
+  function fire() {
+    // Non-positional: it leaves from under your feet.
+    const t0 = now()
     const c = ctx()
-    const s = noiseSource()
-    const bp = c.createBiquadFilter()
     const g = c.createGain()
-    const p = c.createStereoPanner()
-    bp.type = 'bandpass'
-    bp.frequency.value = 1500
-    bp.Q.value = 3.2
-    g.gain.value = 0.0001
-    s.connect(bp).connect(g).connect(p).connect(out())
-    s.start()
-    run = {s, bp, g, p}
-  }
-  function stopRun() {
-    if (!run) return
-    const r = run
-    const t = ctx().currentTime
-    try {
-      r.g.gain.cancelScheduledValues(t)
-      r.g.gain.setValueAtTime(r.g.gain.value, t)
-      r.g.gain.linearRampToValueAtTime(0.0001, t + 0.25)
-      setTimeout(() => { try { r.s.stop(); r.g.disconnect(); r.bp.disconnect(); r.p.disconnect() } catch (e) {} }, 350)
-    } catch (e) {}
-    run = null
-  }
-  // The fish going away from you: the whine thins and quietens with range, so
-  // you can hear roughly how far out it is when it hits (or does not).
-  function updateRun(bearing, range) {
-    if (!run) return
-    const t = ctx().currentTime
-    const close = K().closeness(range)
-    run.p.pan.setTargetAtTime(panOf(bearing), t, 0.05)
-    run.g.gain.setTargetAtTime(0.012 + close * 0.05, t, 0.08)
-    run.bp.frequency.setTargetAtTime(900 + close * 1500, t, 0.08)
-  }
+    g.gain.value = 0
+    g.connect(out())
+    const s = noiseSource()
+    const f = c.createBiquadFilter()
+    f.type = 'lowpass'
+    f.frequency.setValueAtTime(620, t0)
+    f.frequency.exponentialRampToValueAtTime(160, t0 + 0.3)
+    s.connect(f).connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.42, t0 + 0.006)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.32)
+    s.start(t0)
+    s.stop(t0 + 0.35)
 
-  function hit(bearing, range, escort) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    const close = K().closeness(range)
-    const loud = 0.35 + close * 0.45
-
-    // The detonation.
-    noiseBurst(t0, {peak: loud, dur: 0.7, cutoff: 2400, sweepTo: 120, pan, type: 'lowpass', q: 0.9})
-    voice({type: 'sine', freq: 90, glideTo: 32, t0, a: 0.001, hold: 0.06, r: 0.8, peak: loud})
-    // The hull tearing, then going down.
-    later(() => {
-      const t = ctx().currentTime
-      voice({type: 'sawtooth', freq: escort ? 260 : 150, glideTo: escort ? 90 : 44, t0: t, a: 0.05, hold: 0.3, r: 1.4, peak: 0.18, pan})
-      noiseBurst(t, {peak: 0.10, dur: 1.6, cutoff: 500, sweepTo: 90, pan, type: 'lowpass', q: 1.2})
-    }, 620)
-  }
-
-  function torpedoSpent(bearing) {
-    const t0 = ctx().currentTime
-    voice({type: 'sine', freq: 420, glideTo: 180, t0, a: 0.02, hold: 0.1, r: 0.55, peak: 0.09, pan: panOf(bearing)})
-  }
-
-  function fireBlocked(reason) {
-    const t0 = ctx().currentTime
-    if (reason === 'empty') {
-      // Dry tubes: a hollow clack, nothing behind it.
-      noiseBurst(t0, {peak: 0.16, dur: 0.05, cutoff: 1800, type: 'bandpass', q: 3})
-      noiseBurst(t0 + 0.09, {peak: 0.10, dur: 0.05, cutoff: 1400, type: 'bandpass', q: 3})
-    } else {
-      voice({type: 'square', freq: 160, t0, a: 0.002, hold: 0.05, r: 0.08, peak: 0.14})
+    const o = c.createOscillator()
+    const og = c.createGain()
+    og.gain.value = 0
+    o.type = 'sine'
+    o.frequency.setValueAtTime(150, t0)
+    o.frequency.exponentialRampToValueAtTime(55, t0 + 0.3)
+    o.connect(og).connect(out())
+    og.gain.setValueAtTime(0, t0)
+    og.gain.linearRampToValueAtTime(0.32, t0 + 0.005)
+    og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.34)
+    o.start(t0)
+    o.stop(t0 + 0.36)
+    o.onended = () => {
+      try { g.disconnect(); og.disconnect() } catch (e) {}
     }
   }
 
-  function reloaded() {
-    const t0 = ctx().currentTime
-    noiseBurst(t0, {peak: 0.13, dur: 0.09, cutoff: 900, type: 'bandpass', q: 2.4})
-    voice({type: 'square', freq: 300, t0: t0 + 0.06, a: 0.003, hold: 0.03, r: 0.09, peak: 0.10})
+  // Each running fish gets its own binaural whine, so with two in the water
+  // you can hear them diverge.
+  function updateRuns(list) {
+    const seen = new Set()
+    for (const t of list) {
+      seen.add(t.id)
+      let v = runVoices.get(t.id)
+      if (!v) {
+        const c = ctx()
+        const gain = c.createGain()
+        gain.gain.value = 0.0001
+        const bp = c.createBiquadFilter()
+        bp.type = 'bandpass'
+        bp.frequency.value = 1500
+        bp.Q.value = 3.4
+        const s = noiseSource()
+        s.connect(bp).connect(gain)
+        s.start()
+        const ear = engine.ear.binaural.create()
+        ear.from(gain)
+        ear.to(out())
+        v = {gain, bp, s, ear}
+        runVoices.set(t.id, v)
+      }
+      moveEar(v.ear, t.local)
+      const close = K().clamp(1 - t.range / 1600, 0, 1)
+      engine.fn.setParam(v.gain.gain, 0.05 + close * 0.10, 0.08)
+      engine.fn.setParam(v.bp.frequency, 900 + close * 1400, 0.08)
+    }
+    for (const id of [...runVoices.keys()]) {
+      if (seen.has(id)) continue
+      const v = runVoices.get(id)
+      runVoices.delete(id)
+      const t = now()
+      try {
+        v.gain.gain.cancelScheduledValues(t)
+        v.gain.gain.setValueAtTime(v.gain.gain.value, t)
+        v.gain.gain.linearRampToValueAtTime(0.0001, t + 0.2)
+      } catch (e) {}
+      setTimeout(() => {
+        try { v.s.stop(); v.gain.disconnect(); v.bp.disconnect(); v.ear.destroy() } catch (e) {}
+      }, 300)
+    }
   }
+  function stopRuns() {
+    for (const id of [...runVoices.keys()]) {
+      const v = runVoices.get(id)
+      runVoices.delete(id)
+      try { v.s.stop(); v.gain.disconnect(); v.bp.disconnect(); v.ear.destroy() } catch (e) {}
+    }
+  }
+
+  // A generic binaural one-shot: noise burst plus an optional tone.
+  function boom(local, {peak, dur, cutoff, sweepTo, tone, toneTo, tonePeak, type = 'lowpass', q = 0.9}) {
+    const t0 = now()
+    const c = ctx()
+    const ear = earAt(local, {gainModel: engine.ear.gainModel.normalize})
+    const g = c.createGain()
+    g.gain.value = 0
+    ear.from(g)
+
+    const s = noiseSource()
+    const f = c.createBiquadFilter()
+    f.type = type
+    f.frequency.setValueAtTime(cutoff, t0)
+    f.Q.value = q
+    if (sweepTo) f.frequency.exponentialRampToValueAtTime(Math.max(60, sweepTo), t0 + dur)
+    s.connect(f).connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.005)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+    s.start(t0)
+    s.stop(t0 + dur + 0.05)
+
+    if (tone) {
+      const o = c.createOscillator()
+      const og = c.createGain()
+      og.gain.value = 0
+      o.type = 'sine'
+      o.frequency.setValueAtTime(tone, t0)
+      if (toneTo) o.frequency.exponentialRampToValueAtTime(Math.max(18, toneTo), t0 + dur)
+      o.connect(og).connect(g)
+      og.gain.setValueAtTime(0, t0)
+      og.gain.linearRampToValueAtTime(tonePeak || peak, t0 + 0.004)
+      og.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+      o.start(t0)
+      o.stop(t0 + dur + 0.05)
+    }
+
+    setTimeout(() => {
+      try { g.disconnect() } catch (e) {}
+      try { ear.destroy() } catch (e) {}
+    }, (dur + 0.4) * 1000)
+  }
+
+  function hit(local, range, escort) {
+    const close = K().clamp(1 - range / 2000, 0, 1)
+    const loud = 0.35 + close * 0.45
+    boom(local, {peak: loud, dur: 0.8, cutoff: 2400, sweepTo: 120, tone: 90, toneTo: 32, tonePeak: loud})
+    // The hull tearing, then going down.
+    later(() => {
+      boom(local, {
+        peak: 0.12, dur: 1.6, cutoff: 500, sweepTo: 90,
+        tone: escort ? 260 : 150, toneTo: escort ? 90 : 44, tonePeak: 0.16,
+      })
+    }, 640)
+  }
+
+  function torpedoSpent(local) {
+    boom(local, {peak: 0.05, dur: 0.5, cutoff: 900, sweepTo: 220, tone: 420, toneTo: 180, tonePeak: 0.07})
+  }
+
+  function fireBlocked(reason) {
+    const t0 = now()
+    const c = ctx()
+    const g = c.createGain()
+    g.gain.value = 0
+    g.connect(out())
+    const o = c.createOscillator()
+    o.type = 'square'
+    o.frequency.value = reason === 'empty' ? 200 : 160
+    o.connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.14, t0 + 0.004)
+    g.gain.linearRampToValueAtTime(0, t0 + 0.09)
+    o.start(t0)
+    o.stop(t0 + 0.11)
+    o.onended = () => { try { g.disconnect() } catch (e) {} }
+  }
+
+  function tone(freq, {dur = 0.12, peak = 0.18, type = 'square', at = 0, glideTo = 0} = {}) {
+    const t0 = now() + at
+    const c = ctx()
+    const g = c.createGain()
+    g.gain.value = 0
+    g.connect(out())
+    const o = c.createOscillator()
+    o.type = type
+    o.frequency.setValueAtTime(freq, t0)
+    if (glideTo) o.frequency.exponentialRampToValueAtTime(Math.max(20, glideTo), t0 + dur)
+    o.connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.006)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
+    o.start(t0)
+    o.stop(t0 + dur + 0.03)
+    o.onended = () => { try { g.disconnect() } catch (e) {} }
+  }
+
+  function reloaded() { tone(300, {dur: 0.10, peak: 0.10}) }
 
   // ===========================================================================
   // being hunted
   // ===========================================================================
-  // They have you. Two hard tones a fifth apart — deliberately the least
-  // pleasant sound in the game.
   function acquired() {
-    const t0 = ctx().currentTime
-    voice({type: 'sawtooth', freq: 330, t0, a: 0.01, hold: 0.22, r: 0.35, peak: 0.20})
-    voice({type: 'sawtooth', freq: 494, t0: t0 + 0.02, a: 0.01, hold: 0.22, r: 0.35, peak: 0.14})
-    voice({type: 'sawtooth', freq: 330, t0: t0 + 0.42, a: 0.01, hold: 0.22, r: 0.4, peak: 0.18})
+    tone(330, {dur: 0.4, peak: 0.20, type: 'sawtooth'})
+    tone(494, {dur: 0.4, peak: 0.13, type: 'sawtooth', at: 0.02})
+    tone(330, {dur: 0.45, peak: 0.18, type: 'sawtooth', at: 0.44})
+  }
+  function lostContact() { tone(400, {dur: 0.45, peak: 0.14, type: 'sine', glideTo: 560}) }
+
+  function escortTurn(local) {
+    boom(local, {peak: 0.10, dur: 0.55, cutoff: 700, sweepTo: 2200, type: 'bandpass', q: 1.1,
+      tone: 200, toneTo: 420, tonePeak: 0.16})
   }
 
-  function lostContact() {
-    const t0 = ctx().currentTime
-    voice({type: 'sine', freq: 400, glideTo: 560, t0, a: 0.03, hold: 0.14, r: 0.4, peak: 0.14})
+  // Charges in the water: the splash where the escort is, then a long
+  // descending whistle that ends in the bang. The whistle is your dive cue.
+  function chargeSplash(local, fall) {
+    boom(local, {peak: 0.24, dur: 0.32, cutoff: 4200, sweepTo: 700, type: 'bandpass', q: 0.8})
+    const t = fall || K().CHARGE_FALL_TIME
+    const t0 = now() + 0.12
+    const c = ctx()
+    const ear = earAt(local, {gainModel: engine.ear.gainModel.normalize})
+    const g = c.createGain()
+    g.gain.value = 0
+    ear.from(g)
+    const o = c.createOscillator()
+    o.type = 'triangle'
+    o.frequency.setValueAtTime(900, t0)
+    o.frequency.exponentialRampToValueAtTime(130, t0 + t)
+    o.connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.11, t0 + 0.08)
+    g.gain.setValueAtTime(0.11, t0 + t * 0.7)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + t)
+    o.start(t0)
+    o.stop(t0 + t + 0.05)
+    o.onended = () => {
+      try { g.disconnect() } catch (e) {}
+      try { ear.destroy() } catch (e) {}
+    }
   }
 
-  // An escort turning toward you — the sound of being found, panned where it is.
-  function escortTurn(bearing) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    voice({type: 'square', freq: 200, glideTo: 420, t0, a: 0.04, hold: 0.16, r: 0.45, peak: 0.16, pan})
-    noiseBurst(t0, {peak: 0.09, dur: 0.5, cutoff: 700, sweepTo: 2200, pan, type: 'bandpass', q: 1.1})
-  }
-
-  // Charges in the water: the splash, then a long descending whistle that ends
-  // in the bang. The whistle is your dive cue and your countdown.
-  function chargeSplash(bearing, fallTime) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
-    noiseBurst(t0, {peak: 0.24, dur: 0.30, cutoff: 4200, sweepTo: 700, pan, type: 'bandpass', q: 0.8})
-    const fall = fallTime || K().CHARGE_FALL_TIME
-    voice({
-      type: 'triangle',
-      freq: 900,
-      glideTo: 130,
-      t0: t0 + 0.12,
-      a: 0.06,
-      hold: fall * 0.35,
-      r: fall * 0.6,
-      peak: 0.10,
-      pan,
-    })
-  }
-
-  function chargeDetonate(bearing, proximity, deep) {
-    const t0 = ctx().currentTime
-    const pan = panOf(bearing)
+  function chargeDetonate(local, proximity, deep) {
     const near = K().clamp(proximity, 0, 1)
     const loud = 0.10 + near * (deep ? 0.30 : 0.55)
-
-    noiseBurst(t0, {peak: loud, dur: 0.35 + near * 0.5, cutoff: deep ? 900 : 2200, sweepTo: 90, pan, type: 'lowpass', q: 1.0})
-    voice({type: 'sine', freq: 70 + near * 40, glideTo: 28, t0, a: 0.001, hold: 0.05, r: 0.6 + near * 0.5, peak: loud})
-    if (near > 0.35) {
-      // The hull answering it.
-      later(() => {
-        const t = ctx().currentTime
-        voice({type: 'sawtooth', freq: 190, glideTo: 240, t0: t, a: 0.08, hold: 0.2, r: 0.7, peak: 0.10 * near})
-      }, 260)
-    }
+    boom(local, {
+      peak: loud, dur: 0.35 + near * 0.5,
+      cutoff: deep ? 900 : 2200, sweepTo: 90,
+      tone: 70 + near * 40, toneTo: 28, tonePeak: loud,
+    })
+    if (near > 0.35) later(() => tone(190, {dur: 0.7, peak: 0.10 * near, type: 'sawtooth', glideTo: 240}), 260)
   }
 
   function damage() {
-    const t0 = ctx().currentTime
-    // Rivets and plating under pressure.
-    voice({type: 'sawtooth', freq: 520, glideTo: 700, t0, a: 0.01, hold: 0.06, r: 0.35, peak: 0.11})
-    noiseBurst(t0 + 0.05, {peak: 0.09, dur: 0.30, cutoff: 3000, sweepTo: 900, type: 'bandpass', q: 2.4})
+    tone(520, {dur: 0.35, peak: 0.11, type: 'sawtooth', glideTo: 700})
   }
 
   // ===========================================================================
-  // depth
+  // depth, run state, ui
   // ===========================================================================
   function depthChange(to) {
-    const t0 = ctx().currentTime
-    if (to === 'deep') {
-      // Venting ballast.
-      noiseBurst(t0, {peak: 0.26, dur: 1.1, cutoff: 2600, sweepTo: 420, type: 'bandpass', q: 0.7})
-      voice({type: 'sine', freq: 240, glideTo: 90, t0, a: 0.05, hold: 0.4, r: 0.9, peak: 0.14})
-    } else {
-      noiseBurst(t0, {peak: 0.22, dur: 0.9, cutoff: 500, sweepTo: 3000, type: 'bandpass', q: 0.7})
-      voice({type: 'sine', freq: 90, glideTo: 260, t0, a: 0.05, hold: 0.35, r: 0.8, peak: 0.13})
-    }
+    const t0 = now()
+    const c = ctx()
+    const g = c.createGain()
+    g.gain.value = 0
+    g.connect(out())
+    const s = noiseSource()
+    const f = c.createBiquadFilter()
+    f.type = 'bandpass'
+    f.Q.value = 0.7
+    f.frequency.setValueAtTime(to === 'deep' ? 2600 : 500, t0)
+    f.frequency.exponentialRampToValueAtTime(to === 'deep' ? 420 : 3000, t0 + 1.0)
+    s.connect(f).connect(g)
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.24, t0 + 0.05)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 1.05)
+    s.start(t0)
+    s.stop(t0 + 1.1)
+    tone(to === 'deep' ? 240 : 90, {dur: 0.9, peak: 0.13, type: 'sine', glideTo: to === 'deep' ? 90 : 260})
+    setTimeout(() => { try { g.disconnect() } catch (e) {} }, 1400)
   }
-  function depthSettled(depth) {
-    const t0 = ctx().currentTime
-    const f = depth === 'deep' ? 180 : 420
-    voice({type: 'square', freq: f, t0, a: 0.004, hold: 0.05, r: 0.10, peak: 0.13})
-  }
+  function depthSettled(depth) { tone(depth === 'deep' ? 180 : 420, {dur: 0.11, peak: 0.13}) }
 
   function batteryLow() {
-    const t0 = ctx().currentTime
-    for (let i = 0; i < 2; i++) {
-      voice({type: 'square', freq: 620, t0: t0 + i * 0.20, a: 0.003, hold: 0.06, r: 0.10, peak: 0.16})
-    }
+    tone(620, {dur: 0.10, peak: 0.16})
+    tone(620, {dur: 0.10, peak: 0.16, at: 0.20})
   }
-  function batteryDead() {
-    const t0 = ctx().currentTime
-    voice({type: 'square', freq: 620, glideTo: 200, t0, a: 0.01, hold: 0.15, r: 0.5, peak: 0.20})
-  }
+  function batteryDead() { tone(620, {dur: 0.5, peak: 0.20, glideTo: 200}) }
 
-  // ===========================================================================
-  // run state
-  // ===========================================================================
-  function countTone(n) {
-    voice({type: 'square', freq: 500 + (3 - n) * 60, t0: ctx().currentTime, a: 0.003, hold: 0.07, r: 0.13, peak: 0.20})
-  }
+  function countTone(n) { tone(500 + (3 - n) * 60, {dur: 0.14, peak: 0.20}) }
   function dive() {
-    const t0 = ctx().currentTime
-    // The klaxon: two blasts, then you are on patrol.
     for (let i = 0; i < 2; i++) {
-      voice({type: 'sawtooth', freq: 300, glideTo: 380, t0: t0 + i * 0.42, a: 0.03, hold: 0.22, r: 0.14, peak: 0.22})
-      voice({type: 'sawtooth', freq: 452, glideTo: 570, t0: t0 + i * 0.42, a: 0.03, hold: 0.22, r: 0.14, peak: 0.12})
+      tone(300, {dur: 0.36, peak: 0.22, type: 'sawtooth', glideTo: 380, at: i * 0.42})
+      tone(452, {dur: 0.36, peak: 0.12, type: 'sawtooth', glideTo: 570, at: i * 0.42})
     }
   }
   function warning(remaining) {
-    const t0 = ctx().currentTime
-    if (remaining <= 5) {
-      voice({type: 'square', freq: 820, t0, a: 0.002, hold: 0.06, r: 0.09, peak: 0.20})
-    } else {
-      voice({type: 'square', freq: 640, t0, a: 0.003, hold: 0.07, r: 0.12, peak: 0.18})
-      voice({type: 'square', freq: 430, t0: t0 + 0.13, a: 0.003, hold: 0.08, r: 0.14, peak: 0.16})
+    if (remaining <= 5) tone(820, {dur: 0.10, peak: 0.20})
+    else {
+      tone(640, {dur: 0.13, peak: 0.18})
+      tone(430, {dur: 0.15, peak: 0.16, at: 0.13})
     }
   }
   function doom(reason) {
-    const t0 = ctx().currentTime
     if (reason === 'sunk') {
-      // The boat goes down: everything descending at once.
-      voice({type: 'sawtooth', freq: 300, glideTo: 34, t0, a: 0.02, hold: 0.2, r: 1.8, peak: 0.30})
-      voice({type: 'sine', freq: 120, glideTo: 26, t0, a: 0.02, hold: 0.2, r: 2.0, peak: 0.30})
-      noiseBurst(t0, {peak: 0.28, dur: 1.9, cutoff: 1800, sweepTo: 90, type: 'lowpass', q: 1.0})
+      tone(300, {dur: 1.9, peak: 0.30, type: 'sawtooth', glideTo: 34})
+      tone(120, {dur: 2.0, peak: 0.30, type: 'sine', glideTo: 26})
     } else if (reason === 'empty') {
-      noiseBurst(t0, {peak: 0.16, dur: 0.06, cutoff: 1800, type: 'bandpass', q: 3})
-      voice({type: 'square', freq: 400, glideTo: 260, t0: t0 + 0.12, a: 0.01, hold: 0.1, r: 0.4, peak: 0.16})
+      tone(400, {dur: 0.45, peak: 0.16, glideTo: 260, at: 0.12})
     } else {
-      voice({type: 'square', freq: 560, t0, a: 0.003, hold: 0.1, r: 0.14, peak: 0.20})
-      voice({type: 'square', freq: 560, t0: t0 + 0.22, a: 0.003, hold: 0.2, r: 0.2, peak: 0.20})
+      tone(560, {dur: 0.16, peak: 0.20})
+      tone(560, {dur: 0.26, peak: 0.20, at: 0.22})
     }
   }
   function gameOver() {
-    const t0 = ctx().currentTime
     const notes = [294, 247, 196, 147]
     notes.forEach((f, i) => {
-      voice({type: 'triangle', freq: f, t0: t0 + i * 0.26, a: 0.03, hold: 0.14, r: 0.6, peak: 0.20})
-      voice({type: 'sine', freq: f / 2, t0: t0 + i * 0.26, a: 0.03, hold: 0.14, r: 0.6, peak: 0.14})
+      tone(f, {dur: 0.6, peak: 0.20, type: 'triangle', at: i * 0.26})
+      tone(f / 2, {dur: 0.6, peak: 0.14, type: 'sine', at: i * 0.26})
     })
   }
 
-  // ---- menu / ui ----
-  function menuMove() { noiseBurst(ctx().currentTime, {peak: 0.12, dur: 0.03, cutoff: 1800}) }
+  function menuMove() { tone(1800, {dur: 0.04, peak: 0.10, type: 'sine'}) }
   function menuSelect() {
-    const t0 = ctx().currentTime
-    voice({type: 'sine', freq: 392, t0, a: 0.004, hold: 0.04, r: 0.11, peak: 0.20})
-    voice({type: 'sine', freq: 587, t0: t0 + 0.07, a: 0.004, hold: 0.05, r: 0.15, peak: 0.16})
+    tone(392, {dur: 0.12, peak: 0.20, type: 'sine'})
+    tone(587, {dur: 0.16, peak: 0.16, type: 'sine', at: 0.07})
   }
   function menuBack() {
-    const t0 = ctx().currentTime
-    voice({type: 'sine', freq: 440, t0, a: 0.004, hold: 0.04, r: 0.11, peak: 0.17})
-    voice({type: 'sine', freq: 294, t0: t0 + 0.07, a: 0.004, hold: 0.05, r: 0.15, peak: 0.15})
+    tone(440, {dur: 0.12, peak: 0.17, type: 'sine'})
+    tone(294, {dur: 0.16, peak: 0.15, type: 'sine', at: 0.07})
   }
 
   // ===========================================================================
-  // the sea — a wash under everything that closes up when you go deep
+  // the sea
   // ===========================================================================
   function startAmbient() {
     if (sea) return
@@ -483,11 +669,13 @@ content.audio = (() => {
     s.connect(lp).connect(g).connect(out())
     s.start()
     sea = {s, lp, g}
+    startMotor()
   }
   function stopAmbient() {
+    stopMotor()
     if (!sea) return
     const a = sea
-    const t0 = ctx().currentTime
+    const t0 = now()
     try {
       a.g.gain.cancelScheduledValues(t0)
       a.g.gain.setValueAtTime(a.g.gain.value, t0)
@@ -497,59 +685,89 @@ content.audio = (() => {
     sea = null
   }
 
-  // Pumped every frame: the sea darkens as you dive, and the whole bed tightens
-  // when the escorts have you.
-  function frame(delta, {depth, noise} = {}) {
-    if (!sea) return
-    const t = ctx().currentTime
-    const deep = depth === 'deep' || depth === 'diving'
-    sea.g.gain.setTargetAtTime(deep ? 0.030 : 0.020, t, 0.4)
-    sea.lp.frequency.setTargetAtTime(deep ? 170 : 460 + (noise || 0) * 220, t, 0.4)
+  // Pumped every frame from the game screen.
+  function frame(delta, st) {
+    const deep = st.depth === 'deep' || st.depth === 'diving'
+    if (sea) {
+      engine.fn.setParam(sea.g.gain, deep ? 0.028 : 0.018, 0.4)
+      engine.fn.setParam(sea.lp.frequency, deep ? 170 : 460 + (st.noise || 0) * 220, 0.4)
+    }
+    updateMotor(st.speed || 0, st.maxSpeed || 1, deep)
   }
 
   function silenceAll() {
     for (const id of pendingTimeouts) clearTimeout(id)
     pendingTimeouts = []
     stopAmbient()
-    stopAim()
-    stopRun()
+    stopRuns()
+    for (const id of [...closeVoices.keys()]) destroyCloseVoice(id)
   }
 
   // ---- learn-the-sounds cues ----
+  // Local coordinates are in meters, forward and starboard of the boat.
   function sample(which) {
     const k = K()
-    const L = -k.ARC_HALF * 0.7
-    const R = k.ARC_HALF * 0.7
+    const AHEAD = {forward: 600, starboard: 0}
+    const PORT = {forward: 220, starboard: -560}
+    const STBD = {forward: 220, starboard: 560}
+    const ASTERN = {forward: -600, starboard: 0}
+    const CLOSE = {forward: 140, starboard: 60}
+
     switch (which) {
-      case 'humLeft': hum(L, 700, k.SHIP_TYPES.freighter.hum, false, false); break
-      case 'humAhead': hum(0, 700, k.SHIP_TYPES.freighter.hum, false, false); break
-      case 'humRight': hum(R, 700, k.SHIP_TYPES.freighter.hum, false, false); break
-      case 'humNear': hum(0, 260, k.SHIP_TYPES.freighter.hum, false, false); break
-      case 'humTanker': hum(0, 700, k.SHIP_TYPES.tanker.hum, false, false); break
-      case 'humEscort': hum(0, 700, k.SHIP_TYPES.escort.hum, true, false); break
+      case 'beepAhead': beep(AHEAD, 600, false, false); break
+      case 'beepPort': beep(PORT, 600, false, false); break
+      case 'beepStarboard': beep(STBD, 600, false, false); break
+      case 'beepAstern': beep(ASTERN, 600, false, false); break
+      case 'beepNear': beep(CLOSE, 160, false, false); break
+      case 'beepFar': beep({forward: 2000, starboard: 300}, 2020, false, false); break
+      case 'beepEscort': beep(AHEAD, 600, true, false); break
+      // A run of beeps at closing range, so the rate ramp is audible as a ramp.
+      case 'beepClosing': {
+        const steps = [2100, 1700, 1300, 1000, 750, 550, 400, 280, 190]
+        let at = 0
+        steps.forEach((r) => {
+          later(() => beep({forward: r, starboard: r * 0.15}, r, false, false), at * 1000)
+          at += k.beepInterval(r)
+        })
+        break
+      }
       case 'ping': {
         pingOut()
-        later(() => echo(-30, 500, false), k.echoDelay(500) * 1000)
-        later(() => echo(25, 1500, false), k.echoDelay(1500) * 1000)
+        later(() => echo(PORT, 600, false), k.echoDelay(600) * 1000)
+        later(() => echo({forward: 1400, starboard: 900}, 1660, false), k.echoDelay(1660) * 1000)
         break
       }
-      case 'cross': cross(0, false); break
-      case 'fire': fire(0); break
+      case 'motorSlow': {
+        startMotor(); updateMotor(4, 16, false)
+        later(() => { if (!sea) stopMotor() }, 1600)
+        break
+      }
+      case 'motorFlank': {
+        startMotor(); updateMotor(16, 16, false)
+        later(() => { if (!sea) stopMotor() }, 1600)
+        break
+      }
+      case 'closeAboard': {
+        updateClose([{id: 'demo', local: CLOSE, range: 150, voice: k.SHIP_TYPES.tanker.voice, escort: false}], false)
+        later(() => destroyCloseVoice('demo'), 2200)
+        break
+      }
+      case 'fire': fire(); break
       case 'run': {
-        startRun()
-        updateRun(0, 200)
-        later(() => updateRun(0, 900), 500)
-        later(() => updateRun(0, 1600), 1000)
-        later(() => stopRun(), 1600)
+        const ids = [{id: 'demo', local: {forward: 120, starboard: 0}, range: 120}]
+        updateRuns(ids)
+        later(() => updateRuns([{id: 'demo', local: {forward: 700, starboard: 60}, range: 700}]), 400)
+        later(() => updateRuns([{id: 'demo', local: {forward: 1400, starboard: 120}, range: 1400}]), 900)
+        later(() => updateRuns([]), 1500)
         break
       }
-      case 'hit': hit(-20, 800, false); break
-      case 'spent': torpedoSpent(10); break
+      case 'hit': hit({forward: 700, starboard: -300}, 760, false); break
+      case 'spent': torpedoSpent({forward: 900, starboard: 200}); break
       case 'acquired': acquired(); break
-      case 'escortTurn': escortTurn(35); break
-      case 'splash': chargeSplash(0, k.CHARGE_FALL_TIME); break
-      case 'detonateNear': chargeDetonate(0, 0.9, false); break
-      case 'detonateDeep': chargeDetonate(0, 0.9, true); break
+      case 'escortTurn': escortTurn(STBD); break
+      case 'splash': chargeSplash({forward: 200, starboard: 120}, k.CHARGE_FALL_TIME); break
+      case 'detonateNear': chargeDetonate({forward: 60, starboard: -40}, 0.9, false); break
+      case 'detonateDeep': chargeDetonate({forward: 60, starboard: -40}, 0.9, true); break
       case 'diveDeep': depthChange('deep'); break
       case 'risePeriscope': depthChange('periscope'); break
       case 'battery': batteryLow(); break
@@ -559,39 +777,33 @@ content.audio = (() => {
     }
   }
 
-  // Stereo field probe. The arc IS the stereo field, so this doubles as a
-  // bearing calibration: hard left is 90 to port, centre is dead ahead.
-  function testTone(pan, pitch) {
-    const t0 = ctx().currentTime
-    voice({type: 'triangle', freq: pitch || 440, t0, a: 0.005, hold: 0.18, r: 0.22, peak: 0.26, pan})
-  }
+  // Binaural field probe. Because the world is a full circle now, this has to
+  // prove front and BACK, not just left and right.
   function testDirection(which) {
-    const k = K()
-    if (which === 'sweep' || which === 'ring') {
-      const stops = which === 'sweep'
-        ? [-90, -45, 0, 45, 90]
-        : [-90, -45, 0, 45, 90, 45, 0, -45]
-      stops.forEach((b, i) => {
-        later(() => testTone(k.panOf(b), k.aimPitch(b)), i * 420)
-      })
-    } else if (which === 'w') testTone(-1, k.aimPitch(-90))
-    else if (which === 'e') testTone(1, k.aimPitch(90))
-    else testTone(0, k.aimPitch(0))
+    const R = 500
+    const at = (f, s) => beep({forward: f, starboard: s}, R, false, false)
+    if (which === 'n') at(R, 0)
+    else if (which === 's') at(-R, 0)
+    else if (which === 'w') at(0, -R)
+    else if (which === 'e') at(0, R)
+    else if (which === 'c') at(60, 0)
+    else if (which === 'sweep' || which === 'ring') {
+      const stops = [[R, 0], [R * 0.7, R * 0.7], [0, R], [-R * 0.7, R * 0.7], [-R, 0],
+        [-R * 0.7, -R * 0.7], [0, -R], [R * 0.7, -R * 0.7]]
+      const use = which === 'sweep' ? stops.slice(0, 5) : stops
+      use.forEach((p, i) => later(() => at(p[0], p[1]), i * 420))
+    }
   }
 
   return {
-    setStaticListener: function () {}, // stereo — nothing to pin
-    hum,
-    cross,
-    startAim,
-    stopAim,
-    updateAim,
+    setStaticListener: function () {},
+    beep,
+    updateClose,
+    updateRuns,
+    stopRuns,
     pingOut,
     echo,
     fire,
-    startRun,
-    stopRun,
-    updateRun,
     hit,
     torpedoSpent,
     fireBlocked,
@@ -616,6 +828,9 @@ content.audio = (() => {
     menuBack,
     startAmbient,
     stopAmbient,
+    startMotor,
+    stopMotor,
+    updateMotor,
     frame,
     silenceAll,
     sample,

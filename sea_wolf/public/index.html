@@ -20,13 +20,15 @@
         <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
           <div class="a-game--hud">
             <span class="a-game--stat"><span data-i18n="hud.score">Tonnage</span>: <b class="a-game--score-value">0</b></span>
-            <span class="a-game--stat"><span data-i18n="hud.torpedoes">Torpedoes</span>: <b class="a-game--torpedo-value">12</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.torpedoes">Torpedoes</span>: <b class="a-game--torpedo-value">14</b></span>
             <span class="a-game--stat"><span data-i18n="hud.hull">Hull</span>: <b class="a-game--hull-value">100</b></span>
             <span class="a-game--stat"><span data-i18n="hud.battery">Battery</span>: <b class="a-game--battery-value">100</b></span>
             <span class="a-game--stat"><span data-i18n="hud.depth">Depth</span>: <b class="a-game--depth-value">periscope</b></span>
-            <span class="a-game--stat"><span data-i18n="hud.time">Time</span>: <b class="a-game--time-value">300</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.heading">Heading</span>: <b class="a-game--heading-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.speed">Speed</span>: <b class="a-game--speed-value">0.0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.time">Time</span>: <b class="a-game--time-value">360</b></span>
           </div>
-          <div class="a-game--sonar" aria-hidden="true"></div>
+          <div class="a-game--plot" aria-hidden="true"></div>
         </section>
       </div>
 
@@ -72,7 +74,9 @@
           <p class="c-menu--subtitle" data-i18n="help.subtitle">Hear the bearing. Ping for the range. Fire ahead of it.</p>
           <p class="a-help--text" data-i18n="help.intro"></p>
           <ul class="a-help--list">
-            <li data-i18n-html="help.h.aim"></li>
+            <li data-i18n-html="help.h.helm"></li>
+            <li data-i18n-html="help.h.beeps"></li>
+            <li data-i18n-html="help.h.scope"></li>
             <li data-i18n-html="help.h.fire"></li>
             <li data-i18n-html="help.h.ping"></li>
             <li data-i18n-html="help.h.depth"></li>
@@ -104,14 +108,18 @@
           <h1 class="c-menu--title" data-i18n="learn.title">Learn the sounds</h1>
           <p class="c-menu--subtitle" data-i18n="learn.subtitle">Play each cue on its own.</p>
           <ul class="c-menu--list">
-            <li><button class="c-menu--button" data-sound="humLeft" data-i18n="learn.humLeft">Screw beat — ship to port</button></li>
-            <li><button class="c-menu--button" data-sound="humAhead" data-i18n="learn.humAhead">Screw beat — ship dead ahead</button></li>
-            <li><button class="c-menu--button" data-sound="humRight" data-i18n="learn.humRight">Screw beat — ship to starboard</button></li>
-            <li><button class="c-menu--button" data-sound="humNear" data-i18n="learn.humNear">Screw beat — ship close aboard</button></li>
-            <li><button class="c-menu--button" data-sound="humTanker" data-i18n="learn.humTanker">Screw beat — a loaded tanker</button></li>
-            <li><button class="c-menu--button" data-sound="humEscort" data-i18n="learn.humEscort">Screw beat — an escort</button></li>
+            <li><button class="c-menu--button" data-sound="beepAhead" data-i18n="learn.beepAhead">Contact beep - dead ahead</button></li>
+            <li><button class="c-menu--button" data-sound="beepPort" data-i18n="learn.beepPort">Contact beep - off the port bow</button></li>
+            <li><button class="c-menu--button" data-sound="beepStarboard" data-i18n="learn.beepStarboard">Contact beep - off the starboard bow</button></li>
+            <li><button class="c-menu--button" data-sound="beepAstern" data-i18n="learn.beepAstern">Contact beep - astern (the low tone)</button></li>
+            <li><button class="c-menu--button" data-sound="beepFar" data-i18n="learn.beepFar">Contact beep - a long way off</button></li>
+            <li><button class="c-menu--button" data-sound="beepNear" data-i18n="learn.beepNear">Contact beep - close aboard</button></li>
+            <li><button class="c-menu--button" data-sound="beepClosing" data-i18n="learn.beepClosing">Contact beep - closing (hear the rate ramp)</button></li>
+            <li><button class="c-menu--button" data-sound="beepEscort" data-i18n="learn.beepEscort">Contact beep - an escort (square wave)</button></li>
+            <li><button class="c-menu--button" data-sound="motorSlow" data-i18n="learn.motorSlow">Your motor - ahead slow</button></li>
+            <li><button class="c-menu--button" data-sound="motorFlank" data-i18n="learn.motorFlank">Your motor - flank speed</button></li>
+            <li><button class="c-menu--button" data-sound="closeAboard" data-i18n="learn.closeAboard">A ship passing close aboard</button></li>
             <li><button class="c-menu--button" data-sound="ping" data-i18n="learn.ping">Active ping, then two returns</button></li>
-            <li><button class="c-menu--button" data-sound="cross" data-i18n="learn.cross">The periscope crossing a contact</button></li>
             <li><button class="c-menu--button" data-sound="fire" data-i18n="learn.fire">Firing a torpedo</button></li>
             <li><button class="c-menu--button" data-sound="run" data-i18n="learn.run">A torpedo running away from you</button></li>
             <li><button class="c-menu--button" data-sound="hit" data-i18n="learn.hit">A hit, and the ship going down</button></li>
@@ -119,8 +127,8 @@
             <li><button class="c-menu--button" data-sound="acquired" data-i18n="learn.acquired">They have you</button></li>
             <li><button class="c-menu--button" data-sound="escortTurn" data-i18n="learn.escortTurn">An escort turning toward you</button></li>
             <li><button class="c-menu--button" data-sound="splash" data-i18n="learn.splash">Depth charges in the water</button></li>
-            <li><button class="c-menu--button" data-sound="detonateNear" data-i18n="learn.detonateNear">A charge close — at periscope depth</button></li>
-            <li><button class="c-menu--button" data-sound="detonateDeep" data-i18n="learn.detonateDeep">The same charge — from deep</button></li>
+            <li><button class="c-menu--button" data-sound="detonateNear" data-i18n="learn.detonateNear">A charge close - at periscope depth</button></li>
+            <li><button class="c-menu--button" data-sound="detonateDeep" data-i18n="learn.detonateDeep">The same charge - from deep</button></li>
             <li><button class="c-menu--button" data-sound="diveDeep" data-i18n="learn.diveDeep">Going deep</button></li>
             <li><button class="c-menu--button" data-sound="risePeriscope" data-i18n="learn.risePeriscope">Coming up to periscope depth</button></li>
             <li><button class="c-menu--button" data-sound="battery" data-i18n="learn.battery">Battery low</button></li>
@@ -138,11 +146,12 @@
           <h1 class="c-menu--title" data-i18n="test.title">Stereo audio test</h1>
           <p class="c-menu--subtitle" data-i18n="test.subtitle">Confirm the arc.</p>
           <ul class="c-menu--list">
-            <li><button class="c-menu--button" data-dir="w" data-i18n="test.left">Play hard to port</button></li>
-            <li><button class="c-menu--button" data-dir="c" data-i18n="test.centre">Play dead ahead</button></li>
-            <li><button class="c-menu--button" data-dir="e" data-i18n="test.right">Play hard to starboard</button></li>
-            <li><button class="c-menu--button" data-dir="sweep" data-i18n="test.sweep">Sweep port to starboard</button></li>
-            <li><button class="c-menu--button" data-dir="ring" data-i18n="test.ring">Sweep out and back</button></li>
+            <li><button class="c-menu--button" data-dir="n" data-i18n="test.ahead">Play dead ahead</button></li>
+            <li><button class="c-menu--button" data-dir="w" data-i18n="test.left">Play abeam to port</button></li>
+            <li><button class="c-menu--button" data-dir="e" data-i18n="test.right">Play abeam to starboard</button></li>
+            <li><button class="c-menu--button" data-dir="s" data-i18n="test.astern">Play dead astern</button></li>
+            <li><button class="c-menu--button" data-dir="sweep" data-i18n="test.sweep">Sweep ahead to astern</button></li>
+            <li><button class="c-menu--button" data-dir="ring" data-i18n="test.ring">All the way round</button></li>
             <li><button class="c-menu--button" data-action="back" data-i18n="test.back">Back</button></li>
           </ul>
         </section>

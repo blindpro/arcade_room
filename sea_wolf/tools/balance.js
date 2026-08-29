@@ -1,9 +1,8 @@
 /**
  * Balance probe for SEA WOLF. tools/sim.js proves the mechanics work at all;
- * this asks whether they are worth playing — how much is in the arc, how far
- * away it is, how big the lead angle actually gets (if it is under a couple of
- * degrees you cannot hear it and the game has no skill in it), and what a
- * skilled patrol scores versus a reckless one.
+ * this asks whether they are worth playing — how much is within earshot and how
+ * far away, how audible the beep rate ramp actually is across that range, how
+ * big the lead angle gets, and what different ways of driving the boat score.
  *
  *   node tools/balance.js
  */
@@ -36,134 +35,195 @@ function stats(xs) {
   const s = xs.slice().sort((a, b) => a - b)
   const sum = s.reduce((a, b) => a + b, 0)
   return {
-    n: s.length,
-    min: s[0],
-    p50: s[Math.floor(s.length * 0.5)],
-    p90: s[Math.floor(s.length * 0.9)],
-    max: s[s.length - 1],
-    mean: sum / s.length,
+    n: s.length, min: s[0], p50: s[Math.floor(s.length * 0.5)],
+    p90: s[Math.floor(s.length * 0.9)], max: s[s.length - 1], mean: sum / s.length,
   }
 }
 const f1 = (x) => (x == null ? '-' : x.toFixed(1))
 
 console.log('\nSEA WOLF balance probe\n')
 
-// --- the shape of the arc ---------------------------------------------------
+// --- is the beep rate ramp actually readable? -------------------------------
+// The whole navigation interface is "the gap between beeps is the range". If
+// the interval barely moves across the useful band, the interface is a lie.
 {
-  const content = load()
-  const counts = []
-  const ranges = []
-  const escortShare = []
-  startPatrol(content)
-  run(content, 300, (t) => {
-    if (Math.round(t * 60) % 30) return // sample twice a second
-    const list = content.game.contactList()
-    counts.push(list.length)
-    for (const c of list) ranges.push(c.range)
-    if (list.length) escortShare.push(list.filter((c) => c.escort).length / list.length)
-  })
-  const c = stats(counts)
-  const r = stats(ranges)
-  console.log('the arc, sampled across a full 5-minute patrol')
-  console.log('  contacts in view   min ' + c.min + '  median ' + c.p50 + '  p90 ' + c.p90 + '  max ' + c.max)
-  console.log('  contact range (m)  min ' + f1(r.min) + '  median ' + f1(r.p50) + '  p90 ' + f1(r.p90) + '  max ' + f1(r.max))
-  console.log('  escort share       ' + (stats(escortShare).mean * 100).toFixed(0) + '%')
-  console.log('  empty-arc samples  ' + counts.filter((x) => x === 0).length + ' / ' + counts.length)
+  const k = load().constants
+  console.log('the beep rate ramp - the primary distance cue')
+  const rows = [k.CONTACT_RANGE, 1800, 1400, 1000, 700, 450, 250, 100]
+  for (const r of rows) {
+    const iv = k.beepInterval(r)
+    const bar = '#'.repeat(Math.max(1, Math.round(60 / (iv * 20))))
+    console.log('  ' + String(Math.round(r)).padStart(5) + ' m  ' +
+      iv.toFixed(2) + 's  ' + bar)
+  }
+  const ratio = k.beepInterval(k.CONTACT_RANGE) / k.beepInterval(100)
+  console.log('  edge-of-hearing beep is ' + ratio.toFixed(1) + 'x slower than close aboard')
 }
 
-// --- is the lead audible? ---------------------------------------------------
-// The whole game rests on the difference between the target's bearing and the
-// bearing you must fire at. Measure it.
+// --- the shape of the ocean --------------------------------------------------
 {
   const content = load()
-  const leads = []
-  const flights = []
+  const g = content.game
+  const audible = [], ranges = [], escortShare = []
   startPatrol(content)
-  run(content, 300, (t) => {
-    if (Math.round(t * 60) % 30) return
-    for (const c of content.game.contactList()) {
-      if (c.escort) continue
-      content.game.state.aim = c.bearing
-      const sol = content.game.aimedContact()
-      if (!sol) continue
-      leads.push(Math.abs(sol.leadBearing - sol.bearing))
-      flights.push(sol.flight)
+  // Drive the way a player would: chase whatever is nearest.
+  run(content, 360, (t) => {
+    const list = g.contactList()
+    if (list.length) {
+      g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
+      g.nudgeThrottle(1, 1 / 60)
     }
+    if (Math.round(t * 60) % 30) return
+    const aud = list.filter((c) => c.audible)
+    audible.push(aud.length)
+    for (const c of aud) ranges.push(c.range)
+    if (aud.length) escortShare.push(aud.filter((c) => c.escort).length / aud.length)
   })
-  const l = stats(leads)
-  const fl = stats(flights)
-  console.log('\nthe lead — how far ahead of the target you must aim')
-  console.log('  lead angle (deg)   min ' + f1(l.min) + '  median ' + f1(l.p50) + '  p90 ' + f1(l.p90) + '  max ' + f1(l.max))
-  console.log('  torpedo run (s)    min ' + f1(fl.min) + '  median ' + f1(fl.p50) + '  max ' + f1(fl.max))
-  const tooSmall = leads.filter((x) => x < 2).length / leads.length
-  console.log('  leads under 2 deg  ' + (tooSmall * 100).toFixed(0) + '%  (these are the ones you cannot hear)')
+  const a = stats(audible), r = stats(ranges)
+  console.log('\nthe ocean, sampled across a full 6-minute patrol (driving hard)')
+  console.log('  audible contacts   min ' + a.min + '  median ' + a.p50 + '  p90 ' + a.p90 + '  max ' + a.max)
+  console.log('  their range (m)    min ' + f1(r.min) + '  median ' + f1(r.p50) + '  p90 ' + f1(r.p90))
+  console.log('  escort share       ' + (stats(escortShare).mean * 100).toFixed(0) + '%')
+  console.log('  silent samples     ' + audible.filter((x) => x === 0).length + ' / ' + audible.length)
 }
 
-// --- what does a patrol score? ----------------------------------------------
-// Three players. The perfect one fires only on a computed lead and never
-// pings; the pinger uses active sonar constantly; the reckless one does
-// everything at once and stays shallow.
-function patrol(style, seed) {
+// --- can you actually close on things? ---------------------------------------
+{
   const content = load()
   const g = content.game
   startPatrol(content)
+  const closest = []
+  let best = Infinity
+  run(content, 360, (t) => {
+    const list = g.contactList().filter((c) => !c.escort)
+    if (list.length) {
+      g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
+      g.nudgeThrottle(1, 1 / 60)
+      best = Math.min(best, list[0].range)
+    }
+    if (Math.round(t * 60) % 60) return
+    if (list.length) closest.push(list[0].range)
+  })
+  const c = stats(closest)
+  console.log('\nthe intercept - range to the nearest merchant while chasing')
+  console.log('  median ' + f1(c.p50) + ' m,  best of the patrol ' + f1(best) + ' m')
+  console.log('  (torpedo reaches ' +
+    Math.round(load().constants.TORPEDO_SPEED * load().constants.TORPEDO_LIFE) + ' m)')
+}
 
-  let lastCharge = false
+// --- is the lead audible? -----------------------------------------------------
+{
+  const content = load()
+  const g = content.game
+  const leads = [], flights = []
+  // Split by ASPECT. Chasing a ship from astern it is running almost straight
+  // down your line of sight and needs barely any lead; catching one on the beam
+  // it is crossing and needs a lot. That is correct geometry, and it is the
+  // tactical choice the movement rebuild introduced: the easy shot is the one
+  // you had to work hardest to get into position for.
+  const sternLeads = [], beamLeads = []
+  startPatrol(content)
+  run(content, 360, (t) => {
+    const list = g.contactList().filter((c) => !c.escort)
+    if (list.length) {
+      g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
+      g.nudgeThrottle(1, 1 / 60)
+    }
+    if (Math.round(t * 60) % 30) return
+    for (const c of list) {
+      if (c.range > 1400) continue
+      g.state.periscope = content.constants.clamp(c.bearing, -45, 45)
+      const sol = g.aimedContact()
+      if (!sol || sol.escort || sol.id !== c.id) continue
+      const lead = Math.abs(content.constants.wrapDeg(sol.leadBearing - sol.bearing))
+      leads.push(lead)
+      flights.push(sol.flight)
+      // A small lead means the target is running down the sight line (a stern
+      // chase); a large one means it is crossing.
+      if (lead < 3) sternLeads.push(lead)
+      else beamLeads.push(lead)
+    }
+  })
+  const l = stats(leads), fl = stats(flights)
+  console.log('\nthe lead - how far ahead of the target you must aim')
+  console.log('  lead angle (deg)   min ' + f1(l.min) + '  median ' + f1(l.p50) +
+    '  p90 ' + f1(l.p90) + '  max ' + f1(l.max))
+  console.log('  torpedo run (s)    min ' + f1(fl.min) + '  median ' + f1(fl.p50) + '  max ' + f1(fl.max))
+  const tooSmall = leads.length ? leads.filter((x) => x < 2).length / leads.length : 0
+  console.log('  leads under 2 deg  ' + (tooSmall * 100).toFixed(0) +
+    '%  (stern chases - the target is running down your sight line)')
+  const b = stats(beamLeads)
+  console.log('  crossing shots     ' + (beamLeads.length / Math.max(1, leads.length) * 100).toFixed(0) +
+    '% of engagements, median lead ' + f1(b.p50) + ' deg  <- where the skill lives')
+}
+
+// --- what does a patrol score? -----------------------------------------------
+// Four ways of driving. `hunter` runs the intercept hard; `stalker` creeps
+// under the noise threshold; `pinger` spams active sonar; `blind` never leads
+// its shots.
+function patrol(style) {
+  const content = load()
+  const g = content.game
+  const k = content.constants
+  startPatrol(content)
+
+  let charged = false
   let lastPing = -99
-  content.events.on('charge-splash', () => { lastCharge = true })
+  content.events.on('charge-splash', () => { charged = true })
 
-  run(content, 300, () => {
+  run(content, 360, () => {
     if (g.phase() !== 'play') return
+    const st = g.status()
 
-    if (style === 'pinger' || style === 'reckless') g.ping()
-    // The realistic player: a ping every twenty seconds or so to refresh the
-    // picture, then silence while the fish runs.
-    if (style === 'scout' && g.state.elapsed - lastPing > 20) {
+    // Depth discipline: dive when charges land, come up when it is quiet.
+    if (charged && st.depth === 'periscope') { g.setDepth('deep'); charged = false }
+    else if (!g.isHunted() && st.depth === 'deep') g.setDepth('periscope')
+
+    if (style === 'pinger') g.ping()
+    else if (style !== 'blind' && g.state.elapsed - lastPing > 25) {
       if (g.ping()) lastPing = g.state.elapsed
     }
 
-    // Dive when charges are in the water, come up when it is quiet.
-    if (style !== 'reckless') {
-      const st = g.status()
-      if (lastCharge && st.depth === 'periscope') { g.setDepth('deep'); lastCharge = false }
-      else if (!g.isHunted() && st.depth === 'deep') g.setDepth('periscope')
+    // Steer at the nearest merchant.
+    const list = g.contactList().filter((c) => !c.escort)
+    const target = list[0]
+    if (target) {
+      g.setRudder(target.bearing > 3 ? 1 : (target.bearing < -3 ? -1 : 0))
+      // The stalker holds the throttle under the noise break-even point;
+      // everyone else runs flat out.
+      const want = style === 'stalker' ? 0.6 : 1
+      g.nudgeThrottle(st.throttle < want ? 1 : -1, 1 / 60)
     }
 
-    // Shoot the best available merchant on a proper lead.
-    const list = g.contactList().filter((c) => !c.escort && c.range > 400 && c.range < 1500)
-    if (!list.length) return
-    const target = list.sort((a, b) => a.range - b.range)[0]
-    g.state.aim = target.bearing
+    // Shoot when there is a reachable solution.
+    if (!target || target.range > 1600 || st.depth !== 'periscope') return
+    g.state.periscope = k.clamp(target.bearing, -k.PERISCOPE_LIMIT, k.PERISCOPE_LIMIT)
     const sol = g.aimedContact()
-    if (!sol || sol.escort) return
-    g.state.aim = style === 'reckless' ? sol.bearing : sol.leadBearing
+    if (!sol || sol.escort || sol.id !== target.id) return
+    if (!sol.leadReachable) return
+    g.state.periscope = style === 'blind'
+      ? k.clamp(sol.bearing, -k.PERISCOPE_LIMIT, k.PERISCOPE_LIMIT)
+      : k.clamp(sol.leadBearing, -k.PERISCOPE_LIMIT, k.PERISCOPE_LIMIT)
     g.fire()
   })
 
   const st = g.status()
   return {
-    tonnage: st.tonnage,
-    sunk: st.sunk,
-    fired: st.fired,
-    hull: st.hull,
-    phase: g.phase(),
+    tonnage: st.tonnage, sunk: st.sunk, fired: st.fired, hull: st.hull,
     reason: g.state.reason,
   }
 }
 
 console.log('\na patrol, four ways (5 runs each)')
-console.log('  NOTE: these bots read exact ranges out of the sim without pinging, which a')
-console.log('  real player cannot. Read the table for how the STYLES compare, not for')
-console.log('  what a human would score - the tonnage is an upper bound.')
-for (const style of ['sniper', 'scout', 'pinger', 'reckless']) {
+for (const style of ['hunter', 'stalker', 'pinger', 'blind']) {
   const runs = []
-  for (let i = 0; i < 5; i++) runs.push(patrol(style, i))
+  for (let i = 0; i < 5; i++) runs.push(patrol(style))
   const t = stats(runs.map((r) => r.tonnage))
   const s = stats(runs.map((r) => r.sunk))
   const h = stats(runs.map((r) => r.hull))
   const acc = runs.map((r) => (r.fired ? r.sunk / r.fired : 0))
   const died = runs.filter((r) => r.reason === 'sunk').length
-  console.log('  ' + style.padEnd(9) +
+  console.log('  ' + style.padEnd(8) +
     ' tonnage ' + String(Math.round(t.mean)).padStart(6) +
     '   sunk ' + s.mean.toFixed(1).padStart(4) +
     '   hits/shots ' + (stats(acc).mean * 100).toFixed(0).padStart(3) + '%' +
