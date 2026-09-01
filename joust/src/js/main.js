@@ -29,7 +29,13 @@
   engine.mixer.param.limiter.ratio.value = 15
   engine.mixer.param.limiter.release.value = 0.125
   engine.mixer.param.limiter.threshold.value = -24
-  engine.mixer.param.preGain.value = 1.5
+  // Deliberately below the value the rest of the collection uses. JOUST runs
+  // many more simultaneous positional voices than its neighbours - a wing beat
+  // per rider per beat, plus sustained tones, eggs and the reference - and at
+  // 1.5 the limiter was engaged more or less continuously, which does not sound
+  // loud so much as flat and pumping. The headroom is what keeps a busy wave
+  // legible.
+  engine.mixer.param.preGain.value = 1.15
 
   // Start the loop
   engine.loop.start().pause()

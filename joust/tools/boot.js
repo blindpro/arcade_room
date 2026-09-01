@@ -191,17 +191,33 @@ function clean(label) {
   check('the wing ran clean', clean('wing'))
 
   // ---- leaning --------------------------------------------------------------
+  // Measuring the control response means measuring it UNDISTURBED: a rider
+  // bouncing off you rewrites your velocity outright, and a respawn zeroes it,
+  // so any window in which that happened is thrown away and retried.
   errors.length = 0
-  key('ArrowRight')
-  frames(90)
-  keyUp('ArrowRight')
-  const right = content.game.getSpeed()
-  check('holding right leans you right', right > 5, right.toFixed(1))
-  key('ArrowLeft')
-  frames(180)
-  keyUp('ArrowLeft')
-  check('holding left brings you back', content.game.getSpeed() < 0,
-    content.game.getSpeed().toFixed(1))
+  let disturbed = false
+  for (const ev of ['bounce', 'death', 'respawn']) {
+    content.events.on(ev, () => { disturbed = true })
+  }
+  const leanWindow = (code, n) => {
+    disturbed = false
+    key(code)
+    frames(n)
+    keyUp(code)
+    return !disturbed && content.game.isAlive()
+  }
+  let leaned = null
+  for (let attempt = 0; attempt < 15 && !leaned; attempt++) {
+    if (!leanWindow('ArrowRight', 90)) continue
+    const right = content.game.getSpeed()
+    if (!leanWindow('ArrowLeft', 180)) continue
+    leaned = {right, left: content.game.getSpeed()}
+  }
+  check('an undisturbed leaning window could be measured', leaned !== null)
+  if (leaned) {
+    check('holding right leans you right', leaned.right > 5, leaned.right.toFixed(1))
+    check('holding left brings you back', leaned.left < 0, leaned.left.toFixed(1))
+  }
   content.game.setThrust(0)
   check('leaning ran clean', clean('leaning'))
 

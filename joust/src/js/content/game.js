@@ -411,6 +411,14 @@ content.game = (() => {
   // which is the mapping doing its job for free.
   function updateEggs(delta) {
     const k = K()
+    // Rank the landed eggs by distance once per frame, so the tick budget below
+    // is a stable "nearest few" rather than whichever happened to fire first.
+    const tickRank = new Map()
+    eggs.filter((e) => e.landed && !e.collected && !e.hatched)
+      .map((e) => ({id: e.id, d: Math.abs(k.wrapDx(state.x, e.x))}))
+      .sort((a, b) => a.d - b.d)
+      .forEach((e, i) => tickRank.set(e.id, i))
+
     for (const e of eggs) {
       if (e.collected || e.hatched) continue
 
@@ -436,12 +444,20 @@ content.game = (() => {
         e.tickTimer -= delta
         if (e.tickTimer <= 0) {
           e.tickTimer = k.eggTickInterval(e.life / k.EGG_HATCH_TIME)
-          E().emit('egg-tick', {
-            dx: k.wrapDx(state.x, e.x),
-            dAlt: -state.y,
-            progress: e.life / k.EGG_HATCH_TIME,
-            type: e.type,
-          })
+          // A deck full of eggs is a drum machine, so only the nearest few are
+          // allowed a voice. An egg about to hatch always gets one regardless
+          // of rank: that is precisely the one you need to be told about, and
+          // it is usually not the nearest.
+          const urgent = (k.EGG_HATCH_TIME - e.life) <= k.EGG_TICK_URGENT
+          if (urgent || tickRank.get(e.id) < k.EGG_TICK_MAX_VOICES) {
+            E().emit('egg-tick', {
+              dx: k.wrapDx(state.x, e.x),
+              dAlt: -state.y,
+              progress: e.life / k.EGG_HATCH_TIME,
+              type: e.type,
+              urgent,
+            })
+          }
         }
       }
 
@@ -499,14 +515,19 @@ content.game = (() => {
   // fight can be tracked continuously instead of sampled.
   function updateBeats(delta) {
     const k = K()
+    // How many riders are competing for the same layer. Everything in the arena
+    // is within hearing (the strip is only two HEAR_RANGEs around), so this is
+    // simply how many are alive — and it is what lets the audio layer hold the
+    // wing-beat layer at a constant total loudness instead of letting eight
+    // riders sum into a wall.
+    const crowd = riders.reduce((n, r) => n + (r.alive ? 1 : 0), 0)
     for (const r of riders) {
       if (!r.alive) continue
       const dx = k.wrapDx(state.x, r.x)
       const dist = Math.abs(dx)
       r.beatTimer -= delta
       if (r.beatTimer > 0) continue
-      const rate = r.spec.flap * k.lerp(1, k.BEAT_CLOSE_MULT, k.closeness(dist))
-      r.beatTimer = 1 / rate
+      r.beatTimer = 1 / k.beatRate(r.type, dist)
       E().emit('beat', {
         id: r.id,
         dx,
@@ -514,6 +535,7 @@ content.game = (() => {
         dist,
         type: r.type,
         chasing: r.mode === 'chase',
+        crowd,
       })
     }
   }
@@ -669,18 +691,21 @@ content.game = (() => {
       })
       .filter((r) => r.weight > 0)
       .sort((a, b) => a.dist - b.dist)
-      .slice(0, 4)
+      .slice(0, k.SUSTAIN_MAX_VOICES)
 
     E().emit('frame', {
       riders: near,
       // A falling egg gets a continuous voice because its descent IS the pitch
       // mapping in miniature, and it is worth hearing all the way down.
-      falling: eggs.filter((e) => !e.landed).map((e) => ({
-        id: e.id,
-        dx: k.wrapDx(state.x, e.x),
-        dAlt: e.y - state.y,
-        dist: Math.abs(k.wrapDx(state.x, e.x)),
-      })),
+      falling: eggs.filter((e) => !e.landed)
+        .map((e) => ({
+          id: e.id,
+          dx: k.wrapDx(state.x, e.x),
+          dAlt: e.y - state.y,
+          dist: Math.abs(k.wrapDx(state.x, e.x)),
+        }))
+        .sort((a, b) => a.dist - b.dist)
+        .slice(0, k.FALLING_EGG_MAX_VOICES),
       altitude: state.y,
       vy: state.vy,
       speed: Math.abs(state.vx),

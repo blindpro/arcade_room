@@ -74,7 +74,7 @@ app.screen.game = app.screenManager.invent({
     })
 
     // --- the wing beats: the radar ------------------------------------------
-    content.events.on('beat', (e) => A().beat(e.dx, e.dAlt, e.dist, e.type, e.chasing))
+    content.events.on('beat', (e) => A().beat(e.dx, e.dAlt, e.dist, e.type, e.chasing, e.crowd))
 
     // --- per-frame continuous voices ----------------------------------------
     content.events.on('frame', (e) => {

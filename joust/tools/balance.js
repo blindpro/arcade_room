@@ -99,11 +99,65 @@ for (const n of [1, 2, 3, 4, 5, 6, 8, 10, 15, 20]) {
 // ---------------------------------------------------------------------------
 console.log('\n=== the beat rate, which is the distance display ===============')
 console.log('  distance   bounder  hunter  shadow lord   (beats/second)')
-for (const d of [130, 100, 70, 50, 30, 15, 5, 0]) {
-  const r = (tier) => (K.RIDER_TYPES[tier].flap *
-    K.lerp(1, K.BEAT_CLOSE_MULT, K.closeness(d))).toFixed(2)
-  console.log('  ' + pad(d, 8) + pad(r('bounder'), 9) + pad(r('hunter'), 8) +
+// Sampled across the arena as it actually is, and through the shared
+// K.beatRate so this table cannot drift away from what the game plays.
+for (const frac of [1, 0.8, 0.6, 0.45, 0.3, 0.17, 0.06, 0]) {
+  const d = K.HEAR_RANGE * frac
+  const r = (tier) => K.beatRate(tier, d).toFixed(2)
+  console.log('  ' + pad(d.toFixed(0), 8) + pad(r('bounder'), 9) + pad(r('hunter'), 8) +
     pad(r('shadowlord'), 13))
+}
+{
+  const spread = K.beatRate('hunter', 0) / K.beatRate('hunter', K.HEAR_RANGE)
+  console.log('  the ramp across the whole arena is ' + spread.toFixed(1) + 'x.')
+  console.log('  Total beats/second if a full wave of ' + K.waveCount(K.WAVE_COUNTS.length) +
+    ' shadow lords were all on top of you: ' +
+    (K.waveCount(K.WAVE_COUNTS.length) * K.beatRate('shadowlord', 0)).toFixed(0) + '.')
+}
+
+// ---------------------------------------------------------------------------
+console.log('\n=== the mix budget ============================================')
+console.log('Peak gain each layer can contribute at once, so it is obvious which')
+console.log('one to reach for when the game sounds crowded. Anything much over a')
+console.log('total of 1.0 lives on the limiter, which reads as flat rather than')
+console.log('loud. These figures mirror content/audio.js by hand - if you retune')
+console.log('a level there, update it here too.')
+console.log('')
+{
+  const BEAT_DUR = 0.11
+  const maxRiders = K.waveCount(K.WAVE_COUNTS.length)
+  const beats = 0.20 * 1.15 * K.crowdGain(maxRiders) *
+    (K.beatRate('shadowlord', 0) * BEAT_DUR)
+  const layers = [
+    ['reference drone', 0.075, 'continuous; the zero of the pitch scale'],
+    ['wing beats', beats, maxRiders + ' riders on top of you, after the crowd duck'],
+    ['sustained riders', 0.055 * K.SUSTAIN_MAX_VOICES, K.SUSTAIN_MAX_VOICES + ' at full weight'],
+    ['music bed', 0.11, 'at full threat'],
+    ['music pulse', 0.29, 'transient, at full threat'],
+    ['your own wing', 0.29, 'transient, about 5 times a second'],
+    ['deck wash', 0.11, 'on the deck'],
+    ['roof hiss', 0.035, 'at the ceiling'],
+    ['falling eggs', 0.05 * K.FALLING_EGG_MAX_VOICES, K.FALLING_EGG_MAX_VOICES + ' at once'],
+    ['egg ticks', 0.17 * K.EGG_TICK_MAX_VOICES, 'transient, about to hatch'],
+  ]
+  let floor = 0
+  let total = 0
+  for (const row of layers) {
+    console.log('  ' + row[0].padEnd(18) + row[1].toFixed(3).padStart(6) + '   ' + row[2])
+    total += row[1]
+    if (row[2].indexOf('transient') !== 0) floor += row[1]
+  }
+  console.log('  ' + '-'.repeat(62))
+  console.log('  ' + 'continuous floor'.padEnd(18) + floor.toFixed(3).padStart(6) +
+    '   everything that is always there')
+  console.log('  ' + 'absolute worst'.padEnd(18) + total.toFixed(3).padStart(6) +
+    '   every layer peaking in the same instant')
+  console.log('')
+  console.log('  master preGain is 1.15 (main.js), so the floor sits at ' +
+    (floor * 1.15).toFixed(2) + ' going into the limiter.')
+  console.log('  The worst case is allowed over 1.0 - that is what a limiter is for.')
+  console.log('  What must not happen is the FLOOR sitting on it, which is what a')
+  console.log('  preGain of 1.5 and an unducked wing-beat layer used to do.')
 }
 
 // ---------------------------------------------------------------------------

@@ -187,7 +187,7 @@ content.audio = (() => {
   // you it is. Rate comes from content.game (tier rate multiplied up by
   // closeness), so a rider bearing down on you audibly accelerates. Timbre is
   // the tier, so you hear WHAT is coming as well as where and how high.
-  function beat(dx, dAlt, dist, type, chasing) {
+  function beat(dx, dAlt, dist, type, chasing, crowd) {
     const k = K()
     const spec = k.RIDER_TYPES[type] || k.RIDER_TYPES.bounder
     const t0 = now()
@@ -223,7 +223,12 @@ content.audio = (() => {
     s.connect(bp).connect(sg).connect(g)
 
     const dur = 0.11
-    const peak = distanceGain(dist, 0.30, 0.075) * (chasing ? 1.25 : 1)
+    // Ducked by how many riders are sharing this layer, so a late wave is busy
+    // rather than loud. One rider is exactly as loud as it ever was; eight are
+    // at about half each, which keeps the layer's total energy roughly where a
+    // single rider put it.
+    const peak = distanceGain(dist, 0.20, 0.05) *
+      (chasing ? 1.15 : 1) * K().crowdGain(crowd)
     g.gain.setValueAtTime(0, t0)
     g.gain.linearRampToValueAtTime(peak, t0 + 0.006)
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
@@ -304,7 +309,7 @@ content.audio = (() => {
       // Pitch is the point: fast enough to follow a climb, slow enough not to
       // zipper.
       engine.fn.setParam(v.osc.frequency, pitch(r.dAlt), 0.05)
-      engine.fn.setParam(v.gain.gain, 0.008 + r.weight * 0.085, 0.08)
+      engine.fn.setParam(v.gain.gain, 0.005 + r.weight * 0.050, 0.08)
       // A rider coming for you opens up; one drifting stays dull. Same pitch,
       // different urgency.
       engine.fn.setParam(v.lp.frequency,
@@ -357,7 +362,7 @@ content.audio = (() => {
       const f = pitch(e.dAlt)
       engine.fn.setParam(v.osc.frequency, f, 0.04)
       engine.fn.setParam(v.fifth.frequency, f * 1.5, 0.04)
-      engine.fn.setParam(v.gain.gain, distanceGain(e.dist, 0.10, 0.03), 0.08)
+      engine.fn.setParam(v.gain.gain, distanceGain(e.dist, 0.05, 0.015), 0.08)
     }
     for (const id of [...eggVoices.keys()]) {
       if (seen.has(id)) continue
@@ -412,7 +417,9 @@ content.audio = (() => {
     s.connect(bp).connect(sg).connect(g)
 
     const dur = k.lerp(0.09, 0.05, p)
-    const peak = k.lerp(0.14, 0.26, p)
+    // Quiet early, insistent late. The tick is a clock you check, not an alarm
+    // that runs the whole time an egg is down.
+    const peak = k.lerp(0.075, 0.17, p)
     g.gain.setValueAtTime(0, t0)
     g.gain.linearRampToValueAtTime(peak, t0 + 0.004)
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + dur)
@@ -469,7 +476,7 @@ content.audio = (() => {
     bp.Q.value = 0.8
     s.connect(bp).connect(g)
     g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(0.26, t0 + 0.012)
+    g.gain.linearRampToValueAtTime(0.17, t0 + 0.012)
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.17)
     s.start(t0)
     s.stop(t0 + 0.2)
@@ -484,7 +491,7 @@ content.audio = (() => {
     o.frequency.exponentialRampToValueAtTime(52, t0 + 0.14)
     o.connect(og).connect(out())
     og.gain.setValueAtTime(0, t0)
-    og.gain.linearRampToValueAtTime(0.18, t0 + 0.006)
+    og.gain.linearRampToValueAtTime(0.12, t0 + 0.006)
     og.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.16)
     o.start(t0)
     o.stop(t0 + 0.18)
@@ -538,7 +545,7 @@ content.audio = (() => {
   function updateBounds(groundNear, ceilingNear) {
     const k = K()
     if (deck) {
-      engine.fn.setParam(deck.g.gain, 0.0001 + Math.pow(groundNear, 1.5) * 0.16, 0.12)
+      engine.fn.setParam(deck.g.gain, 0.0001 + Math.pow(groundNear, 1.5) * 0.11, 0.12)
       engine.fn.setParam(deck.lp.frequency, k.lerp(170, 420, groundNear), 0.15)
     }
     if (roof) {
@@ -880,11 +887,11 @@ content.audio = (() => {
       case 'riderFar': for (let i = 0; i < 4; i++) later(() => beat(FAR, 4, FAR, 'bounder', false), i * 620); break
       // The rate ramp: one rider crossing the arena at you.
       case 'riderClosing': {
-        const steps = [120, 96, 74, 55, 40, 28, 18, 11, 6, 3]
+        const steps = [88, 72, 58, 45, 34, 24, 16, 10, 5, 2]
         let at = 0
         steps.forEach((d) => {
           later(() => beat(d, 3, d, 'hunter', true), at * 1000)
-          at += 1 / (k.RIDER_TYPES.hunter.flap * k.lerp(1, k.BEAT_CLOSE_MULT, k.closeness(d)))
+          at += 1 / k.beatRate('hunter', d)
         })
         break
       }

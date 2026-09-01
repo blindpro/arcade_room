@@ -73,7 +73,7 @@ content.music = (() => {
     o.type = 'sine'
     o.frequency.setValueAtTime(104, t)
     o.frequency.exponentialRampToValueAtTime(46, t + 0.14)
-    const peak = 0.09 + intensity * 0.34
+    const peak = 0.07 + intensity * 0.22
     g.gain.setValueAtTime(0.0001, t)
     g.gain.linearRampToValueAtTime(peak, t + 0.007)
     g.gain.exponentialRampToValueAtTime(0.0001, t + 0.26)
@@ -93,9 +93,9 @@ content.music = (() => {
       nextPulse += pulseInterval()
     }
 
-    b.gain.gain.setTargetAtTime(0.045 + intensity * 0.13, now, 0.5)
+    b.gain.gain.setTargetAtTime(0.030 + intensity * 0.080, now, 0.5)
     b.lp.frequency.setTargetAtTime(160 + intensity * 260, now, 0.5)
-    b.sourGain.gain.setTargetAtTime(0.0001 + intensity * 0.30, now, 0.7)
+    b.sourGain.gain.setTargetAtTime(0.0001 + intensity * 0.24, now, 0.7)
   }
 
   function start() {
@@ -106,7 +106,7 @@ content.music = (() => {
     const b = ensureBed()
     b.gain.gain.cancelScheduledValues(c.currentTime)
     b.gain.gain.setValueAtTime(0.0001, c.currentTime)
-    b.gain.gain.setTargetAtTime(0.045, c.currentTime, 0.8)
+    b.gain.gain.setTargetAtTime(0.030, c.currentTime, 0.8)
   }
 
   function setIntensity(v) { intensity = Math.max(0, Math.min(1, v || 0)) }

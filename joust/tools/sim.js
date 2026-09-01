@@ -337,18 +337,93 @@ section('the wing beats: the radar')
 }
 {
   // The rate ramp is the distance display, so prove it actually ramps.
-  const rate = (d, tier) =>
-    K.RIDER_TYPES[tier].flap * K.lerp(1, K.BEAT_CLOSE_MULT, K.closeness(d))
+  const rate = (d, tier) => K.beatRate(tier, d)
   const far = rate(K.HEAR_RANGE, 'hunter')
   const near = rate(0, 'hunter')
   console.log('     hunter beat rate: ' + far.toFixed(2) + '/s across the arena -> ' +
     near.toFixed(2) + '/s on top of you (' + (near / far).toFixed(1) + 'x)')
   check('the beat rate ramps enough to be heard as a ramp', near / far >= 2,
     (near / far).toFixed(2) + 'x')
-  check('a distant beat is still slow enough to count', far <= 2.5, far.toFixed(2) + '/s')
+  check('a distant beat is a murmur, not a clatter', far <= 1.2, far.toFixed(2) + '/s')
   check('nastier tiers beat faster',
     K.RIDER_TYPES.shadowlord.flap > K.RIDER_TYPES.hunter.flap &&
     K.RIDER_TYPES.hunter.flap > K.RIDER_TYPES.bounder.flap)
+}
+
+// ---------------------------------------------------------------------------
+section('the audio budget: how loud can it possibly get?')
+{
+  // The first build of this was genuinely overloading, and the cause was
+  // arithmetic rather than taste: a late wave fields eight riders, each firing
+  // a wing beat several times a second, and nothing anywhere held the total
+  // down. These checks are the budget that stops it coming back.
+  const worstTier = 'shadowlord'
+  const maxRiders = K.waveCount(K.WAVE_COUNTS.length)
+  const closeRate = K.beatRate(worstTier, 0)
+  const farRate = K.beatRate(worstTier, K.HEAR_RANGE)
+  const BEAT_DUR = 0.11 // must match content/audio.js
+
+  // The pathological case: every rider of the nastiest tier, all on top of you.
+  const worstPerSecond = maxRiders * closeRate
+  const worstOverlap = worstPerSecond * BEAT_DUR
+  console.log('     worst case: ' + maxRiders + ' x ' + worstTier + ' on top of you = ' +
+    worstPerSecond.toFixed(0) + ' beats/s, ' + worstOverlap.toFixed(1) + ' overlapping')
+  check('the wing-beat layer cannot become a continuous tone',
+    worstPerSecond < 45, worstPerSecond.toFixed(0) + ' beats/s')
+  check('only a few wing beats can ever overlap',
+    worstOverlap < 4, worstOverlap.toFixed(1) + ' at once')
+
+  // ...and the loudness of that pile, which is the number that actually
+  // matters, because the crowd duck is what holds it flat.
+  const nearPeak = 0.20 * 1.15   // distanceGain(0, 0.20, ..) * the chasing boost
+  const solo = nearPeak * K.crowdGain(1) * (K.beatRate(worstTier, 0) * BEAT_DUR)
+  const mob = nearPeak * K.crowdGain(maxRiders) * worstOverlap
+  console.log('     summed wing-beat gain: one rider ' + solo.toFixed(2) +
+    ', ' + maxRiders + ' riders ' + mob.toFixed(2) +
+    ' (duck is ' + K.crowdGain(maxRiders).toFixed(2) + 'x)')
+  check('the crowd duck actually ducks', K.crowdGain(maxRiders) < 0.6,
+    K.crowdGain(maxRiders).toFixed(2) + 'x at ' + maxRiders + ' riders')
+  check('a solo rider is not quietened for no reason', K.crowdGain(1) === 1)
+  check('a full wave does not sum past the limiter on wing beats alone',
+    mob < 1.0, mob.toFixed(2) + ' summed gain')
+  check('...and a full wave is still louder than one rider, just not 8x',
+    mob > solo && mob < solo * 5,
+    (mob / solo).toFixed(1) + 'x louder for ' + maxRiders + 'x the riders')
+
+  // The continuous layers are capped by count, not just by gain.
+  check('sustained rider voices are capped', K.SUSTAIN_MAX_VOICES <= 3,
+    K.SUSTAIN_MAX_VOICES + ' voices')
+  check('falling-egg voices are capped', K.FALLING_EGG_MAX_VOICES <= 3,
+    K.FALLING_EGG_MAX_VOICES + ' voices')
+  check('egg ticks are capped', K.EGG_TICK_MAX_VOICES <= 2,
+    K.EGG_TICK_MAX_VOICES + ' ticking at once')
+  check('...but an egg about to hatch always gets heard',
+    K.EGG_TICK_URGENT > 1 && K.EGG_TICK_URGENT < K.EGG_HATCH_TIME,
+    'always ticks inside ' + K.EGG_TICK_URGENT + 's of hatching')
+}
+{
+  // And measured, rather than reasoned about: play a real run and count every
+  // positional one-shot in the busiest one-second window.
+  let events = 0
+  E.clear()
+  E.on('beat', () => { events++ })
+  E.on('egg-tick', () => { events++ })
+  begin()
+  const window = []
+  let worst = 0
+  let peakRiders = 0
+  for (let i = 0; i < 60 * 300 && G.phase() !== 'over'; i++) {
+    const before = events
+    G.update(1 / 60)
+    window.push(events - before)
+    if (window.length > 60) window.shift()
+    if (window.length === 60) worst = Math.max(worst, window.reduce((a, b) => a + b, 0))
+    peakRiders = Math.max(peakRiders, G.status().riders)
+  }
+  console.log('     measured in real play: peak ' + peakRiders +
+    ' riders, busiest second held ' + worst + ' one-shots')
+  check('real play stays inside the budget', worst < 30, worst + ' one-shots in a second')
+  E.clear()
 }
 
 // ---------------------------------------------------------------------------

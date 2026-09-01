@@ -153,15 +153,15 @@ content.constants = (() => {
   // RIDER_FLAP_COOLDOWN, exactly like you do, and `climb` alone caps them.
   const RIDER_TYPES = {
     bounder: {
-      speed: 17, climb: 15, flap: 1.5, aggression: 0.35,
+      speed: 17, climb: 15, flap: 1.3, aggression: 0.35,
       score: 500, wave: 1, timbre: 'triangle', bright: 900,
     },
     hunter: {
-      speed: 23, climb: 19, flap: 2.2, aggression: 0.55,
+      speed: 23, climb: 19, flap: 1.8, aggression: 0.55,
       score: 750, wave: 2, timbre: 'sawtooth', bright: 1500,
     },
     shadowlord: {
-      speed: 30, climb: 24, flap: 3.0, aggression: 0.80,
+      speed: 30, climb: 24, flap: 2.4, aggression: 0.80,
       score: 1500, wave: 4, timbre: 'square', bright: 2400,
     },
   }
@@ -218,9 +218,36 @@ content.constants = (() => {
   // rather than sampled. Outside it there is no continuous layer at all — a
   // permanent drone for every distant rider is exactly the uninformative wash
   // this engine's other games had to be rebuilt to remove.
-  const BEAT_CLOSE_MULT = 2.4     // beat rate multiplier when right on top of you
+  // The rate ramp runs from BEAT_FAR_MULT across the arena to BEAT_CLOSE_MULT
+  // alongside — a 4x spread, which is what you actually hear as "closing".
+  //
+  // BEAT_FAR_MULT exists because of an arithmetic problem: a late wave fields
+  // eight riders, and at the old flat far-rate that was fifty-odd wing beats a
+  // second all by itself, six of them overlapping at any instant. The ramp was
+  // right and the FLOOR was wrong. Pulling the far end down widens the ramp and
+  // empties the mix at the same time, so distant riders now murmur rather than
+  // clatter, and closing on one is more obvious than it was before, not less.
+  const BEAT_FAR_MULT = 0.45      // ...when it is right across the arena
+  const BEAT_CLOSE_MULT = 1.8     // ...when it is right on top of you
+  // The other half of the density fix, and the one that only acts when it is
+  // needed: total wing-beat loudness is held roughly constant as the crowd
+  // grows, so one rider is as loud as it ever was and eight do not sum into a
+  // wall. Read as gain *= count^-BEAT_CROWD_POWER, so four riders are at 63%
+  // and eight at 49%.
+  const BEAT_CROWD_POWER = 0.35
+
   const SUSTAIN_FAR = 42          // the sustained tone starts fading in here
   const SUSTAIN_NEAR = 10         // ...and is at full weight here
+  // Hard caps on the continuous layers. The sustained tone is for the rider you
+  // are about to fight, so three is already generous; past that it stops being
+  // a tracker and becomes a chord.
+  const SUSTAIN_MAX_VOICES = 3
+  const FALLING_EGG_MAX_VOICES = 3
+  // Only the nearest few eggs tick, because a deck full of them is a drum
+  // machine. An egg close to hatching always ticks regardless of rank — that is
+  // the one you have to be told about.
+  const EGG_TICK_MAX_VOICES = 2
+  const EGG_TICK_URGENT = 3.0     // seconds left, at which an egg always ticks
 
   // ---- placing sound around the head ----------------------------------------
   // Arena units are not metres, and syngen's ear cares: it derives an
@@ -294,6 +321,19 @@ content.constants = (() => {
 
   // 0 at the far side of the arena, 1 right on top of you.
   function closeness(dist) { return clamp(1 - Math.abs(dist) / HEAR_RANGE, 0, 1) }
+
+  // Wing beats per second for a rider of `tier` at `dist`. One definition, used
+  // by the game, the balance report and the density budget in the harness.
+  function beatRate(tier, dist) {
+    const spec = RIDER_TYPES[tier] || RIDER_TYPES.bounder
+    return spec.flap * lerp(BEAT_FAR_MULT, BEAT_CLOSE_MULT, closeness(dist))
+  }
+
+  // How much to duck each wing beat when `count` riders are audible at once, so
+  // the layer's total loudness stays roughly flat as a wave fills up.
+  function crowdGain(count) {
+    return Math.pow(Math.max(1, count || 1), -BEAT_CROWD_POWER)
+  }
 
   // How much sustained tone a rider at this distance has earned, 0..1.
   function sustainWeight(dist) {
@@ -407,9 +447,15 @@ content.constants = (() => {
     WAVE_HURRY_RAMP,
     WAVE_HURRY_MULT,
     WAVE_HURRY_COMMIT,
+    BEAT_FAR_MULT,
     BEAT_CLOSE_MULT,
+    BEAT_CROWD_POWER,
     SUSTAIN_FAR,
     SUSTAIN_NEAR,
+    SUSTAIN_MAX_VOICES,
+    FALLING_EGG_MAX_VOICES,
+    EGG_TICK_MAX_VOICES,
+    EGG_TICK_URGENT,
     EAR_DEPTH,
     EAR_MAX_Y,
     EAR_HALF,
@@ -432,6 +478,8 @@ content.constants = (() => {
     wrapX,
     pitchFor,
     closeness,
+    beatRate,
+    crowdGain,
     sustainWeight,
     earLocal,
     duelOutcome,
