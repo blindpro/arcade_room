@@ -56,6 +56,7 @@ content.game = (() => {
     torpedoes: 0,
     reload: 0,
     pingCooldown: 0,
+    sweepCooldown: 0,
 
     timeLeft: 0,
     elapsed: 0,
@@ -576,6 +577,60 @@ content.game = (() => {
     return true
   }
 
+  // ---- the hydrophone sweep ---------------------------------------------------
+  // The quick, quiet, coarse counterpart to the ping. It answers immediately —
+  // there is no round trip, because nothing is being sent — and it costs no
+  // noise, but every bearing it gives you is smeared, and it reports range in
+  // three bands rather than in metres. It is for orienting yourself, not for
+  // shooting: SWEEP_ERROR_FAR is far wider than any lead angle in the game, so
+  // a sweep can tell you which way to come round and never where to aim.
+  function sweepReach() {
+    const k = K()
+    return k.CONTACT_RANGE * k.lerp(1, k.SWEEP_DEEP_RANGE_MULT, depthFrac())
+  }
+
+  function sweep() {
+    if (state.phase !== 'play') return false
+    if (state.sweepCooldown > 0) return false
+
+    const k = K()
+    state.sweepCooldown = k.SWEEP_COOLDOWN
+    if (k.SWEEP_NOISE) addNoise(k.SWEEP_NOISE)
+
+    const reach = sweepReach()
+    const returns = []
+    for (const c of contacts) {
+      if (!c.alive) continue
+      const range = rangeTo(c)
+      if (range > reach) continue
+
+      // How badly this particular bearing is smeared: sharp on a close, loud
+      // contact and vague on a distant one, and worse the deeper the boat is.
+      const spread = k.lerp(k.SWEEP_ERROR_NEAR, k.SWEEP_ERROR_FAR,
+        k.clamp(range / reach, 0, 1)) * k.lerp(1, k.SWEEP_DEEP_ERROR_MULT, depthFrac())
+      const heard = k.wrapDeg(relBearing(c.x, c.y) + k.rand(-spread, spread))
+      const band = k.sweepBand(range, reach)
+
+      // The audio layer is given the WRONG position on purpose — the smeared
+      // bearing, at the middle of the reported band rather than the true range.
+      // If it placed the blip at the real spot the ear would simply read the
+      // truth off it and the whole point of a coarse instrument would be lost.
+      const shown = reach * (band === 0 ? 0.18 : (band === 1 ? 0.45 : 0.85))
+      const h = rad(heard)
+      returns.push({
+        id: c.id,
+        escort: c.escort,
+        bearing: heard,
+        band,
+        local: {forward: Math.cos(h) * shown, starboard: Math.sin(h) * shown},
+      })
+    }
+
+    returns.sort((a, b) => a.band - b.band)
+    E().emit('sweep', {returns, reach})
+    return true
+  }
+
   // ---- depth ------------------------------------------------------------------
   // Page up and page down step between DEPTH_LEVELS. The order is commanded
   // instantly and the boat then takes as long as it takes to get there, which
@@ -705,6 +760,7 @@ content.game = (() => {
     state.torpedoes = k.TORPEDO_LOAD
     state.reload = 0
     state.pingCooldown = 0
+    state.sweepCooldown = 0
 
     state.timeLeft = k.PATROL_TIME
     state.elapsed = 0
@@ -760,6 +816,7 @@ content.game = (() => {
       state.timeLeft -= delta
       if (state.reload > 0) state.reload = Math.max(0, state.reload - delta)
       if (state.pingCooldown > 0) state.pingCooldown = Math.max(0, state.pingCooldown - delta)
+      if (state.sweepCooldown > 0) state.sweepCooldown = Math.max(0, state.sweepCooldown - delta)
 
       updateBoat(delta)
       updateDepth(delta)
@@ -944,6 +1001,7 @@ content.game = (() => {
       timeLeft: Math.max(0, state.timeLeft),
       reload: state.reload,
       pingCooldown: state.pingCooldown,
+      sweepCooldown: state.sweepCooldown,
       contacts: contacts.filter((c) => rangeTo(c) <= K().CONTACT_RANGE).length,
     }
   }
@@ -954,6 +1012,7 @@ content.game = (() => {
     update,
     fire,
     ping,
+    sweep,
     setDepthLevel,
     stepDepth,
     setRudder,

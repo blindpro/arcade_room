@@ -207,12 +207,39 @@ function clean(label) {
   errors.length = 0
   let pingSeen = false
   content.events.on('ping', () => { pingSeen = true })
-  key('KeyP')
+  key('KeyS')
   frames(10)
-  keyUp('KeyP')
-  check('P sends an active ping', pingSeen)
+  keyUp('KeyS')
+  check('S sends an active ping', pingSeen)
   await new Promise((r) => setTimeout(r, 400)) // let the scheduled echoes land
   check('ping and its echoes ran clean', clean('ping'))
+
+  // S must no longer touch the throttle - it used to be throttle-down, and a
+  // ping that also slowed the boat would be a nasty surprise mid-intercept.
+  const speedBeforePing = content.game.getSpeed()
+  key('KeyS'); frames(30); keyUp('KeyS')
+  check('S no longer works the throttle',
+    Math.abs(content.game.getSpeed() - speedBeforePing) < 0.6,
+    speedBeforePing.toFixed(1) + ' -> ' + content.game.getSpeed().toFixed(1) + ' m/s')
+
+  // The sweep: instant, free, and usable far more often than the ping.
+  errors.length = 0
+  let sweepSeen = null
+  content.events.on('sweep', (e) => { sweepSeen = e })
+  // Advance a single frame around the sweep. The boat is at flank speed here,
+  // so the noise gauge is climbing on its own at about 0.0017 per frame; what
+  // this has to rule out is a STEP, of the kind a ping puts in (0.34).
+  const noiseBeforeSweep = content.game.getNoise()
+  key('KeyF'); frames(1); keyUp('KeyF')
+  check('F sends a hydrophone sweep', !!sweepSeen,
+    sweepSeen && sweepSeen.returns.length + ' returns')
+  check('the sweep puts no step in the noise gauge',
+    content.game.getNoise() - noiseBeforeSweep < 0.01,
+    (content.game.getNoise() - noiseBeforeSweep).toFixed(4) +
+    ' vs ' + content.constants.PING_NOISE + ' for a ping')
+  frames(9)
+  await new Promise((r) => setTimeout(r, 700)) // let the blips play out
+  check('the sweep and its blips ran clean', clean('sweep'))
 
   // Fire, then let the fish run to a hit or to exhaustion. The running whine
   // is a per-torpedo binaural voice created and torn down by the frame event.

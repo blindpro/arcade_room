@@ -340,6 +340,70 @@ content.audio = (() => {
   }
 
   // ===========================================================================
+  // the hydrophone sweep — quick, quiet, coarse
+  // ===========================================================================
+  // It has to be instantly distinguishable from a ping, because the two answer
+  // different questions. A ping is a hard sine SHOUT followed by a long silence
+  // and then discrete returns. A sweep is a soft band-passed hiss — the sound
+  // of the operator swinging the hydrophone, not of anything leaving the boat —
+  // and the returns arrive with it rather than seconds later.
+  function sweepOut() {
+    const t0 = now()
+    const c = ctx()
+    const src = noiseSource()
+    const bp = c.createBiquadFilter()
+    bp.type = 'bandpass'
+    bp.Q.value = 2.2
+    // Sweeping upward: the ping glides DOWN, so the two are opposites even in
+    // the shape of their pitch contour.
+    bp.frequency.setValueAtTime(420, t0)
+    bp.frequency.exponentialRampToValueAtTime(1500, t0 + 0.34)
+    const g = c.createGain()
+    g.gain.value = 0
+    src.connect(bp)
+    bp.connect(g)
+    g.connect(out())
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(0.13, t0 + 0.05)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.36)
+    src.start(t0)
+    src.stop(t0 + 0.38)
+    src.onended = () => {
+      try { g.disconnect() } catch (e) {}
+      try { bp.disconnect() } catch (e) {}
+    }
+  }
+
+  // One return. Placed binaurally at the SMEARED bearing the sweep reported,
+  // and pitched by range band rather than gained by distance — a coarse
+  // instrument should sound like three buckets, not like a continuum, or the
+  // ear will start reading a range off it that the sweep never measured.
+  function sweepBlip(local, band, escort) {
+    const t0 = now()
+    const c = ctx()
+    const ear = earAt(local)
+    const g = c.createGain()
+    g.gain.value = 0
+    ear.from(g)
+
+    const o = c.createOscillator()
+    o.type = escort ? 'sawtooth' : 'triangle'
+    o.frequency.value = [880, 660, 470][band] || 470
+    o.connect(g)
+
+    const dur = 0.13
+    g.gain.setValueAtTime(0, t0)
+    g.gain.linearRampToValueAtTime(escort ? 0.20 : 0.16, t0 + 0.008)
+    g.gain.linearRampToValueAtTime(0, t0 + dur)
+    o.start(t0)
+    o.stop(t0 + dur + 0.02)
+    o.onended = () => {
+      try { g.disconnect() } catch (e) {}
+      try { ear.destroy() } catch (e) {}
+    }
+  }
+
+  // ===========================================================================
   // torpedoes
   // ===========================================================================
   function fire() {
@@ -802,11 +866,11 @@ content.audio = (() => {
       case 'beepStarboard': beep(STBD, 600, false, 0); break
       case 'beepAstern': beep(ASTERN, 600, false, 0); break
       case 'beepNear': beep(CLOSE, 160, false, 0); break
-      case 'beepFar': beep({forward: 2000, starboard: 300}, 2020, false, 0); break
+      case 'beepFar': beep({forward: 1480, starboard: 220}, 1500, false, 0); break
       case 'beepEscort': beep(AHEAD, 600, true, 0); break
       // A run of beeps at closing range, so the rate ramp is audible as a ramp.
       case 'beepClosing': {
-        const steps = [2100, 1700, 1300, 1000, 750, 550, 400, 280, 190]
+        const steps = [1550, 1300, 1050, 850, 650, 480, 340, 230, 150]
         let at = 0
         steps.forEach((r) => {
           later(() => beep({forward: r, starboard: r * 0.15}, r, false, 0), at * 1000)
@@ -817,9 +881,22 @@ content.audio = (() => {
       case 'ping': {
         pingOut()
         later(() => echo(PORT, 600, false), k.echoDelay(600) * 1000)
-        later(() => echo({forward: 1400, starboard: 900}, 1660, false), k.echoDelay(1660) * 1000)
+        later(() => echo({forward: 1100, starboard: 700}, 1310, false), k.echoDelay(1310) * 1000)
         break
       }
+      // The sweep, for direct comparison with the ping above: same field, but
+      // it answers at once and in three coarse buckets instead of in metres.
+      case 'sweep': {
+        sweepOut()
+        const shown = [
+          [{forward: 190, starboard: -120}, 0, false],
+          [{forward: -300, starboard: 640}, 1, true],
+          [{forward: 900, starboard: 340}, 2, false],
+        ]
+        shown.forEach((r, i) => later(() => sweepBlip(r[0], r[1], r[2]), 120 + i * 130))
+        break
+      }
+      case 'sweepEmpty': sweepOut(); break
       case 'motorSlow': {
         startMotor(); updateMotor(4, 16, 0)
         later(() => { if (!sea) stopMotor() }, 1600)
@@ -910,6 +987,8 @@ content.audio = (() => {
     stopRuns,
     pingOut,
     echo,
+    sweepOut,
+    sweepBlip,
     fire,
     hit,
     torpedoSpent,

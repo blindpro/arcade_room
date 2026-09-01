@@ -312,6 +312,60 @@ console.log('\nSEA WOLF simulation\n')
     (k.ESCORT_FIRE_MIN / k.ENEMY_TORPEDO_SPEED).toFixed(1) + 's of flight')
 }
 
+// --- 6b. the sweep is fast, free and vague -----------------------------------
+// The sweep only justifies its existence if it is strictly worse than the ping
+// at the ping's job. If its bearings were tight enough to shoot on, or it
+// reported a usable range, it would just be a ping with no downside and the
+// active/passive choice would collapse.
+{
+  const content = load()
+  const g = content.game
+  const k = content.constants
+  let last = null
+  content.events.on('sweep', (e) => { last = e })
+  startPatrol(content)
+  run(content, 2)
+
+  console.log('\n6b. the hydrophone sweep')
+  const noiseBefore = g.getNoise()
+  const ok = g.sweep()
+  check('a sweep answers', ok && !!last, last ? last.returns.length + ' returns' : 'none')
+  check('it costs no noise', g.getNoise() === noiseBefore,
+    noiseBefore.toFixed(3) + ' -> ' + g.getNoise().toFixed(3))
+  check('it cannot be spammed every frame', !g.sweep())
+  check('it reports bands, never metres',
+    last.returns.every((r) => r.band >= 0 && r.band <= 2 && r.range === undefined))
+
+  // Sample the bearing error against the truth, and against the thing it must
+  // not be good enough for: the lead angle you actually have to shoot on.
+  let worst = 0, n = 0, sum = 0
+  run(content, 120, () => {
+    if (!g.sweep()) return
+    const truth = new Map(g.contactList().map((c) => [c.id, c.bearing]))
+    for (const r of last.returns) {
+      if (!truth.has(r.id)) continue
+      const err = Math.abs(k.wrapDeg(r.bearing - truth.get(r.id)))
+      worst = Math.max(worst, err); sum += err; n++
+    }
+  })
+  const mean = n ? sum / n : 0
+  console.log('  (bearing error over ' + n + ' returns: mean ' +
+    mean.toFixed(1) + ' deg, worst ' + worst.toFixed(1) + ')')
+  check('bearings are smeared, not exact', mean > 3, mean.toFixed(1) + ' deg mean error')
+  // A crossing shot needs about 6 degrees of lead. If the sweep's own error is
+  // not comfortably bigger than that, it is accurate enough to aim with.
+  check('too vague to shoot on', mean > 6, mean.toFixed(1) + ' deg vs a ~6 deg lead')
+  check('but still tells you which way to turn', mean < 45,
+    'a 90 degree error would be useless')
+
+  // Depth is supposed to cost you the passive picture, the same way it costs
+  // you the beeps.
+  const shallowReach = k.CONTACT_RANGE
+  const deepReach = k.CONTACT_RANGE * k.SWEEP_DEEP_RANGE_MULT
+  check('running deep shortens the sweep', deepReach < shallowReach,
+    Math.round(deepReach) + ' m vs ' + Math.round(shallowReach))
+}
+
 // --- 7. the ocean stays populated and bounded --------------------------------
 {
   const content = load()

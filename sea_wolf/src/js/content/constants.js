@@ -127,6 +127,36 @@ content.constants = (() => {
   const PING_COOLDOWN = 3.0
   const PING_NOISE = 0.34        // deliberately below HUNT_THRESHOLD
 
+  // ---- the hydrophone sweep -------------------------------------------------
+  // The other half of the sonar pair, and deliberately the opposite of the ping
+  // on every axis. A ping is SLOW, LOUD, PRECISE and LONG: you wait seconds for
+  // the echoes, every escort hears you shout, and what comes back is an exact
+  // range. A sweep is INSTANT, SILENT, COARSE and SHORT: the operator swings
+  // the hydrophone round and calls what he hears, right now, for free — but a
+  // passive bearing is a smeared thing, and he can only tell you roughly how
+  // far off it is.
+  //
+  // So the ping is what you use to build a firing solution and the sweep is
+  // what you use to answer "what is around me, and which way do I turn" without
+  // announcing yourself to the entire escort screen. Neither replaces the
+  // other, and the sweep never gives you a number you could shoot on.
+  const SWEEP_COOLDOWN = 1.1     // it is free, so the cooldown is the only limit
+  // Passive, so it hears no further than the beeps do and it makes no noise of
+  // its own. Listening is not a sound you make.
+  const SWEEP_NOISE = 0
+  // Bearing error, in degrees either side. A near contact is loud and its
+  // bearing is sharp; a distant one is a smear. Read against PERISCOPE_LIMIT
+  // (45) this is the number that keeps a sweep out of the firing solution.
+  const SWEEP_ERROR_NEAR = 5
+  const SWEEP_ERROR_FAR = 24
+  // Depth muffles the passive set, so a deep boat sweeps blurrier and shorter -
+  // the same trade the contact beeps already make.
+  const SWEEP_DEEP_ERROR_MULT = 1.8
+  const SWEEP_DEEP_RANGE_MULT = 0.62
+  // Range is reported in bands rather than metres. These are the fractions of
+  // the sweep's reach where "close" becomes "near" and "near" becomes "far".
+  const SWEEP_BANDS = [0.28, 0.62]
+
   // ---- being hunted ---------------------------------------------------------
   // The noise economy. SPEED is now the constant term — a boat at flank is
   // loud the whole time, which is the price of the intercept. Pings, shots and
@@ -276,6 +306,16 @@ content.constants = (() => {
 
   function echoDelay(range) { return (2 * range) / SOUND_SPEED }
 
+  // Which coarse band a sweep return falls in: 0 close, 1 near, 2 far. `reach`
+  // is the sweep's own range, which shrinks with depth, so the bands are
+  // always relative to how well the boat can hear at that moment.
+  function sweepBand(range, reach) {
+    const f = reach > 0 ? range / reach : 1
+    if (f <= SWEEP_BANDS[0]) return 0
+    if (f <= SWEEP_BANDS[1]) return 1
+    return 2
+  }
+
   // 0 at the surface, 1 in the cellar. Everything that scales with depth -
   // speed, noise, battery - reads it from here.
   function depthFraction(depth) { return clamp(depth / MAX_DEPTH, 0, 1) }
@@ -335,6 +375,14 @@ content.constants = (() => {
     SOUND_SPEED,
     PING_COOLDOWN,
     PING_NOISE,
+    SWEEP_COOLDOWN,
+    SWEEP_NOISE,
+    SWEEP_ERROR_NEAR,
+    SWEEP_ERROR_FAR,
+    SWEEP_DEEP_ERROR_MULT,
+    SWEEP_DEEP_RANGE_MULT,
+    SWEEP_BANDS,
+    sweepBand,
     SPEED_NOISE,
     SPEED_NOISE_POWER,
     DEEP_NOISE_MULT,

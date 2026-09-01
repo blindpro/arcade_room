@@ -33,13 +33,22 @@ app.screen.game = app.screenManager.invent({
     port:      ['ArrowLeft', 'KeyA', 'Numpad4'],
     starboard: ['ArrowRight', 'KeyD', 'Numpad6'],
     faster:    ['ArrowUp', 'KeyW', 'Numpad8'],
-    slower:    ['ArrowDown', 'KeyS', 'Numpad2'],
+    // S used to be here, but it is the easiest key on the board to reach and
+    // the ping was on P, which is a stretch mid-manoeuvre. Throttle-down keeps
+    // the arrow and moves to Z inside the left-hand cluster.
+    slower:    ['ArrowDown', 'KeyZ', 'Numpad2'],
     scopeLeft: ['KeyQ', 'Numpad7'],
     scopeRight:['KeyE', 'Numpad9'],
     scopeMid:  ['KeyR', 'Numpad5'],
     fine:      ['ShiftLeft', 'ShiftRight'],
     fire:      ['Space', 'Enter', 'NumpadEnter'],
-    ping:      ['KeyP', 'Numpad0'],
+    // S is the ping. P still works - it is what the old builds used and it is
+    // what a lot of writing about the game says - but it is no longer the one
+    // you are expected to reach for.
+    ping:      ['KeyS', 'KeyP', 'Numpad0'],
+    // The quick hydrophone sweep, next to the helm keys under the left hand.
+    // Deliberately NOT Tab, which belongs to the focus layer.
+    sweep:     ['KeyF', 'Numpad1'],
     // Depth is a ladder now, so it needs two keys rather than a toggle.
     deeper:    ['PageDown', 'KeyX', 'NumpadDecimal'],
     shallower: ['PageUp', 'KeyC', 'Numpad3'],
@@ -55,6 +64,7 @@ app.screen.game = app.screenManager.invent({
     fine:      [6],
     fire:      [0, 7],
     ping:      [2],
+    sweep:     [8],
     deeper:    [1],
     shallower: [3],
   },
@@ -128,6 +138,32 @@ app.screen.game = app.screenManager.invent({
           range: Math.round(n.range),
         }))
       }
+    })
+
+    // --- the hydrophone sweep ------------------------------------------------
+    // Unlike the ping, the returns are NOT scheduled — they arrive with the
+    // sweep, because nothing had to travel out and back. They are only spread
+    // by a few tens of milliseconds each so that four contacts read as four
+    // blips round the field rather than as one chord.
+    content.events.on('sweep', (e) => {
+      A().sweepOut()
+      e.returns.forEach((r, i) => {
+        A().later(() => A().sweepBlip(r.local, r.band, r.escort), 130 + i * 110)
+      })
+      if (!e.returns.length) {
+        app.announce.polite(t('ann.sweepEmpty'))
+        return
+      }
+      // Bearings and bands only. A sweep never reports a range in metres and
+      // never names a ship type — if it did it would be a better ping, and the
+      // point of it is that it is a worse one you can use constantly.
+      const parts = e.returns.slice(0, 4).map((r) => t('ann.sweepItem', {
+        what: t(r.escort ? 'sweep.escort' : 'sweep.merchant'),
+        bearing: self.bearingWord(r.bearing),
+        band: t('sweep.band.' + r.band),
+      }))
+      app.announce.polite(
+        t('ann.sweep', {count: e.returns.length}) + ' ' + parts.join('. '))
     })
 
     // --- torpedoes -----------------------------------------------------------
@@ -305,6 +341,7 @@ app.screen.game = app.screenManager.invent({
       if (this.edge('ping', this.held('ping', k, gp))) {
         if (!content.game.ping()) content.audio.fireBlocked('reload')
       }
+      if (this.edge('sweep', this.held('sweep', k, gp))) content.game.sweep()
       // Page down takes her down a level, page up brings her up one. The
       // order is a step on the ladder, not a hold — the boat then takes as
       // long as it takes.
