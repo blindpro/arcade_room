@@ -40,7 +40,7 @@ jobs:
               echo "Building $game"
               npm --prefix "$game" install --no-audit --no-fund
               npm --prefix "$game" install --no-save --no-audit --no-fund gulp
-              npx --prefix "$game" --no-install gulp build
+              npx --prefix "$game" gulp build
             fi
           done
 
