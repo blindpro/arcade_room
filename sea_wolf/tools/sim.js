@@ -227,40 +227,89 @@ console.log('\nSEA WOLF simulation\n')
   content.events.on('acquired', () => { acquired = true })
   content.events.on('lost-contact', () => { lost = true })
 
+  // This check is about the NOISE ECONOMY, so the boat is made unsinkable for
+  // its duration. A boat that gets torpedoed partway through freezes at phase
+  // 'over', after which update() is a no-op and the noise gauge simply stops
+  // where it was - pinned at 1.0. That made the check fail at random and told
+  // us nothing about whether going quiet works.
+  const immortal = () => {
+    g.state.hull = content.constants.HULL_MAX
+    if (g.phase() !== 'play') g.state.phase = 'play'
+  }
+
   startPatrol(content)
-  run(content, 50, () => { g.nudgeThrottle(1, 1 / 60); g.ping() })
+  run(content, 50, () => { immortal(); g.nudgeThrottle(1, 1 / 60); g.ping() })
   console.log('\n5. stealth')
   check('flank speed plus constant pinging gets you acquired', acquired,
     g.getNoise().toFixed(2))
 
-  g.setDepth('deep')
-  run(content, 60, () => g.nudgeThrottle(-1, 1 / 60))
+  // Take her to the cellar and stop. Depth sheds noise faster, so this is the
+  // escape route the noise economy is supposed to offer.
+  g.setDepthLevel(content.constants.DEPTH_LEVELS.length - 1)
+  run(content, 60, () => { immortal(); g.nudgeThrottle(-1, 1 / 60) })
   console.log('  (noise after 60s stopped and deep: ' + g.getNoise().toFixed(3) + ')')
   check('going quiet and deep loses them', lost && !g.isHunted())
 }
 
 // --- 6. depth is worth taking ------------------------------------------------
+// Depth is no longer a damage multiplier; it is a MISS. An escort's torpedo runs
+// at the depth it guessed when it fired, so what matters is how often that guess
+// lands inside ENEMY_TORPEDO_DEPTH_BAND of where the boat actually is.
 {
   const k = load().constants
-  const prox = 0.9
-  const shallow = k.CHARGE_DAMAGE * prox
-  const deep = k.CHARGE_DAMAGE * prox * k.DEEP_DAMAGE_MULT
+
+  // Fraction of shots whose depth setting would still be lethal, for a boat
+  // sitting at each rung of the ladder. The escort's error scales with the
+  // boat's depth, which is what makes the bottom of the ladder worth the trip.
+  // Sampled at grip 1 - escorts that have the boat cold - so these are the
+  // WORST case for the player. This mirrors escortFire() exactly, including
+  // the fact that the guess is floored at the surface but not capped at
+  // MAX_DEPTH: capping it was what used to make the cellar a worse place to
+  // hide than 200 metres.
+  function lethalFraction(depth, grip) {
+    let hits = 0
+    const TRIALS = 20000
+    for (let i = 0; i < TRIALS; i++) {
+      const err = k.ESCORT_DEPTH_ERROR * k.depthFraction(depth) * k.lerp(1, 0.6, grip)
+      const setFor = Math.max(0, depth + k.rand(-err, err))
+      if (Math.abs(setFor - depth) <= k.ENEMY_TORPEDO_DEPTH_BAND) hits++
+    }
+    return hits / TRIALS
+  }
 
   console.log('\n6. depth')
-  check('deep takes less damage', deep < shallow, deep.toFixed(1) + ' vs ' + shallow.toFixed(1))
-  // Expressed as the thing that actually matters: how many charges at ground
-  // zero it takes to kill the boat at each depth.
-  const killsShallow = k.HULL_MAX / shallow
-  const killsDeep = k.HULL_MAX / deep
-  check('a shallow boat dies to a handful of close charges',
-    killsShallow > 2 && killsShallow < 7, killsShallow.toFixed(1) + ' charges')
-  check('a deep boat can ride out a long attack',
-    killsDeep > 12, killsDeep.toFixed(1) + ' charges')
-  check('a full battery is a finite dive',
-    k.BATTERY_MAX / k.BATTERY_DRAIN > 15 && k.BATTERY_MAX / k.BATTERY_DRAIN < 45,
-    (k.BATTERY_MAX / k.BATTERY_DRAIN).toFixed(0) + 's submerged')
+  const atTop = lethalFraction(k.DEPTH_LEVELS[0], 1)
+  const atBottom = lethalFraction(k.MAX_DEPTH, 1)
+  for (const d of k.DEPTH_LEVELS) {
+    console.log('  ' + String(d).padStart(4) + ' m: ' +
+      (lethalFraction(d, 1) * 100).toFixed(0) + '% of well-aimed shots still find you')
+  }
+  check('at periscope depth they cannot miss you vertically', atTop > 0.95,
+    (atTop * 100).toFixed(0) + '%')
+  check('the cellar beats most of their shots', atBottom < 0.5,
+    (atBottom * 100).toFixed(0) + '%')
+  check('the ladder is a gradient, not a switch',
+    lethalFraction(100, 1) > lethalFraction(200, 1) &&
+    lethalFraction(200, 1) > atBottom)
+
+  // A round trip to the bottom has to cost a real slice of the battery,
+  // otherwise there is no reason ever to come up.
+  const trip = k.MAX_DEPTH / k.DIVE_RATE + k.MAX_DEPTH / k.RISE_RATE
+  const drain = (k.BATTERY_DRAIN_BASE + k.BATTERY_DRAIN_DEPTH * 0.5) * trip
+  check('a round trip to the cellar costs real battery',
+    drain > 8 && drain < 60, drain.toFixed(0) + '% for a ' + trip.toFixed(0) + 's round trip')
+  check('you cannot sit on the bottom all patrol',
+    k.BATTERY_MAX / (k.BATTERY_DRAIN_BASE + k.BATTERY_DRAIN_DEPTH) < k.PATROL_TIME * 0.5,
+    (k.BATTERY_MAX / (k.BATTERY_DRAIN_BASE + k.BATTERY_DRAIN_DEPTH)).toFixed(0) + 's at the bottom')
   check('running deep costs you the chase', k.SPEED_MAX_DEEP < k.SPEED_MAX_SHALLOW,
     k.SPEED_MAX_DEEP + ' vs ' + k.SPEED_MAX_SHALLOW + ' m/s')
+  // The dodge only works if the fish takes longer to arrive than the boat takes
+  // to change level. That is the single number the whole evasion loop rests on.
+  const rung = k.DEPTH_LEVELS[1] - k.DEPTH_LEVELS[0]
+  check('one rung of depth is quicker than a torpedo from the hold-off range',
+    rung / k.DIVE_RATE < k.ESCORT_FIRE_MIN / k.ENEMY_TORPEDO_SPEED,
+    (rung / k.DIVE_RATE).toFixed(1) + 's to dive vs ' +
+    (k.ESCORT_FIRE_MIN / k.ENEMY_TORPEDO_SPEED).toFixed(1) + 's of flight')
 }
 
 // --- 7. the ocean stays populated and bounded --------------------------------

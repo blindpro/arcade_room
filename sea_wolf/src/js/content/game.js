@@ -139,8 +139,14 @@ content.game = (() => {
 
     let merchants = k.randInt(k.CONVOY_SIZE[0], k.CONVOY_SIZE[1])
     let escorts = k.randInt(k.CONVOY_ESCORTS[0], k.CONVOY_ESCORTS[1])
+    // Escorts already on the plot count against the new convoy's screen, so a
+    // convoy that sails into a fight the player is already losing does not
+    // bring two more guns with it.
+    const onStation = contacts.reduce((n, c) => n + (c.escort && c.alive ? 1 : 0), 0)
+    escorts = Math.max(0, Math.min(escorts, k.MAX_ESCORTS - onStation))
     if (merchants + escorts > room) {
-      merchants = Math.min(merchants, Math.max(1, room - 1))
+      // Merchants are the point of the game, so they get the seats first.
+      merchants = Math.min(merchants, room)
       escorts = Math.max(0, Math.min(escorts, room - merchants))
     }
 
@@ -167,8 +173,8 @@ content.game = (() => {
       const speed = k.rand(spec.speed[0], spec.speed[1])
       const sprint = spec.sprint ? k.rand(spec.sprint[0], spec.sprint[1]) : speed
 
-      const along = (i - order.length / 2) * k.rand(110, 200)
-      const abeam = k.rand(-130, 130)
+      const along = (i - order.length / 2) * k.rand(k.CONVOY_SPACING[0], k.CONVOY_SPACING[1])
+      const abeam = k.rand(-k.CONVOY_BEAM, k.CONVOY_BEAM)
       const ch = rad(course)
       const px = cx + Math.sin(ch) * along + Math.cos(ch) * abeam
       const py = cy + Math.cos(ch) * along - Math.sin(ch) * abeam
@@ -186,6 +192,10 @@ content.game = (() => {
         sprint,
         vx: Math.sin(ch) * speed,
         vy: Math.cos(ch) * speed,
+        // The way the ship is actually pointing. It starts on the convoy's
+        // course and only diverges when an escort breaks off to hunt; `course`
+        // is kept as the formation's course so it has something to rejoin.
+        heading: course,
         alive: true,
         hull: spec.hull,
         hunting: false,
@@ -221,10 +231,21 @@ content.game = (() => {
     if (state.hunted && !wasHunted) E().emit('acquired', {})
     if (!state.hunted && wasHunted) E().emit('lost-contact', {})
 
+    // How far off an escort can act on the noise it is hearing. Being FOUND is
+    // a global fact — the noise gauge crosses a threshold and the flotilla
+    // knows a boat is out there — but being PROSECUTED is a local one. Without
+    // this every escort on the plot, including ones four kilometres away and
+    // out of earshot, turned inbound on the same frame, which is what made the
+    // hunt feel less like being stalked and more like being teleported at.
+    const reach = k.lerp(k.ESCORT_DETECT_MIN, k.ESCORT_DETECT_RANGE, state.noise)
+
     for (const c of contacts) {
       if (!c.escort || !c.alive) continue
       const wasHunting = c.hunting
-      c.hunting = state.hunted
+      const r = rangeTo(c) || 1
+      // A little hysteresis, so an escort sitting on the edge of its own
+      // detection range does not flicker between screening and prosecuting.
+      c.hunting = state.hunted && r <= (wasHunting ? reach * k.ESCORT_HOLD_MULT : reach)
 
       if (c.hunting) {
         // Turn toward the boat and open up. The escort was screening the
@@ -232,14 +253,34 @@ content.game = (() => {
         // a change of pace as well as a swing across the field.
         //
         // It runs in to torpedo range and then holds off: an escort wants a
-        // firing solution, not a collision, so it sheers away rather than
-        // sitting on top of you. If it does end up alongside that is your
-        // doing, and updateCollisions will charge you both for it.
-        const r = rangeTo(c) || 1
-        const away = r < k.ESCORT_FIRE_MIN ? -1 : 1
-        c.vx = ((state.x - c.x) / r) * c.sprint * away
-        c.vy = ((state.y - c.y) / r) * c.sprint * away
-        if (!wasHunting) E().emit('escort-turn', {local: localOf(c.x, c.y), range: r})
+        // firing solution, not a collision. Inside the hold-off band it turns
+        // across your bearing and circles rather than reversing on the spot —
+        // the old code flipped its velocity vector the instant it crossed
+        // ESCORT_FIRE_MIN, which read as a ship stuttering in place. If it does
+        // end up alongside that is your doing, and updateCollisions will charge
+        // you both for it.
+        const toBoat = deg(Math.atan2(state.x - c.x, state.y - c.y))
+        const want = r < k.ESCORT_FIRE_MIN
+          ? toBoat + 180                               // too close: open the range
+          : (r < k.ESCORT_STANDOFF ? toBoat + 70       // hold a beam-on circle
+                                   : toBoat)          // still outside: close
+        // It is a ship, so it comes round at a ship's rate rather than
+        // snapping onto a new heading every frame.
+        const turn = k.clamp(k.wrapDeg(want - c.heading),
+          -k.ESCORT_TURN_RATE * delta, k.ESCORT_TURN_RATE * delta)
+        c.heading = k.wrapDeg(c.heading + turn)
+        const ch = rad(c.heading)
+        c.vx = Math.sin(ch) * c.sprint
+        c.vy = Math.cos(ch) * c.sprint
+        if (!wasHunting) {
+          // Working up a solution costs them time. Without this an escort that
+          // loses the boat and regains it gets a free shot on the frame it
+          // re-acquires, so a player who evades well — and so keeps crossing
+          // in and out of their detection range — draws far MORE fire than one
+          // who drives in a straight line.
+          c.fireTimer = k.ESCORT_FIRE_INTERVAL * k.ESCORT_SOLUTION_TIME
+          E().emit('escort-turn', {local: localOf(c.x, c.y), range: r})
+        }
 
         c.fireTimer -= delta
         if (c.fireTimer <= 0 && r >= k.ESCORT_FIRE_MIN && r <= k.ESCORT_FIRE_RANGE) {
@@ -248,6 +289,7 @@ content.game = (() => {
         }
       } else if (wasHunting) {
         // Give up and resume the convoy's course.
+        c.heading = c.course
         const ch = rad(c.course)
         c.vx = Math.sin(ch) * c.speed
         c.vy = Math.cos(ch) * c.speed
@@ -284,8 +326,14 @@ content.game = (() => {
     // they hold you, so depth protects you twice: once passively, by making
     // this guess bad, and once actively, when you change level after the fish
     // is already in the water on the old number.
+    //
+    // Note the guess is NOT clamped to MAX_DEPTH. It used to be, and that
+    // quietly cancelled the bottom of the ladder: at 300 metres every guess
+    // that overshot got folded back onto exactly the boat's depth, so the
+    // cellar was HARDER to survive than 200 metres. A fish can be set to run
+    // deeper than the boat can go — it just runs under you, which is the point.
     const depthErr = k.ESCORT_DEPTH_ERROR * k.depthFraction(state.depth) * k.lerp(1, 0.6, grip)
-    const setFor = k.clamp(state.depth + k.rand(-depthErr, depthErr), 0, k.MAX_DEPTH)
+    const setFor = Math.max(0, state.depth + k.rand(-depthErr, depthErr))
     const course = deg(Math.atan2(aimX - escort.x, aimY - escort.y)) + k.rand(-spread, spread)
     const ch = rad(course)
 

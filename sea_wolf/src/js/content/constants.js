@@ -48,13 +48,19 @@ content.constants = (() => {
   const PERISCOPE_FINE = 9       // ...while holding shift
 
   // ---- ranges ---------------------------------------------------------------
-  const CONTACT_RANGE = 2200     // beyond this a contact is not audible at all
-  const DESPAWN_RANGE = 4200     // ...and past this it is forgotten entirely
-  const MIN_ENGAGE_RANGE = 180   // closer than this a torpedo has not armed
+  // The plot is deliberately TIGHT. An earlier build ran a 2.2 km hearing
+  // radius over a 4.2 km field, which meant most of a patrol was spent driving
+  // through open water toward a beep that took a minute to become anything.
+  // Everything here is scaled so that a convoy you can hear is a convoy you can
+  // be shooting at inside a minute or so, and so that the whole audible field
+  // fits comfortably inside one torpedo's run.
+  const CONTACT_RANGE = 1600     // beyond this a contact is not audible at all
+  const DESPAWN_RANGE = 2800     // ...and past this it is forgotten entirely
+  const MIN_ENGAGE_RANGE = 140   // closer than this a torpedo has not armed
   // Where a new convoy is put down relative to the boat: close enough to hear
   // and reach, far enough that the intercept is a real decision.
-  const SPAWN_NEAR = 900
-  const SPAWN_FAR = 2100
+  const SPAWN_NEAR = 650
+  const SPAWN_FAR = 1500
 
   // ---- proximity beeps (the primary navigation cue) -------------------------
   // Interval ramps from SLOW at the edge of hearing to FAST alongside; pitch
@@ -73,15 +79,21 @@ content.constants = (() => {
   // exactly the uninformative wash this game had before it was rebuilt, so the
   // continuous layer is only allowed where it actually means something.
   // Set to 0 to switch the continuous layer off entirely.
-  const CLOSE_VOICE_RANGE = 420
+  const CLOSE_VOICE_RANGE = 340
 
   // ---- torpedoes ------------------------------------------------------------
   // Speed is the lead. For a target crossing your bow the angle you must aim
   // ahead is about asin(shipSpeed / TORPEDO_SPEED) — it depends on the speed
   // ratio and NOT on range — so this number alone decides whether the core
   // skill is audible or an inaudible sliver.
-  const TORPEDO_SPEED = 145      // m/s
-  const TORPEDO_LIFE = 14        // seconds before it runs out of fuel
+  //
+  // 145 m/s put every lead in the game between 3 and 5 degrees, which is under
+  // a fifth of a second of periscope travel and far too fine to hear. At 105
+  // the same ships need 5 to 10 degrees, which is a lead you can actually train
+  // onto by ear — and it keeps the torpedo's reach (SPEED * LIFE) just inside
+  // the audible field rather than twice its width.
+  const TORPEDO_SPEED = 105      // m/s
+  const TORPEDO_LIFE = 15        // seconds before it runs out of fuel
   const TORPEDO_HIT_RADIUS = 26  // meters
   const TORPEDO_LOAD = 14        // per patrol
   const RELOAD_TIME = 3.5        // seconds between shots
@@ -141,14 +153,31 @@ content.constants = (() => {
   // them can be beaten by changing course, speed or depth after you hear it
   // launch. That makes an incoming run a puzzle rather than a die roll, which
   // is what the old depth-charge pattern was.
-  const ESCORT_FIRE_RANGE = 1400  // they will shoot from this far out
+  //
+  // An escort only PROSECUTES the boat when it is close enough to work with the
+  // noise it is hearing. Crossing HUNT_THRESHOLD tells the whole flotilla that
+  // there is a submarine somewhere; these two numbers decide which escorts are
+  // near enough to do anything about it. Without them every escort on the plot
+  // turned inbound on the same frame, from any range, which made the hunt read
+  // as scripted rather than as something you had walked into.
+  const ESCORT_DETECT_RANGE = 1300 // how far they can act on a boat at full noise
+  const ESCORT_DETECT_MIN = 450    // ...and on one that is barely making a sound
+  const ESCORT_HOLD_MULT = 1.3     // hysteresis, so an escort at the edge is not a strobe
+  // Once inside this it stops closing and circles, holding a firing position
+  // instead of driving onto the boat's back.
+  const ESCORT_STANDOFF = 800
+  const ESCORT_TURN_RATE = 22     // degrees/second; it is a ship, not a cursor
+  const ESCORT_FIRE_RANGE = 1050  // they will shoot from this far out
   // ...and they hold off at least this far, which is the number that makes the
   // whole fight work: at ENEMY_TORPEDO_SPEED a shot from 600 metres takes the
   // better part of six seconds to arrive, and six seconds is just enough to
   // change one level of depth. Let an escort in closer than this and the flight
   // time drops below the dive time, at which point nothing you do matters.
-  const ESCORT_FIRE_MIN = 600
-  const ESCORT_FIRE_INTERVAL = 7.5
+  const ESCORT_FIRE_MIN = 520
+  const ESCORT_FIRE_INTERVAL = 9.0
+  // Fraction of that interval an escort must spend working up a solution after
+  // it first gains contact, before its first shot.
+  const ESCORT_SOLUTION_TIME = 0.8
   const ESCORT_AIM_ERROR = 7      // degrees of scatter when they barely have you
   const ESCORT_AIM_ERROR_MIN = 1.6 // ...and when they have you cold
   // They have to guess your depth as well as your position, and a deep boat is
@@ -158,9 +187,12 @@ content.constants = (() => {
   // beat about a third of their shots, and at 300 you beat well over half.
   // That gradient is what makes the bottom of the ladder worth the battery,
   // the speed and the fourteen seconds it costs to get there.
-  const ESCORT_DEPTH_ERROR = 160
-  const ENEMY_TORPEDO_SPEED = 105
-  const ENEMY_TORPEDO_LIFE = 17
+  const ESCORT_DEPTH_ERROR = 220
+  // Slower than yours, and slower than the range they shoot from, so that a
+  // launch heard at ESCORT_FIRE_MIN gives you about six seconds — comfortably
+  // more than the 4.8 it takes to fall one rung of the depth ladder.
+  const ENEMY_TORPEDO_SPEED = 88
+  const ENEMY_TORPEDO_LIFE = 15
   const ENEMY_TORPEDO_HIT_RADIUS = 30
   // Vertical miss distance. A fish set for periscope depth passes harmlessly
   // over a boat at 100 metres, which is the whole reason to dive.
@@ -203,10 +235,24 @@ content.constants = (() => {
   }
 
   const CONVOY_GAP = [26, 40]    // seconds between convoys
-  const CONVOY_SIZE = [2, 4]     // merchants per convoy
+  const CONVOY_SIZE = [2, 3]     // merchants per convoy
   const CONVOY_ESCORTS = [1, 2]
-  // An audio budget, not a difficulty knob.
-  const MAX_CONTACTS = 10
+  // An audio budget, not a difficulty knob. On the tighter plot almost
+  // everything alive is also audible, so this is now close to the number of
+  // beeps in your ears at once - which is why it came down from ten.
+  const MAX_CONTACTS = 7
+  // ...and a separate ceiling on escorts, which is a difficulty knob and the
+  // fix for a slow rot in the old build: merchants sail on and despawn, but a
+  // prosecuting escort follows the boat and therefore NEVER leaves the plot.
+  // Over a six-minute patrol the field silently filled up with escorts, which
+  // both blocked new convoys from spawning (no room left) and stacked more and
+  // more guns on the player. The patrol got harder and emptier at the same time.
+  const MAX_ESCORTS = 3
+  // How a convoy is strung out along its own course, and how far it spreads
+  // either side of it. Scaled to the plot: a formation should read as a
+  // formation, not fill the whole audible field.
+  const CONVOY_SPACING = [90, 150]
+  const CONVOY_BEAM = 100
 
   // ---- helpers --------------------------------------------------------------
   const DEG = 180 / Math.PI
@@ -298,9 +344,15 @@ content.constants = (() => {
     HIT_NOISE,
     HUNT_THRESHOLD,
     LOSE_THRESHOLD,
+    ESCORT_DETECT_RANGE,
+    ESCORT_DETECT_MIN,
+    ESCORT_HOLD_MULT,
+    ESCORT_STANDOFF,
+    ESCORT_TURN_RATE,
     ESCORT_FIRE_RANGE,
     ESCORT_FIRE_MIN,
     ESCORT_FIRE_INTERVAL,
+    ESCORT_SOLUTION_TIME,
     ESCORT_AIM_ERROR,
     ESCORT_AIM_ERROR_MIN,
     ESCORT_DEPTH_ERROR,
@@ -323,7 +375,10 @@ content.constants = (() => {
     CONVOY_GAP,
     CONVOY_SIZE,
     CONVOY_ESCORTS,
+    CONVOY_SPACING,
+    CONVOY_BEAM,
     MAX_CONTACTS,
+    MAX_ESCORTS,
     DEG,
     clamp,
     lerp,

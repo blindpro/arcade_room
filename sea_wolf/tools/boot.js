@@ -226,19 +226,25 @@ function clean(label) {
   frames(900)
   check('the torpedo run and its outcome ran clean', clean('torpedo'))
 
-  // Depth.
+  // Depth. It is a four-rung ladder travelled at a fixed rate, not a toggle, so
+  // each order has to be given its travel time before the boat is anywhere.
   errors.length = 0
+  const levels = content.constants.DEPTH_LEVELS
   key('KeyX'); frames(6); keyUp('KeyX')
-  frames(200)
-  check('X takes her deep', content.game.status().depth === 'deep',
-    content.game.status().depth)
+  frames(60 * Math.ceil(levels[1] / content.constants.DIVE_RATE) + 60)
+  check('X takes her down a rung', content.game.status().depth === levels[1],
+    content.game.status().depth + ' m')
+  check('the boat reports the level it settled on', !content.game.status().changingDepth)
+
   const blocked = content.game.status().torpedoes
   key('Space'); frames(6); keyUp('Space')
-  check('the tubes will not fire from deep', content.game.status().torpedoes === blocked)
-  key('KeyX'); frames(6); keyUp('KeyX')
-  frames(200)
-  check('X again returns to periscope depth', content.game.status().depth === 'periscope',
-    content.game.status().depth)
+  check('the tubes will not fire from below periscope depth',
+    content.game.status().torpedoes === blocked)
+
+  key('KeyC'); frames(6); keyUp('KeyC')
+  frames(60 * Math.ceil(levels[1] / content.constants.RISE_RATE) + 60)
+  check('C brings her back to periscope depth', content.game.status().atPeriscope,
+    content.game.status().depth + ' m')
   check('depth changes ran clean', clean('depth'))
 
   // ---- the F-key readouts ---------------------------------------------------

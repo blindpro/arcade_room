@@ -49,7 +49,7 @@ console.log('\nSEA WOLF balance probe\n')
 {
   const k = load().constants
   console.log('the beep rate ramp - the primary distance cue')
-  const rows = [k.CONTACT_RANGE, 1800, 1400, 1000, 700, 450, 250, 100]
+  const rows = [k.CONTACT_RANGE, 1300, 1000, 800, 600, 450, 250, 100]
   for (const r of rows) {
     const iv = k.beepInterval(r)
     const bar = '#'.repeat(Math.max(1, Math.round(60 / (iv * 20))))
@@ -68,6 +68,11 @@ console.log('\nSEA WOLF balance probe\n')
   startPatrol(content)
   // Drive the way a player would: chase whatever is nearest.
   run(content, 360, (t) => {
+    // Once the boat is dead the world stops moving, and every later sample is
+    // a duplicate of the frame it died on. That used to pull the median onto
+    // the final value and make it identical to the extreme, which read as a
+    // suspicious result rather than as "the patrol ended early".
+    if (g.phase() !== 'play') return
     const list = g.contactList()
     if (list.length) {
       g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
@@ -95,6 +100,7 @@ console.log('\nSEA WOLF balance probe\n')
   const closest = []
   let best = Infinity
   run(content, 360, (t) => {
+    if (g.phase() !== 'play') return
     const list = g.contactList().filter((c) => !c.escort)
     if (list.length) {
       g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
@@ -124,6 +130,7 @@ console.log('\nSEA WOLF balance probe\n')
   const sternLeads = [], beamLeads = []
   startPatrol(content)
   run(content, 360, (t) => {
+    if (g.phase() !== 'play') return
     const list = g.contactList().filter((c) => !c.escort)
     if (list.length) {
       g.setRudder(list[0].bearing > 3 ? 1 : (list[0].bearing < -3 ? -1 : 0))
@@ -131,7 +138,7 @@ console.log('\nSEA WOLF balance probe\n')
     }
     if (Math.round(t * 60) % 30) return
     for (const c of list) {
-      if (c.range > 1400) continue
+      if (c.range > content.constants.CONTACT_RANGE) continue
       g.state.periscope = content.constants.clamp(c.bearing, -45, 45)
       const sol = g.aimedContact()
       if (!sol || sol.escort || sol.id !== c.id) continue
@@ -167,27 +174,40 @@ function patrol(style) {
   const k = content.constants
   startPatrol(content)
 
-  let charged = false
+  // A launch puts the boat into evasion for a fixed window: down a rung and
+  // hold, because the fish is set for the level it was fired at. Once the
+  // window closes it comes back up, since periscope depth is the only place
+  // the tubes work and the battery charges.
+  let evade = 0
   let lastPing = -99
-  content.events.on('charge-splash', () => { charged = true })
+  content.events.on('escort-fire', () => { evade = 10 })
 
-  run(content, 360, () => {
+  run(content, 360, (t, dt) => {
     if (g.phase() !== 'play') return
     const st = g.status()
+    evade = Math.max(0, evade - dt)
 
-    // Depth discipline: dive when charges land, come up when it is quiet.
-    if (charged && st.depth === 'periscope') { g.setDepth('deep'); charged = false }
-    else if (!g.isHunted() && st.depth === 'deep') g.setDepth('periscope')
+    if (evade > 0) {
+      if (st.depthTarget < 200 && !st.changingDepth) g.stepDepth(1)
+    } else if (st.depthTarget > 0 && !st.changingDepth && !g.isHunted()) {
+      g.stepDepth(-1)
+    }
 
     if (style === 'pinger') g.ping()
     else if (style !== 'blind' && g.state.elapsed - lastPing > 25) {
       if (g.ping()) lastPing = g.state.elapsed
     }
 
-    // Steer at the nearest merchant.
+    // Steer at the nearest merchant - but sheer off rather than driving the
+    // boat into it at flank speed, which is a way to die that says nothing
+    // about the balance of the hunt.
     const list = g.contactList().filter((c) => !c.escort)
     const target = list[0]
-    if (target) {
+    const nearest = g.contactList()[0]
+    if (nearest && nearest.range < 200 && st.atPeriscope) {
+      g.setRudder(nearest.bearing > 0 ? -1 : 1)
+      g.nudgeThrottle(-1, 1 / 60)
+    } else if (target) {
       g.setRudder(target.bearing > 3 ? 1 : (target.bearing < -3 ? -1 : 0))
       // The stalker holds the throttle under the noise break-even point;
       // everyone else runs flat out.
@@ -196,7 +216,7 @@ function patrol(style) {
     }
 
     // Shoot when there is a reachable solution.
-    if (!target || target.range > 1600 || st.depth !== 'periscope') return
+    if (!target || target.range > k.CONTACT_RANGE || !st.atPeriscope) return
     g.state.periscope = k.clamp(target.bearing, -k.PERISCOPE_LIMIT, k.PERISCOPE_LIMIT)
     const sol = g.aimedContact()
     if (!sol || sol.escort || sol.id !== target.id) return
@@ -217,7 +237,7 @@ function patrol(style) {
 console.log('\na patrol, four ways (5 runs each)')
 for (const style of ['hunter', 'stalker', 'pinger', 'blind']) {
   const runs = []
-  for (let i = 0; i < 5; i++) runs.push(patrol(style))
+  for (let i = 0; i < 8; i++) runs.push(patrol(style))
   const t = stats(runs.map((r) => r.tonnage))
   const s = stats(runs.map((r) => r.sunk))
   const h = stats(runs.map((r) => r.hull))
@@ -228,7 +248,7 @@ for (const style of ['hunter', 'stalker', 'pinger', 'blind']) {
     '   sunk ' + s.mean.toFixed(1).padStart(4) +
     '   hits/shots ' + (stats(acc).mean * 100).toFixed(0).padStart(3) + '%' +
     '   hull left ' + String(Math.round(h.mean)).padStart(3) +
-    '   killed ' + died + '/5')
+    '   killed ' + died + '/8')
 }
 
 console.log('')
