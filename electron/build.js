@@ -11,13 +11,25 @@ const GAME_DIRS = fs.readdirSync(ROOT, {withFileTypes: true})
   .map(d => d.name)
   .sort()
 
-// Every game's index.html loads ./scripts.min.js and ./styles.min.css, which
-// gulp writes into public/ and .gitignore keeps out of the repo. Shipping a
-// game without them produces a menu entry that opens a blank screen, so treat
+// Most games' index.html loads ./scripts.min.js and ./styles.min.css, which
+// gulp writes into public/ and .gitignore keeps out of the repo. Shipping such
+// a game without them produces a menu entry that opens a blank screen, so treat
 // an unbuilt game as a hard error unless the caller opts out.
+//
+// A few games (racing) have no build step at all: they ship plain sources under
+// public/ and their index.html never references the minified bundles. Asking
+// those for a bundle would flag them as permanently unbuilt, so let each game's
+// own index.html declare what it needs.
+const needsBuild = (g) => {
+  const html = fs.readFileSync(path.join(ROOT, g, 'public', 'index.html'), 'utf8')
+  return html.includes('scripts.min.js') || html.includes('styles.min.css')
+}
+
 const isBuilt = (g) =>
-  fs.existsSync(path.join(ROOT, g, 'public', 'scripts.min.js')) &&
-  fs.existsSync(path.join(ROOT, g, 'public', 'styles.min.css'))
+  !needsBuild(g) || (
+    fs.existsSync(path.join(ROOT, g, 'public', 'scripts.min.js')) &&
+    fs.existsSync(path.join(ROOT, g, 'public', 'styles.min.css'))
+  )
 
 const UNBUILT = GAME_DIRS.filter(g => !isBuilt(g))
 

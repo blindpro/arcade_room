@@ -27,9 +27,15 @@ function readGameList() {
     return fs.readdirSync(root, {withFileTypes: true})
       .filter(d => d.isDirectory() && !skip.has(d.name) && !d.name.startsWith('.') && !d.name.startsWith('!'))
       .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'index.html')))
-      // scripts.min.js is gulp output, not source. Without it the game's
-      // index.html loads to a blank screen, so keep it out of the menu.
-      .filter(d => fs.existsSync(path.join(root, d.name, 'public', 'scripts.min.js')))
+      // scripts.min.js is gulp output, not source. Without it a game that asks
+      // for it loads to a blank screen, so keep that one out of the menu. Games
+      // with no build step (racing) never reference it and always belong.
+      .filter(d => {
+        const pub = path.join(root, d.name, 'public')
+        const html = fs.readFileSync(path.join(pub, 'index.html'), 'utf8')
+        return !html.includes('scripts.min.js') ||
+          fs.existsSync(path.join(pub, 'scripts.min.js'))
+      })
       .map(d => d.name)
       .sort()
   } catch (_err) {
