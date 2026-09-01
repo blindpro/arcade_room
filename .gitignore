@@ -15,9 +15,6 @@ dist/
 */public/styles.min.css
 pinball-debug.log
 
-# AI / dev documentation
-*.md
-!how_to_host.md
 
 # OS / editor cruft
 .DS_Store
