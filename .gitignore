@@ -29,3 +29,6 @@ Thumbs.db
 
 # Reserved Windows device name created by external tooling
 nul
+
+# Pages build output
+_site/

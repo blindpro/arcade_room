@@ -12,7 +12,7 @@ permissions:
 
 concurrency:
   group: pages
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   build:
@@ -26,23 +26,35 @@ jobs:
         with:
           node-version: 20
           cache: npm
-
-      - name: Install root dependencies
-        run: npm ci
+          cache-dependency-path: '*/package-lock.json'
 
       - name: Build game assets
         shell: bash
         run: |
           set -euo pipefail
+          failed=()
           for game_dir in */; do
             game="${game_dir%/}"
-            if [[ -f "$game/package.json" && -f "$game/Gulpfile.js" && "$game" != "racing" ]]; then
-              echo "Building $game"
-              npm --prefix "$game" install --no-audit --no-fund
-              npm --prefix "$game" install --no-save --no-audit --no-fund gulp
-              npx --prefix "$game" gulp build
+            [[ -f "$game/package.json" && -f "$game/Gulpfile.js" ]] || continue
+            echo "::group::Building $game"
+            # gulp resolves its gulpfile and local install from the cwd,
+            # so each game has to be built from inside its own directory.
+            if (
+              cd "$game" &&
+              { npm ci --no-audit --no-fund || npm install --no-audit --no-fund; } &&
+              npx gulp build
+            ); then
+              echo "Built $game"
+            else
+              failed+=("$game")
+              echo "::error title=Build failed::$game did not build"
             fi
+            echo "::endgroup::"
           done
+          if (( ${#failed[@]} )); then
+            echo "Failed games: ${failed[*]}"
+            exit 1
+          fi
 
       - name: Assemble Pages artifact
         shell: bash
@@ -50,14 +62,32 @@ jobs:
           set -euo pipefail
           rm -rf _site
           mkdir -p _site
-          cp index.html .nojekyll _site/
+          cp index.html _site/
+          touch _site/.nojekyll
 
           for game_dir in */; do
             game="${game_dir%/}"
+            [[ "$game" == "_site" ]] && continue
             if [[ -f "$game/public/index.html" ]]; then
               cp -R "$game/public" "_site/$game"
             fi
           done
+
+      - name: Verify launcher entries
+        shell: bash
+        run: |
+          set -euo pipefail
+          missing=()
+          while read -r game; do
+            [[ -n "$game" ]] || continue
+            [[ -f "_site/$game/index.html" ]] || missing+=("$game")
+          done < <(sed -n '/id="games-data"/,/<\/script>/p' index.html \
+                   | grep -o '"[^"]*"' | tr -d '"' | grep -v '^application/json$\|^games-data$')
+          if (( ${#missing[@]} )); then
+            echo "::error title=Missing games::Listed in index.html but not in the artifact: ${missing[*]}"
+            exit 1
+          fi
+          echo "All launcher entries present."
 
       - name: Configure Pages
         uses: actions/configure-pages@v5

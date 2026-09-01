@@ -71,7 +71,18 @@ GitHub Pages is suitable because the collection is static.
 
 ### Option B: deploy from a Pages workflow
 
-If the repository uses a GitHub Actions workflow, configure it to upload the prepared static directory as the Pages artifact and deploy that artifact. The artifact must have `index.html` at its root, with the game directories beside it—not nested one level too deeply.
+This repository ships such a workflow at `.github/workflows/pages.yml`. It runs on every push to `main` and:
+
+1. Builds each game that has both a `package.json` and a `Gulpfile.js`. Each build runs **from inside that game's directory** (`cd <game> && npm ci && npx gulp build`), because gulp resolves both its local install and its gulpfile from the current directory. Running it from the repository root fails with `Local gulp not found`.
+2. Assembles `_site/` with the launcher at its root, a `.nojekyll` marker, and each game's built `public/` directory copied in as `_site/<game>/`.
+3. Fails the run if any game listed in the launcher's `games-data` array is missing an `index.html` in the artifact.
+4. Uploads `_site` with `actions/upload-pages-artifact` and deploys it with `actions/deploy-pages`.
+
+The artifact must have `index.html` at its root, with the game directories beside it—not nested one level too deeply.
+
+The build step is required: `*/public/scripts.min.js` and `*/public/styles.min.css` are gitignored, so a game's folder is not playable until gulp has generated them. Prebuilt games without a gulp setup (such as `racing`) are copied through as they are.
+
+For this workflow to publish, **Settings → Pages → Build and deployment** must be set to **GitHub Actions**, not *Deploy from a branch*.
 
 ### Project-site paths
 
