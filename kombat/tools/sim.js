@@ -249,9 +249,121 @@ function ladder(content) {
   check('some run clears at least the first stage', best >= 2, true)
 }
 
+
+// ---------------------------------------------------------------------------
+// the stereo image
+// ---------------------------------------------------------------------------
+
+// constants.panOf() is the ONE place arena space becomes ear space, and every
+// positional cue in the game is placed with it, so the properties it has to
+// hold are worth stating rather than hearing. The listener is the player's
+// fighter: these are all statements about what the PLAYER hears.
+function stereo(content) {
+  const K = content.constants
+  console.log('\n=== the stereo image ===')
+
+  // Your own body is always the centre of the image. This is the whole point of
+  // the listener being the player and not the arena.
+  check('a source standing on the player is centred', K.panOf(2.4, 2.4), 0)
+  check('and that is true anywhere in the arena', K.panOf(-4.1, -4.1), 0)
+
+  // Sides. Arena left is your left no matter where you are standing, because
+  // the listener faces the screen and never turns around.
+  check('an opponent to your right pans right', K.panOf(1, 0) > 0, true)
+  check('an opponent to your left pans left', K.panOf(-1, 0) < 0, true)
+  check('walking past them flips the image',
+    K.panOf(0, 1) < 0 && K.panOf(0, -1) > 0, true)
+
+  // Only the offset matters, never the absolute positions: the same gap reads
+  // the same in the middle of the arena and in a corner.
+  check('the same gap reads the same in a corner',
+    Math.abs(K.panOf(0.5, 0) - K.panOf(-4.5, -5)) < 1e-9, true)
+
+  // Monotonic out to EAR_FULL_PAN, and hard over beyond it — past that point
+  // the pulse RATE is the distance channel, not the pan.
+  let mono = true
+  for (let d = 0; d < K.EAR_FULL_PAN; d += 0.05) {
+    if (!(K.panOf(d + 0.05, 0) > K.panOf(d, 0))) mono = false
+  }
+  check('the pan widens all the way out to full pan', mono, true)
+  check('and stops widening beyond it',
+    K.panOf(K.EAR_FULL_PAN, 0) === 1 && K.panOf(K.ARENA_HALF * 2, 0) === 1, true)
+
+  // The curve exists so that punch range is a side rather than a suggestion.
+  check('punch range is already well off centre',
+    K.panOf(C(content).get('highPunch').reach, 0) > 0.6, true)
+}
+
+function C(content) { return content.combat }
+
+
+// ---------------------------------------------------------------------------
+// can you reach them at all?
+// ---------------------------------------------------------------------------
+
+// The rules being fair is not the same as the fight being reachable. The AI
+// chooses where to stand, and every button whose reach is shorter than that
+// distance is decoration — no matter how well the player reads the tell, and
+// with every rule in the triangle above still perfectly true. That is exactly
+// how this shipped twice: first with the opponent parked beyond the longest
+// attack in the game, then with it parked inside a kick but never inside a
+// punch, so U and J could not land all match.
+//
+// So: play a round per attack as somebody who walks in and throws that attack
+// whenever it would reach, and require that all four of them are real.
+function reachable(content) {
+  console.log('\n=== can you reach the opponent? ===')
+
+  for (const id of content.combat.ORDER) {
+    const reach = content.combat.get(id).reach
+    content.game.setPlayer('rook')
+    content.game.reset()
+
+    let landed = 0, whiffed = 0, inReach = 0, frames = 0, cool = 0
+    const count = (e) => { if (e.side === 'player') landed++ }
+    content.events.on('hit', count)
+    content.events.on('blocked', count)
+    content.events.on('whiff', (e) => { if (e.side === 'player') whiffed++ })
+
+    for (let t = 0; t < 45 && content.game.phase() !== 'gameover'; t += STEP) {
+      const st = content.game.status()
+      const intent = {left: false, right: false, jump: false, block: false, attack: null}
+      if (st.dist != null) {
+        intent[st.dx > 0 ? 'right' : 'left'] = true
+        cool -= STEP
+        if (st.dist <= reach && cool <= 0) { intent.attack = id; cool = 0.8 }
+        if (st.phase === 'fight') {
+          frames++
+          if (st.dist <= reach) inReach++
+        }
+      }
+      content.game.setInput(intent)
+      content.game.update(STEP)
+    }
+
+    const pct = Math.round(100 * inReach / Math.max(1, frames))
+    check(id + ' can be thrown at all (' + pct + '% of the round within its reach)',
+      pct >= 20, true)
+    check(id + ' mostly lands when thrown in range (' +
+      landed + ' landed, ' + whiffed + ' whiffed)', landed > whiffed, true)
+  }
+
+  // The distances the opponent chooses are what decide all of the above, so
+  // state them directly rather than only measuring their effect.
+  const K = content.combat
+  const kickRest = K.get('highKick').reach - 0.25
+  const punchRest = Math.min(K.get('highPunch').reach, K.get('lowPunch').reach) - 0.15
+  check('its kick stance stands inside your longest attack (' + kickRest.toFixed(2) +
+    ' against ' + K.get('highKick').reach + ')', kickRest < K.get('highKick').reach, true)
+  check('its punch stance stands inside your SHORTEST attack (' + punchRest.toFixed(2) +
+    ' against ' + K.get('lowPunch').reach + ')', punchRest < K.get('lowPunch').reach, true)
+}
+
 function main() {
   const content = load()
   triangle(content)
+  stereo(content)
+  reachable(content)
   ladder(content)
   console.log(failures ? `\nFAILED: ${failures} check(s).` : '\nOK: rules hold and every ladder terminates.')
   process.exit(failures ? 1 : 0)

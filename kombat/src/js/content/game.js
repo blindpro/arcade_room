@@ -206,7 +206,7 @@ content.game = (() => {
     if (f.stun > 0) f.stun = Math.max(0, f.stun - delta)
     if (f.down > 0) {
       f.down = Math.max(0, f.down - delta)
-      if (f.down === 0) content.events.emit('getup', {side: f.side, dx: dxOf(f)})
+      if (f.down === 0) content.events.emit('getup', {side: f.side, x: f.x})
     }
     if (f.cooldown > 0) f.cooldown = Math.max(0, f.cooldown - delta)
     for (const m of f.motion) m.t += delta
@@ -236,7 +236,7 @@ content.game = (() => {
       f.intent.jumpEdge = false
       f.jumpT = 0
       f.jumpVx = walkDir(f) * K().WALK_SPEED * (f.character.speedMult || 1) * K().AIR_DRIFT
-      content.events.emit('jump', {side: f.side, dx: dxOf(f)})
+      content.events.emit('jump', {side: f.side, x: f.x})
       return
     }
 
@@ -265,7 +265,7 @@ content.game = (() => {
       resolved: false,
     }
     content.events.emit('tell', {
-      side: f.side, dx: dxOf(f), level: attack.level, limb: attack.limb,
+      side: f.side, x: f.x, level: attack.level, limb: attack.limb,
       startup: t.startup,
     })
   }
@@ -285,7 +285,7 @@ content.game = (() => {
       resolved: false, hitsLeft: sp.hits || 1,
     }
     content.events.emit('special-charge', {
-      side: f.side, dx: dxOf(f), id: sp.id, level: sp.level, charge: sp.charge,
+      side: f.side, x: f.x, id: sp.id, level: sp.level, charge: sp.charge,
       fighter: f.character.id,
     })
     return true
@@ -330,7 +330,7 @@ content.game = (() => {
 
     if (verdict.outcome === 'whiff' || verdict.outcome === 'jumped') {
       content.events.emit(verdict.outcome === 'jumped' ? 'jumped-over' : 'whiff', {
-        side: f.side, dx: dxOf(f), level, limb,
+        side: f.side, x: f.x, level, limb,
       })
       return
     }
@@ -356,7 +356,7 @@ content.game = (() => {
     content.events.emit(verdict.outcome === 'block' ? 'blocked' : 'hit', {
       side: f.side,                       // who threw it
       victim: other.side,
-      dx: dxOf(other),
+      x: other.x,
       level, limb,
       damage,
       airHit: !!verdict.airHit,
@@ -373,7 +373,7 @@ content.game = (() => {
     const other = opponentOf(f)
 
     content.events.emit('special-fire', {
-      side: f.side, dx: dxOf(f), id: sp.id, level: sp.level, fighter: f.character.id,
+      side: f.side, x: f.x, id: sp.id, level: sp.level, fighter: f.character.id,
     })
 
     if (sp.projectile) {
@@ -390,13 +390,13 @@ content.game = (() => {
       const beyond = other.x + (other.x >= f.x ? sp.teleport : -sp.teleport)
       f.x = K().clamp(beyond, -K().ARENA_HALF, K().ARENA_HALF)
       faceEachOther()
-      content.events.emit('teleport', {side: f.side, dx: dxOf(f)})
+      content.events.emit('teleport', {side: f.side, x: f.x})
     }
 
     if (sp.dashTo != null) {
       const sign = other.x >= f.x ? 1 : -1
       f.x = K().clamp(other.x - sign * sp.dashTo, -K().ARENA_HALF, K().ARENA_HALF)
-      content.events.emit('dash', {side: f.side, dx: dxOf(f)})
+      content.events.emit('dash', {side: f.side, x: f.x})
     }
 
     const hits = sp.hits || 1
@@ -460,12 +460,12 @@ content.game = (() => {
 
     if (Math.abs(p.x) > K().ARENA_HALF) {
       state.projectile = null
-      content.events.emit('projectile-gone', {dx: p.x - state.player.x})
+      content.events.emit('projectile-gone', {x: p.x})
       return
     }
 
     content.events.emit('projectile', {
-      dx: p.x - state.player.x,
+      x: p.x,
       dist: Math.abs(p.x - state.player.x),
       incoming: p.owner === 'foe',
     })
@@ -482,7 +482,7 @@ content.game = (() => {
       if (t >= 1) {
         f.jumpT = -1
         f.y = 0
-        content.events.emit('land', {side: f.side, dx: dxOf(f)})
+        content.events.emit('land', {side: f.side, x: f.x})
       } else {
         // A plain parabola. Height is not a number the player has to read — it
         // only ever answers "on the floor, or not".
@@ -584,9 +584,14 @@ content.game = (() => {
   // ---------------------------------------------------------------------------
   // readouts
   // ---------------------------------------------------------------------------
+  //
+  // Every event that has a place carries `x`: the ABSOLUTE arena position of
+  // whatever made the sound — the attacker for a tell, the victim for an
+  // impact, the fighter's own x for a jump or a landing. It is never an offset
+  // from the player. Where that ends up in the stereo image is content.audio's
+  // business, because that is where the listener lives.
 
   function opponentOf(f) { return f.side === 'player' ? state.foe : state.player }
-  function dxOf(f) { return state.player ? f.x - state.player.x : 0 }
 
   function stanceOf(f) {
     if (f.down > 0) return 'down'
@@ -626,14 +631,31 @@ content.game = (() => {
       canAct: canAct(p),
       foeCanAct: canAct(f),
       foeTone: f.character.toneHz,
+      playerWalking: !!p.walking,
       foeWalking: !!f.walking,
       cooldown: p.cooldown,
       specialReady: p.cooldown <= 0,
       cornered: Math.abs(p.x) > K().ARENA_HALF - 0.4,
-      // The one number the player needs for spacing: can my longest basic
-      // attack reach them right now.
+      // Spacing, which is most of what the player has to know. There are TWO
+      // boundaries, not one: kicks reach from a long way out, punches only from
+      // close in, and the gap between the two is where a fight is actually
+      // fought. Both edges are published, not just which side of them we are
+      // on — the audio gate needs the boundary itself, because a gate with no
+      // hysteresis chatters exactly where two fighters stand.
+      //
+      // The punch edge is the SHORTER of the two punches, so "in punch range"
+      // means both of them reach rather than only one; being told you can punch
+      // and then whiffing a low one is worse than not being told.
+      kickReach: C().ATTACKS.highKick.reach * (p.character.reachMult || 1),
+      punchReach: Math.min(C().ATTACKS.highPunch.reach, C().ATTACKS.lowPunch.reach) *
+        (p.character.reachMult || 1),
       inKickRange: dist <= C().ATTACKS.highKick.reach * (p.character.reachMult || 1),
-      inPunchRange: dist <= C().ATTACKS.highPunch.reach * (p.character.reachMult || 1),
+      // Measured against the same shorter punch as `punchReach`, so the F2
+      // readout and the range gate can never disagree about which band you are
+      // in — being told two different things by two parts of the same game is
+      // worse than being told one of them.
+      inPunchRange: dist <= Math.min(C().ATTACKS.highPunch.reach, C().ATTACKS.lowPunch.reach) *
+        (p.character.reachMult || 1),
       foeInKickRange: dist <= C().ATTACKS.highKick.reach * (f.character.reachMult || 1),
       projectile: state.projectile
         ? {dx: state.projectile.x - p.x, incoming: state.projectile.owner === 'foe'}

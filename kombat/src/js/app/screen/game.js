@@ -117,13 +117,13 @@ app.screen.game = app.screenManager.invent({
     // The tell is the game's most important sound and it is NEVER spoken: by
     // the time a screen reader had said "low kick" the sweep would already be
     // over. It is audio only, on purpose.
-    content.events.on('tell', (e) => A().tell(e.dx, e.level, e.limb, e.startup))
-    content.events.on('whiff', (e) => A().whiff(e.dx, e.limb))
-    content.events.on('jumped-over', (e) => A().jumpedOver(e.dx))
+    content.events.on('tell', (e) => A().tell(e.x, e.level, e.limb, e.startup))
+    content.events.on('whiff', (e) => A().whiff(e.x, e.limb))
+    content.events.on('jumped-over', (e) => A().jumpedOver(e.x))
 
     content.events.on('hit', (e) => {
-      A().hit(e.dx, e.level, e.limb, e.damage, e.airHit)
-      if (e.knockdown) A().knockdown(e.dx)
+      A().hit(e.x, e.level, e.limb, e.damage, e.airHit)
+      if (e.knockdown) A().knockdown(e.x)
       if (e.victim === 'player') {
         self.rumble(0.9, 0.6, e.knockdown ? 340 : 180)
         // Only a knockdown interrupts with speech — it is the one hit that
@@ -139,19 +139,19 @@ app.screen.game = app.screenManager.invent({
     })
 
     content.events.on('blocked', (e) => {
-      A().blocked(e.dx)
+      A().blocked(e.x)
       if (e.victim === 'player') self.rumble(0.25, 0.3, 90)
       self.refreshHud()
     })
 
     // --- bodies -------------------------------------------------------------
-    content.events.on('jump', (e) => A().jump(e.dx))
-    content.events.on('land', (e) => A().land(e.dx))
-    content.events.on('getup', (e) => A().getup(e.dx))
+    content.events.on('jump', (e) => A().jump(e.x))
+    content.events.on('land', (e) => A().land(e.x))
+    content.events.on('getup', (e) => A().getup(e.x))
 
     // --- specials -----------------------------------------------------------
     content.events.on('special-charge', (e) => {
-      A().specialCharge(e.dx, e.fighter, e.level, e.charge)
+      A().specialCharge(e.x, e.fighter, e.level, e.charge)
       // The opponent's special IS announced, because its charge is long enough
       // that you have time to hear a word and still act on it — and because
       // knowing which special is charging tells you whether to block or jump.
@@ -159,10 +159,10 @@ app.screen.game = app.screenManager.invent({
         app.announce.assertive(t('ann.foeSpecial', {name: t('special.' + e.id)}))
       }
     })
-    content.events.on('special-fire', (e) => A().specialFire(e.dx, e.id))
-    content.events.on('teleport', (e) => A().teleport(e.dx))
-    content.events.on('dash', (e) => A().jump(e.dx))
-    content.events.on('projectile', (e) => A().projectile(e.dx, Math.abs(e.dx)))
+    content.events.on('special-fire', (e) => A().specialFire(e.x, e.id))
+    content.events.on('teleport', (e) => A().teleport(e.x))
+    content.events.on('dash', (e) => A().jump(e.x))
+    content.events.on('projectile', (e) => A().projectile(e.x, e.dist))
     content.events.on('projectile-gone', () => A().projectileGone())
 
     // --- results ------------------------------------------------------------
@@ -272,7 +272,7 @@ app.screen.game = app.screenManager.invent({
       content.music.update(delta)
       if (app.haptics && app.haptics.update) app.haptics.update(delta)
 
-      if (st.cornered && !this.state.lastCornered) content.audio.corner(0)
+      if (st.cornered && !this.state.lastCornered) content.audio.corner()
       this.state.lastCornered = !!st.cornered
 
       if (this.edge('f1', k.is('F1'))) this.announceStatus()

@@ -1,12 +1,14 @@
 // KOMBAT audio.
 //
-// Three channels, three questions, and they are kept apart so hard that you can
-// answer any one of them while ignoring the other two:
+// Four channels, four questions, and they are kept apart so hard that you can
+// answer any one of them while ignoring the others:
 //
 //   WHERE are they?      Stereo position, plus a footstep pulse whose RATE
 //                        speeds up as they close. Volume is deliberately not
 //                        the distance cue — volume has to stay free to mean
-//                        "how hard did that land".
+//                        "how hard did that land". Position is always relative
+//                        to YOUR fighter, who is the listener; see the panner
+//                        below, which is the other half of this spec.
 //
 //   Are they in the AIR? Brightness. A grounded fighter's presence tone is dark
 //                        and bodied; a jump lifts it an octave and opens the
@@ -14,6 +16,25 @@
 //                        only reason you know a low attack is about to be
 //                        wasted, or that a high one is about to be worth 35%
 //                        more.
+//
+//   What REACHES from    Three answers, not two: nothing, kicks, or everything.
+//   here?                Each band has its own two-tone dyad, played rising as
+//                        you get into it and falling as you drop out of it, and
+//                        while you are in one, every footstep of theirs carries
+//                        a tick per band — one for kicks, two for punches. So
+//                        the crossing is announced and the state can also be
+//                        read off any single step without having heard it.
+//
+//                        This is the question you answer before pressing
+//                        anything, and for a long time the game did not answer
+//                        it. The pulse rate technically carried distance, but
+//                        spread across the whole arena, so the difference
+//                        between "my kick lands" and "my kick whiffs" was three
+//                        pulses a second against three and a bit; and when a
+//                        gate was finally added it reported only the kick band,
+//                        which told the player they were in range while their
+//                        punches were still a foot short. See
+//                        constants.spacing().
 //
 //   HIGH or LOW?         The direction the tell SWEEPS. Every attack broadcasts
 //                        a whoosh during its startup frames: a high attack
@@ -35,7 +56,9 @@ content.audio = (() => {
   let crowd = null         // the room
   let pulseT = 0
   let heartT = 0
-  let staticListener = false
+  let selfStepT = 0
+  let reachBand = 0        // 0 nothing reaches, 1 kicks reach, 2 punches too
+  let reachT = 0
   let pendingTimeouts = []
 
   function ctx() { return engine.context() }
@@ -70,23 +93,147 @@ content.audio = (() => {
     return id
   }
 
-  // A binaural ear at an arena offset. Arena units are compressed onto a small
-  // listening stage by constants.earLocal, because the ear derives an
-  // interaural delay from raw distance. syngen wants {x: forward,
-  // y: left-positive}, so the sign flips exactly once, here.
-  function earAt(dx) {
-    const local = K().earLocal(dx)
-    const ear = engine.ear.binaural.create({
-      gainModel: engine.ear.gainModel.normalize,
-    })
-    ear.to(out())
-    ear.update({x: local.forward, y: -local.starboard, z: 0})
-    return ear
+  // ===========================================================================
+  // the listener, and everything that is placed against it
+  // ===========================================================================
+  // THE LISTENER IS THE PLAYER'S FIGHTER. It is not the screen and not the
+  // middle of the arena: it is a point that walks around with you. Every
+  // positional cue below is handed the SOURCE's own arena x — the attacker's
+  // for a tell, the victim's for an impact, the walker's for a footstep — and
+  // the pan is worked out here against wherever the player is standing this
+  // frame. That is what makes backing away actually sound like backing away,
+  // and it is why your own body always sounds like it is at the centre of the
+  // image: your x minus your x is zero.
+  //
+  // The listener faces the screen, not the opponent. Facing flips every time
+  // you cross them, and an image that mirrors itself mid-match is unreadable;
+  // arena left is your left for the whole fight.
+  const SELF_STEP_INTERVAL = 0.31   // your own walking cadence, seconds
+  // The two fighters spend most of a round within a hand's width of one of the
+  // range edges, so the gate needs real hysteresis and a floor on how often it
+  // can speak. Without both it is a smoke alarm.
+  const REACH_HYSTERESIS = 0.30     // units you must leave a band by before losing it
+  const REACH_REFRACTORY = 0.55     // and the soonest it may change its mind
+
+  // The two bands, low to high. Closer is higher: each band's marker is its own
+  // pair of tones, played rising as you enter it and falling as you fall out of
+  // it, so "further in" and "further out" are the same gesture in two
+  // directions and there is nothing to memorise beyond up and down.
+  const BAND_TONES = {1: [740, 1110], 2: [1180, 1770]}
+
+  let listenerX = 0
+  function setListener(x) { listenerX = typeof x === 'number' ? x : 0 }
+
+  // A mono source placed in the stereo image at arena position `x`.
+  //
+  // This deliberately does NOT use syngen's binaural ear. That ear is built for
+  // a world where sources are metres out and it derives the entire image from
+  // head geometry — and with gainModel.normalize both of its channels run at
+  // the SAME gain, so all that separated left from right was a few hundred
+  // microseconds of delay and a gentle shadow filter. That is a headphones-only
+  // cue, it is close to inaudible on speakers, and syngen ramps it into place
+  // over a frame, by which time a 12ms footstep transient is already finished.
+  // The whole fight happened in the middle of your head.
+  //
+  // So the pan is built out of the three things that actually place a sound,
+  // all of them set INSTANTLY at the moment the cue starts:
+  //
+  //   LEVEL   an equal-power split between the near and the far channel. This
+  //           is the cue that survives speakers, a phone and a room.
+  //   TIME    up to EAR_ITD of extra delay on the far channel. This is what
+  //           makes it read as a place rather than as a volume knob.
+  //   SHADOW  a lowpass on the far channel only. A head is in the way.
+  //
+  // Distance is NOT in here. Volume means "how hard did that land" and nothing
+  // else; the footstep pulse RATE carries distance.
+  const SHADOW_OPEN = 20000
+
+  function sourceAt(x) {
+    const c = ctx()
+    const input = c.createGain()
+    const merger = c.createChannelMerger(2)
+
+    const channel = (n) => {
+      const delay = c.createDelay(0.05)
+      const shadow = c.createBiquadFilter()
+      shadow.type = 'lowpass'
+      shadow.frequency.value = SHADOW_OPEN
+      shadow.Q.value = 0.4
+      const gain = c.createGain()
+      gain.gain.value = 1
+      input.connect(delay)
+      delay.connect(shadow)
+      shadow.connect(gain)
+      gain.connect(merger, 0, n)
+      return {delay, shadow, gain}
+    }
+
+    const src = {
+      input,
+      merger,
+      left: channel(0),
+      right: channel(1),
+      from: function (node) { node.connect(this.input); return this },
+      destroy: function () {
+        try { this.merger.disconnect() } catch (e) {}
+        for (const ch of [this.left, this.right]) {
+          try { ch.gain.disconnect() } catch (e) {}
+          try { ch.shadow.disconnect() } catch (e) {}
+          try { ch.delay.disconnect() } catch (e) {}
+        }
+        try { this.input.disconnect() } catch (e) {}
+      },
+    }
+
+    merger.connect(out())
+    place(src, x, true)
+    return src
   }
-  function moveEar(ear, dx) {
-    const local = K().earLocal(dx)
-    ear.update({x: local.forward, y: -local.starboard, z: 0})
+
+  // `instant` is what every one-shot uses: the position is set on the sample
+  // the cue starts, because the part of a sound the ear places is its first few
+  // milliseconds. The two voices that are HELD while their source moves — the
+  // opponent's presence drone and a projectile in flight — glide instead.
+  function place(src, x, instant) {
+    const p = K().panOf(x, listenerX)
+    const a = Math.abs(p)
+    const t = now()
+
+    const set = (param, v) => {
+      try {
+        if (instant) {
+          param.cancelScheduledValues(t)
+          param.setValueAtTime(v, t)
+        } else {
+          param.setTargetAtTime(v, t, 0.04)
+        }
+      } catch (e) {}
+    }
+
+    // Equal power, stopping just short of silencing the far channel: a channel
+    // that reaches absolute zero vanishes entirely when the two are summed.
+    //
+    // The SQRT2 is a level-matching trim, not a taste one. These cues were all
+    // written against an ear that ran both channels at unity, so a plain
+    // equal-power law would quietly drop every positional sound 3dB below the
+    // bell, the heartbeat and the crowd, which are wired straight to the mix.
+    // Scaled this way a centred cue is exactly as loud as it always was, and a
+    // cue keeps that loudness as it pans — which it must, because in this game
+    // volume means "how hard did that land" and nothing else.
+    const theta = (p * K().EAR_FAR_TRIM + 1) * Math.PI / 4
+    set(src.left.gain.gain, Math.SQRT2 * Math.cos(theta))
+    set(src.right.gain.gain, Math.SQRT2 * Math.sin(theta))
+
+    const itd = a * K().EAR_ITD
+    set(src.left.delay.delayTime, p > 0 ? itd : 0)
+    set(src.right.delay.delayTime, p < 0 ? itd : 0)
+
+    const shadowed = SHADOW_OPEN * Math.pow(K().EAR_SHADOW_HZ / SHADOW_OPEN, a)
+    set(src.left.shadow.frequency, p > 0 ? shadowed : SHADOW_OPEN)
+    set(src.right.shadow.frequency, p < 0 ? shadowed : SHADOW_OPEN)
   }
+
+  function moveSource(src, x) { place(src, x, false) }
 
   // ===========================================================================
   // the opponent: where they are, and whether they are on the floor
@@ -98,11 +245,11 @@ content.audio = (() => {
   function startPresence(toneHz) {
     stopPresence()
     const c = ctx()
-    const ear = earAt(0)
+    const src = sourceAt(0)
 
     const gain = c.createGain()
     gain.gain.value = 0.0001
-    ear.from(gain)
+    src.from(gain)
 
     const lp = c.createBiquadFilter()
     lp.type = 'lowpass'
@@ -127,7 +274,7 @@ content.audio = (() => {
     b.start()
 
     gain.gain.linearRampToValueAtTime(0.05, now() + 0.4)
-    presence = {ear, gain, lp, a, b, ag, bg, toneHz}
+    presence = {src, gain, lp, a, b, ag, bg, toneHz}
   }
 
   function stopPresence() {
@@ -140,7 +287,7 @@ content.audio = (() => {
     } catch (e) {}
     later(() => {
       try { p.a.stop(); p.b.stop() } catch (e) {}
-      try { p.ear.destroy() } catch (e) {}
+      try { p.src.destroy() } catch (e) {}
     }, 260)
   }
 
@@ -149,8 +296,14 @@ content.audio = (() => {
   function frame(delta, st) {
     if (!st || st.foeX == null) return
 
+    // Before anything is placed: move the listener onto the player's fighter.
+    // Everything below hands out ABSOLUTE arena positions and lets the panner
+    // do the subtraction, so there is exactly one place in the game that knows
+    // where you are standing, and it is this line.
+    setListener(st.playerX)
+
     if (presence) {
-      moveEar(presence.ear, st.dx)
+      moveSource(presence.src, st.foeX)
       // Air = bright and an octave up. The ramp is short but not instant, so a
       // jump sounds like a jump rather than a switch.
       const air = K().clamp(st.foeY / K().JUMP_HEIGHT, 0, 1)
@@ -162,12 +315,58 @@ content.audio = (() => {
     }
 
     // The footstep pulse: the distance channel. Interval shrinks as they close,
-    // so an approach accelerates audibly long before it is in range.
+    // so an approach accelerates audibly long before it is in range. It plays
+    // at the OPPONENT's position, which is what makes it the cue you track them
+    // with.
     pulseT -= delta
     if (pulseT <= 0) {
-      const interval = K().lerp(K().PULSE_FAR, K().PULSE_NEAR, K().closeness(st.dist))
+      const interval = K().lerp(K().PULSE_FAR, K().PULSE_NEAR, K().spacing(st.dist))
       pulseT = interval
-      step(st.dx, st.dist, st.foeStance)
+      step(st.foeX, st.dist, st.foeStance)
+    }
+
+    // Your own footsteps, at your own position — which is dead centre, because
+    // you are the listener. They are quieter, darker and carry no transient
+    // click: the click is the localisation cue and it belongs to the opponent,
+    // whose position you actually have to read. These exist so that walking
+    // sounds like walking and so the middle of the image is anchored to a body.
+    // They run on their own clock at a fixed cadence, and only while you are
+    // actually walking on the floor, so they never compete with the pulse.
+    if (st.playerWalking && st.stance !== 'air' && st.stance !== 'down') {
+      selfStepT -= delta
+      if (selfStepT <= 0) {
+        selfStepT = SELF_STEP_INTERVAL
+        step(st.playerX, 0, 'self')
+      }
+    } else {
+      selfStepT = 0
+    }
+
+    // Can you reach them? This is the one thing a fighter has to know before it
+    // is worth pressing anything, and it was the one thing the game never said.
+    // The pulse rate carries how far away they are, but reading a rate takes
+    // time you do not have mid-exchange, so the crossing itself gets a sound:
+    // a short rising dyad when your longest attack starts reaching them, and a
+    // falling one when it stops. It is a pure tone pair on purpose — every
+    // attack in the game is swept noise, so this can never be mistaken for one.
+    //
+    // The gate has to be sticky. Two fighters at the edge of a kick jitter
+    // across the boundary several times a second, and a cue that chattered
+    // there would be worse than no cue at all.
+    if (st.kickReach != null) {
+      const want = bandFor(st.dist, st.punchReach, st.kickReach)
+      // The state only flips when it is allowed to make a sound, so what you
+      // last heard is always what the gate currently says. Deferring the flip
+      // rather than dropping the cue is the difference between a gate that is
+      // quiet for a moment and a gate that lies to you.
+      if (want !== reachBand && now() - reachT >= REACH_REFRACTORY) {
+        const closer = want > reachBand
+        // Stepping out of punch range and out of the fight entirely in one
+        // movement is one crossing, not two: you get told where you ended up.
+        reachBand = want
+        reachT = now()
+        reachMark(st.foeX, want, closer)
+      }
     }
 
     // The heartbeat only exists below a third of your health. It is not
@@ -195,22 +394,62 @@ content.audio = (() => {
   // interaural time difference is read off a sharp broadband onset, and a
   // narrow band of noise barely has one. A step without the click is audible
   // on a side; a step with it is audible AT a place.
-  function step(dx, dist, stance) {
+  //
+  // `stance` of 'self' is your OWN step. It gets the body and not the click,
+  // and it sits well under the opponent's: it is there to give you a walking
+  // body at the centre of the image, not to be read for a position you already
+  // know.
+  function step(x, dist, stance) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const self = stance === 'self'
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
 
     // Body: wide, so it carries broadband content the ear can compare.
     const s = noiseSource()
     const bp = c.createBiquadFilter()
     bp.type = 'bandpass'
-    bp.frequency.value = stance === 'air' ? 2400 : (stance === 'block' ? 900 : 460)
+    bp.frequency.value = self ? 240 : (stance === 'air' ? 2400 : (stance === 'block' ? 900 : 460))
     bp.Q.value = stance === 'air' ? 1.2 : 0.6
     const sg = c.createGain()
     sg.gain.value = 0.75
     s.connect(bp).connect(sg).connect(g)
+
+    // In-range tick. The gate above says the moment the window opens or shuts;
+    // this says it CONTINUOUSLY, on the back of the pulse the player is already
+    // counting, so "can I reach them" can be checked at any moment instead of
+    // having to be remembered from the last time it changed. It is a single
+    // short partial well above the step's own band, so it colours the step
+    // without touching the stance reading underneath it.
+    // One tick for kick range, two for punch range. Counting to two is faster
+    // and far more robust than judging a pitch, and it means the band can be
+    // read off any single footstep without having to have heard the crossing.
+    //
+    // They hang off the panner directly rather than off `g`: the step's own
+    // envelope is down to nothing 80ms in, which would leave the second tick
+    // thirty times quieter than the first and turn "two" into "one and a
+    // maybe".
+    let tickBus = null
+    if (!self && reachBand > 0) {
+      tickBus = c.createGain()
+      tickBus.gain.value = 0.055
+      src.from(tickBus)
+      for (let i = 0; i < reachBand; i++) {
+        const at = t0 + i * 0.038
+        const tick = c.createOscillator()
+        tick.type = 'sine'
+        tick.frequency.value = 2640
+        const tg = c.createGain()
+        tg.gain.setValueAtTime(0.0001, at)
+        tg.gain.exponentialRampToValueAtTime(1, at + 0.004)
+        tg.gain.exponentialRampToValueAtTime(0.0001, at + 0.03)
+        tick.connect(tg).connect(tickBus)
+        tick.start(at)
+        tick.stop(at + 0.04)
+      }
+    }
 
     // Transient: the localisation cue. Short enough to read as one instant.
     const click = noiseSource()
@@ -220,10 +459,10 @@ content.audio = (() => {
     const cg = c.createGain()
     cg.gain.value = 0
     click.connect(hp).connect(cg).connect(g)
-    cg.gain.setValueAtTime(0.9, t0)
+    cg.gain.setValueAtTime(self ? 0.12 : 0.9, t0)
     cg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.012)
 
-    const peak = 0.08 + K().closeness(dist) * 0.10
+    const peak = self ? 0.045 : 0.08 + K().closeness(dist) * 0.10
     g.gain.setValueAtTime(0, t0)
     g.gain.linearRampToValueAtTime(peak, t0 + 0.003)
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08)
@@ -235,8 +474,54 @@ content.audio = (() => {
     s.onended = () => {
       try { g.disconnect(); bp.disconnect(); sg.disconnect() } catch (e) {}
       try { hp.disconnect(); cg.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { if (tickBus) tickBus.disconnect() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
+  }
+
+  // Which band a distance falls in. Hysteresis applies only on the way OUT of
+  // whatever band we are currently in, so closing the distance is reported the
+  // moment it is true and losing it takes a real step back.
+  function bandFor(dist, punchReach, kickReach) {
+    const slack = (band) => reachBand >= band ? REACH_HYSTERESIS : 0
+    if (punchReach != null && dist <= punchReach + slack(2)) return 2
+    if (dist <= kickReach + slack(1)) return 1
+    return 0
+  }
+
+  // The range gate. Two short sine partials at the opponent's position — so it
+  // answers "can I reach THEM" and not merely "is something in range" — rising
+  // as you get into a band and falling as you drop out of it. Quiet: it is a
+  // permission, not an event, and it plays over the top of a fight that still
+  // has to be audible.
+  //
+  // Moving OUT of a band is announced with the tones of the band you just lost,
+  // falling. That is deliberate: what you need to know at that moment is which
+  // buttons stopped working, and those are the buttons the band you left had
+  // just given you.
+  function reachMark(x, band, closer) {
+    const c = ctx(), t0 = now()
+    const src = sourceAt(x)
+    const g = c.createGain()
+    g.gain.value = 0
+    src.from(g)
+    const tones = BAND_TONES[closer ? band : band + 1] || BAND_TONES[1]
+    const pair = closer ? tones : [tones[1], tones[0]]
+    pair.forEach((hz, i) => {
+      const o = c.createOscillator()
+      o.type = 'sine'
+      o.frequency.value = hz
+      const og = c.createGain()
+      og.gain.value = 0
+      og.gain.setValueAtTime(0, t0 + i * 0.045)
+      og.gain.linearRampToValueAtTime(0.6, t0 + i * 0.045 + 0.005)
+      og.gain.exponentialRampToValueAtTime(0.0001, t0 + i * 0.045 + 0.05)
+      o.connect(og).connect(g)
+      o.start(t0 + i * 0.045)
+      o.stop(t0 + i * 0.045 + 0.06)
+    })
+    g.gain.setValueAtTime(closer ? 0.085 : 0.06, t0)
+    later(() => { try { g.disconnect() } catch (e) {} try { src.destroy() } catch (e) {} }, 260)
   }
 
   function beat(frac) {
@@ -264,13 +549,13 @@ content.audio = (() => {
   // exactly the startup. HIGH sweeps up, LOW sweeps down; a punch is a tight
   // band, a kick is a wide one with body behind it. The sweep ENDING is the
   // moment the hit goes live, so the cue is also a timer.
-  function tell(dx, level, limb, startup) {
+  function tell(x, level, limb, startup) {
     const c = ctx(), t0 = now()
     const dur = Math.max(0.07, startup)
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
 
     const s = noiseSource()
     const bp = c.createBiquadFilter()
@@ -306,7 +591,7 @@ content.audio = (() => {
     s.stop(t0 + dur + 0.05)
     s.onended = () => {
       try { g.disconnect(); bp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
@@ -317,12 +602,12 @@ content.audio = (() => {
   // body. Pitched down for a low attack and up for a high one, so an impact
   // confirms which line you just got caught on — you need that to know what to
   // do differently next time.
-  function hit(dx, level, limb, damage, airHit) {
+  function hit(x, level, limb, damage, airHit) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
 
     const weight = K().clamp(damage / 18, 0.35, 1.4)
 
@@ -371,19 +656,19 @@ content.audio = (() => {
     sub.onended = () => {
       later(() => {
         try { g.disconnect(); bp.disconnect(); sg.disconnect() } catch (e) {}
-        try { ear.destroy() } catch (e) {}
+        try { src.destroy() } catch (e) {}
       }, 300)
     }
   }
 
   // Bright, metallic, and short — a block should feel like a good outcome, and
   // it should be impossible to mistake for a hit even at the edge of hearing.
-  function blocked(dx) {
+  function blocked(x) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
 
     for (const f of [1900, 2840, 4130]) {
       const o = c.createOscillator()
@@ -409,17 +694,17 @@ content.audio = (() => {
     g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.14)
     s.onended = () => {
       try { g.disconnect(); hp.disconnect(); sg.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
   // Empty air. No body, no sub — the absence of weight IS the information.
-  function whiff(dx, limb) {
+  function whiff(x, limb) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const s = noiseSource()
     const bp = c.createBiquadFilter()
     bp.type = 'bandpass'
@@ -433,19 +718,19 @@ content.audio = (() => {
     s.stop(t0 + 0.28)
     s.onended = () => {
       try { g.disconnect(); bp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
   // A sweep that passed underneath somebody. Deliberately NOT the whiff sound:
   // one of them means "you were out of range", the other means "they read you",
   // and those are different lessons.
-  function jumpedOver(dx) {
+  function jumpedOver(x) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const s = noiseSource()
     const bp = c.createBiquadFilter()
     bp.type = 'bandpass'
@@ -459,19 +744,19 @@ content.audio = (() => {
     s.stop(t0 + 0.3)
     s.onended = () => {
       try { g.disconnect(); bp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
   // ===========================================================================
   // your own body
   // ===========================================================================
-  function jump(dx) {
+  function jump(x) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const s = noiseSource()
     const bp = c.createBiquadFilter()
     bp.type = 'bandpass'
@@ -485,24 +770,24 @@ content.audio = (() => {
     s.stop(t0 + 0.36)
     s.onended = () => {
       try { g.disconnect(); bp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
-  function land(dx) {
-    thud(dx, 0.14, 110)
+  function land(x) {
+    thud(x, 0.14, 110)
   }
 
-  function knockdown(dx) {
-    thud(dx, 0.30, 62)
+  function knockdown(x) {
+    thud(x, 0.30, 62)
   }
 
-  function getup(dx) {
+  function getup(x) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const o = c.createOscillator()
     o.type = 'triangle'
     o.frequency.setValueAtTime(180, t0)
@@ -514,16 +799,16 @@ content.audio = (() => {
     o.stop(t0 + 0.28)
     o.onended = () => {
       try { g.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
-  function thud(dx, peak, hz) {
+  function thud(x, peak, hz) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const o = c.createOscillator()
     o.type = 'sine'
     o.frequency.setValueAtTime(hz, t0)
@@ -542,14 +827,14 @@ content.audio = (() => {
     s.start(t0); s.stop(t0 + 0.3)
     o.onended = () => {
       try { g.disconnect(); lp.disconnect(); sg.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
   // Backed into the wall. Short, dry, and unmistakably not an impact — being
   // cornered is the position you lose from, so it gets its own sound.
   let cornerT = 0
-  function corner(dx) {
+  function corner() {
     if (now() - cornerT < 0.6) return
     cornerT = now()
     const c = ctx(), t0 = now()
@@ -578,13 +863,13 @@ content.audio = (() => {
   // in a four-fighter ladder.
   const CHARGE_WAVE = {rook: 'sawtooth', vex: 'square', sable: 'triangle', kroll: 'sine'}
 
-  function specialCharge(dx, fighter, level, charge) {
+  function specialCharge(x, fighter, level, charge) {
     const c = ctx(), t0 = now()
     const dur = Math.max(0.12, charge)
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const o = c.createOscillator()
     o.type = CHARGE_WAVE[fighter] || 'sawtooth'
     const from = level === 'low' ? 90 : 220
@@ -601,16 +886,16 @@ content.audio = (() => {
     o.stop(t0 + dur + 0.08)
     o.onended = () => {
       try { g.disconnect(); lp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
-  function specialFire(dx, id) {
+  function specialFire(x, id) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const o = c.createOscillator()
     o.type = 'sawtooth'
     o.frequency.setValueAtTime(id === 'quake' ? 60 : 520, t0)
@@ -625,18 +910,18 @@ content.audio = (() => {
     o.stop(t0 + 0.38)
     o.onended = () => {
       try { g.disconnect(); lp.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
   // Vanish and arrive, in that order, with the gap between them being the whole
   // point: the stereo image is about to move and you get one beat to notice.
-  function teleport(dx) {
+  function teleport(x) {
     const c = ctx(), t0 = now()
-    const ear = earAt(dx)
+    const src = sourceAt(x)
     const g = c.createGain()
     g.gain.value = 0
-    ear.from(g)
+    src.from(g)
     const o = c.createOscillator()
     o.type = 'sine'
     o.frequency.setValueAtTime(1400, t0)
@@ -648,7 +933,7 @@ content.audio = (() => {
     o.stop(t0 + 0.28)
     o.onended = () => {
       try { g.disconnect() } catch (e) {}
-      try { ear.destroy() } catch (e) {}
+      try { src.destroy() } catch (e) {}
     }
   }
 
@@ -656,22 +941,22 @@ content.audio = (() => {
   // stereo field and rises in pitch as it closes, so "it is nearly here" is a
   // continuous reading rather than a countdown you have to remember.
   let boltVoice = null
-  function projectile(dx, dist) {
+  function projectile(x, dist) {
     const c = ctx()
     if (!boltVoice) {
-      const ear = earAt(dx)
+      const src = sourceAt(x)
       const g = c.createGain()
       g.gain.value = 0.0001
-      ear.from(g)
+      src.from(g)
       const o = c.createOscillator()
       o.type = 'triangle'
       o.frequency.value = 300
       o.connect(g)
       o.start()
       g.gain.linearRampToValueAtTime(0.13, now() + 0.05)
-      boltVoice = {ear, g, o}
+      boltVoice = {src, g, o}
     }
-    moveEar(boltVoice.ear, dx)
+    moveSource(boltVoice.src, x)
     boltVoice.o.frequency.setTargetAtTime(
       300 + K().closeness(dist) * 900, now(), 0.03)
   }
@@ -686,7 +971,7 @@ content.audio = (() => {
     } catch (e) {}
     later(() => {
       try { v.o.stop() } catch (e) {}
-      try { v.ear.destroy() } catch (e) {}
+      try { v.src.destroy() } catch (e) {}
     }, 180)
   }
 
@@ -855,6 +1140,10 @@ content.audio = (() => {
     }
     pulseT = 0
     heartT = 0
+    selfStepT = 0
+    reachBand = 0
+    reachT = 0
+    setListener(0)
   }
 
   // One cue at a time, in isolation, for the learn screen. Every entry here is
@@ -871,9 +1160,35 @@ content.audio = (() => {
       // having to read one under pressure.
       case 'footsteps': {
         for (let i = 0; i <= 10; i++) {
-          const dx = -K().EAR_FULL_PAN + i * (K().EAR_FULL_PAN / 5)
-          later(() => step(dx, Math.abs(dx), 'stand'), i * 190)
+          const x = -K().EAR_FULL_PAN + i * (K().EAR_FULL_PAN / 5)
+          later(() => step(x, Math.abs(x), 'stand'), i * 190)
         }
+        break
+      }
+      // One demo per band: the crossing, then the pulse as it sounds once you
+      // are there — the marker and the tick count are the same reading told
+      // twice, and the player needs to recognise both.
+      case 'rangeKick': {
+        reachBand = 0
+        reachMark(1.6, 1, true)
+        reachBand = 1
+        for (let i = 1; i <= 4; i++) later(() => step(1.6, 1.6, 'stand'), 240 + i * 300)
+        later(() => { reachBand = 0 }, 1900)
+        break
+      }
+      case 'rangePunch': {
+        reachBand = 1
+        reachMark(0.9, 2, true)
+        reachBand = 2
+        for (let i = 1; i <= 4; i++) later(() => step(0.9, 0.9, 'stand'), 240 + i * 230)
+        later(() => { reachBand = 0 }, 1700)
+        break
+      }
+      case 'rangeOut': {
+        reachBand = 1
+        for (let i = 0; i < 2; i++) later(() => step(2.4, 2.4, 'stand'), i * 300)
+        later(() => { reachMark(2.4, 0, false); reachBand = 0 }, 620)
+        for (let i = 1; i <= 3; i++) later(() => step(2.4, 2.4, 'stand'), 760 + i * 380)
         break
       }
       case 'tellHighPunch': tell(0.9, 'high', 'punch', 0.13); break
@@ -904,10 +1219,10 @@ content.audio = (() => {
   }
 
   function demoPresence(dist, air, side) {
-    const dx = (side == null ? 1 : side) * dist
+    const foeX = (side == null ? 1 : side) * dist
     startPresence(124)
     const st = {
-      foeX: dx, dx, dist, foeY: air * K().JUMP_HEIGHT,
+      playerX: 0, foeX, dist, foeY: air * K().JUMP_HEIGHT,
       healthFrac: 1, phase: 'learn', foeStance: air ? 'air' : 'stand',
     }
     let n = 0
@@ -932,7 +1247,7 @@ content.audio = (() => {
 
   // The spatial diagnostic behind #test.
   function testDirection(dir) {
-    const play = (dx) => step(dx, Math.abs(dx), 'stand')
+    const play = (x) => step(x, Math.abs(x), 'stand')
     switch (dir) {
       case 'l': play(-K().ARENA_HALF); break
       case 'c': play(0); break
@@ -972,6 +1287,10 @@ content.audio = (() => {
     silenceAll,
     sample,
     testDirection,
-    setStaticListener: function () { staticListener = true },
+    // The learn and test screens play cues in isolation, with positions given
+    // as plain arena offsets. Putting the listener back at the origin is what
+    // makes those offsets mean what they say.
+    setListener,
+    setStaticListener: function () { setListener(0) },
   }
 })()

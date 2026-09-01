@@ -38,9 +38,29 @@ content.ai = (() => {
     const tier = TIERS[Math.min(stage, TIERS.length - 1)]
     brain = {
       ...tier,
-      // Preferred distance: sit just outside your own longest attack, so the
-      // approach is always a real spacing fight rather than a scramble.
-      preferred: C().ATTACKS.highKick.reach * (foe.character.reachMult || 1) + 0.25,
+      // Where it chooses to stand. There are two such places, and it moves
+      // between them, because there are two ranges in the game:
+      //
+      //   KICK  just inside a kick. Its own kicks reach, and so do yours.
+      //   PUNCH close enough that all four buttons work, for either of us.
+      //
+      // A single resting distance was not enough. Held at kick range the
+      // opponent is never inside a punch, so U and J simply never land: half
+      // the buttons on the pad are decoration for the whole match. Closing to
+      // punch range and backing out again is also what makes a round have a
+      // shape — the fight breathes in and out instead of orbiting one radius.
+      //
+      // (It used to rest at kick reach PLUS a quarter unit — "just outside my
+      // own longest attack". Both fighters have roughly the same reach, so that
+      // read as "just outside YOURS": it parked a hand's width beyond the
+      // player's longest attack and every swing thrown from where it chose to
+      // stand was a whiff by construction. Its safety is meant to come from
+      // reacting to the tell, which is a fight; being untouchable is not.)
+      reachMult: foe.character.reachMult || 1,
+      stance: 'kick',
+      stanceT: 1.2,
+      backoff: 0,           // seconds of retreat left in the current one
+      backoffCool: 0,       // and how long until it may retreat again
       nextAction: 0.4,
       pending: null,        // a tell we have registered but not yet answered
       seenAction: null,
@@ -59,7 +79,22 @@ content.ai = (() => {
     const toward = player.x >= foe.x ? 1 : -1
 
     brain.nextAction -= delta
+    brain.backoff -= delta
+    brain.backoffCool -= delta
     if (brain.pending) brain.pending.t -= delta
+
+    // Change its mind about which range it wants to be at. Weighted toward
+    // kick range, which is where its own best attacks live, but it spends real
+    // time up close — and a player who hears it come in has a window in which
+    // their punches are the fastest thing on the floor.
+    brain.stanceT -= delta
+    if (brain.stanceT <= 0) {
+      brain.stance = Math.random() < 0.38 ? 'punch' : 'kick'
+      brain.stanceT = brain.stance === 'punch'
+        ? 1.1 + Math.random() * 1.2
+        : 1.6 + Math.random() * 1.8
+    }
+    const preferred = preferredDistance()
 
     observe(foe, player)
 
@@ -109,9 +144,19 @@ content.ai = (() => {
 
     // --- spacing --------------------------------------------------------------
     // Hold the preferred distance, with a dead band so it does not shuffle.
-    if (dist > brain.preferred + 0.2) {
+    //
+    // Backing off is a MOVE, with a length and a cooldown, not a per-frame coin
+    // flip. As a coin flip it was a permanent half-speed retreat: the player
+    // held forward, the opponent gave ground for as long as they kept holding
+    // it, and the gap never closed enough to matter. Now it gives ground for a
+    // beat and then has to stand and deal with you.
+    if (dist > preferred + 0.2) {
       if (toward > 0) intent.right = true; else intent.left = true
-    } else if (dist < brain.preferred - 0.5 && Math.random() < 0.5) {
+    } else if (brain.backoff > 0) {
+      if (toward > 0) intent.left = true; else intent.right = true
+    } else if (dist < preferred - 0.45 && brain.backoffCool <= 0) {
+      brain.backoff = 0.28
+      brain.backoffCool = 1.6
       if (toward > 0) intent.left = true; else intent.right = true
     } else if (player.action && Math.random() < brain.accuracy * 0.5) {
       // They are committed to something and we are outside its reach: block
@@ -120,6 +165,18 @@ content.ai = (() => {
     }
 
     return intent
+  }
+
+  // The distance it is currently trying to hold. Both are measured INSIDE the
+  // attack they are named for, so arriving there means the attack already
+  // reaches rather than nearly reaches — and the punch stance uses the SHORTER
+  // punch, so getting there makes both of them live.
+  function preferredDistance() {
+    if (brain.stance === 'punch') {
+      return Math.min(C().ATTACKS.highPunch.reach, C().ATTACKS.lowPunch.reach) *
+        brain.reachMult - 0.15
+    }
+    return C().ATTACKS.highKick.reach * brain.reachMult - 0.25
   }
 
   // Register the player's attack the first time we see it in startup, and only

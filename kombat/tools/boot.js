@@ -9,10 +9,11 @@
 // This covers what tools/sim.js cannot see. sim.js runs the rules in isolation;
 // everything in content/audio.js and app/screen/game.js only ever executes in a
 // browser, so every synthesis call and every event wiring is exercised here for
-// the first time. In particular it covers the binaural layer — every positional
-// sound builds an engine.ear.binaural, which the fake Web Audio below has to
-// satisfy, so a missing or misused ear API shows up here rather than in the
-// player's ears.
+// the first time. In particular it covers the spatial layer — every positional
+// sound builds its own two-channel panner, which the fake Web Audio below has
+// to satisfy, and one check reads the resulting graph back to confirm the pan
+// is real and is measured against the player. Both show up here rather than in
+// the player's ears.
 //
 // Requires the --debug bundle (no IIFE wrap) so app/content/engine are reachable.
 //   npx gulp build --debug && node tools/boot.js
@@ -22,18 +23,27 @@ const path = require('path')
 const { JSDOM, VirtualConsole } = require('jsdom')
 
 // ---- fake Web Audio ----
+// Scheduled values are kept on `.value` so the spatial check below can read
+// back what a cue actually asked its nodes to do. Nothing in the game reads a
+// param it scheduled, so this only ever adds information.
 function makeParam() {
   const p = { value: 0 }
-  for (const m of ['setValueAtTime', 'linearRampToValueAtTime', 'exponentialRampToValueAtTime',
-    'setTargetAtTime', 'cancelScheduledValues', 'cancelAndHoldAtTime', 'setValueCurveAtTime',
+  for (const m of ['cancelScheduledValues', 'cancelAndHoldAtTime', 'setValueCurveAtTime',
     'connect', 'disconnect']) p[m] = () => p
+  for (const m of ['setValueAtTime', 'linearRampToValueAtTime',
+    'exponentialRampToValueAtTime', 'setTargetAtTime']) {
+    p[m] = (v) => { p.value = v; return p }
+  }
   return p
 }
 const PARAMS = new Set(['gain', 'frequency', 'Q', 'detune', 'pan', 'delayTime', 'playbackRate',
   'threshold', 'knee', 'ratio', 'attack', 'release', 'reduction'])
-function makeNode() {
-  const store = {}, params = {}
-  return new Proxy(store, {
+// Every node ever created, in creation order, so a check can look at the shape
+// of the graph a cue built rather than only at whether it threw.
+const NODES = []
+function makeNode(type) {
+  const store = {__type: type}, params = {}
+  const node = new Proxy(store, {
     get(t, prop) {
       if (prop in t) return t[prop]
       if (typeof prop === 'symbol') return undefined
@@ -42,6 +52,8 @@ function makeNode() {
     },
     set(t, prop, v) { t[prop] = v; return true },
   })
+  NODES.push({type, node, params})
+  return node
 }
 class FakeAudioBuffer {
   constructor(channels, length, sampleRate) {
@@ -52,9 +64,19 @@ class FakeAudioBuffer {
   }
   getChannelData(i) { return this._c[i] || this._c[0] }
 }
+// The audio clock has to move. Everything that decides how often a cue may
+// repeat — the corner thud, the range gate — reads engine.time(), which is
+// context.currentTime; pinned at zero those guards can never elapse and the
+// harness cannot see the cues at all. It runs on wall time, plus an offset a
+// check can push forward when it needs to skip a cooldown deterministically.
+const CLOCK_T0 = Date.now()
+let CLOCK_OFFSET = 0
+function advanceClock(seconds) { CLOCK_OFFSET += seconds }
 function makeContext() {
   const base = {
-    sampleRate: 44100, currentTime: 0, state: 'running', destination: makeNode(), listener: makeNode(),
+    sampleRate: 44100, state: 'running',
+    get currentTime() { return CLOCK_OFFSET + (Date.now() - CLOCK_T0) / 1000 },
+    destination: makeNode('destination'), listener: makeNode('listener'),
     createBuffer: (c, l) => new FakeAudioBuffer(c, l, 44100),
     resume: () => Promise.resolve(), suspend: () => Promise.resolve(), close: () => Promise.resolve(),
     addEventListener() {},
@@ -62,7 +84,7 @@ function makeContext() {
   return new Proxy(base, {
     get(t, p) {
       if (p in t) return t[p]
-      if (typeof p === 'string' && p.startsWith('create')) return () => makeNode()
+      if (typeof p === 'string' && p.startsWith('create')) return () => makeNode(p)
       return undefined
     },
     set(t, p, v) { t[p] = v; return true },
@@ -135,8 +157,39 @@ function clean(label) {
   function keyUp(code) {
     window.dispatchEvent(new window.KeyboardEvent('keyup', { code, key: code, bubbles: true }))
   }
+  // The input assertions need a LIVE match to run in, and they take longer than
+  // a match now lasts: the opponent stands inside its own range these days, so
+  // both fighters land far more, and the harness was reaching its later probes
+  // after the match had already been decided — where `canAct` is false forever
+  // and every readout is empty. That failed as "never got a free frame", which
+  // is a true statement about the wrong thing. While `keepAlive` is set, both
+  // fighters are topped back up each frame, so the fight cannot end underneath
+  // a check that is testing the keyboard.
+  // `calm` goes further: it stands the opponent off at the far wall and stops it
+  // acting. Every check that uses it is asking "does this key reach the game",
+  // and the answer must not depend on whether a kick happened to land during
+  // the window it was measured in. The opponent now holds a distance inside its
+  // own range and attacks about once a second, so an undisturbed half second is
+  // no longer something a harness can simply wait for. What is lost is nothing
+  // these checks were ever testing; the match under pressure is still played
+  // out in full at the end of the run.
+  let keepAlive = false
+  let calm = false
   function frames(n) {
-    for (let i = 0; i < n; i++) screen().onFrame({ delta: 1 / 60 })
+    for (let i = 0; i < n; i++) {
+      const st = content.game.state
+      if (keepAlive) {
+        for (const f of [st.player, st.foe]) if (f) f.health = f.maxHealth
+        st.clock = Math.max(st.clock, 20)
+      }
+      if (calm && st.player && st.foe) {
+        st.foe.x = st.player.x >= 0 ? -content.constants.ARENA_HALF : content.constants.ARENA_HALF
+        st.foe.action = null
+        st.foe.stun = 0
+        st.foe.down = 0
+      }
+      screen().onFrame({ delta: 1 / 60 })
+    }
   }
   // Attacks and the jump are EDGES, so a held key buys exactly one move. Tapping
   // means actually releasing between presses, the same as a player does.
@@ -262,6 +315,10 @@ function clean(label) {
   check('the round bell and the fight call ran clean', clean('round start'))
 
   // ---- movement: A and D walk, and only those ------------------------------
+  // Everything from here to the end of the special check is about whether a key
+  // reaches the game, so the match is held open and the opponent stood off.
+  keepAlive = true
+  calm = true
   errors.length = 0
   // Walking is measured over a window in which nothing hit the player and the
   // wall was not in the way — getting knocked out of a walk, or pushed into the
@@ -379,31 +436,145 @@ function clean(label) {
       !!fired, fired ? fired.id : (free ? 'never fired' : 'never got a free frame'))
     check('the special ran clean', clean('special'))
   }
+  // The readouts and the pause round trip need a live match, but not a quiet
+  // one — from here the opponent fights again.
+  calm = false
 
   // ---- every cue the screen can be asked to play ---------------------------
   // Fired directly, because a single match will not naturally produce all of
   // them and each one builds its own ear.
   errors.length = 0
-  content.events.emit('tell', {side: 'foe', dx: -2, level: 'low', limb: 'kick', startup: 0.28})
-  content.events.emit('hit', {side: 'foe', victim: 'player', dx: 0, level: 'low', limb: 'kick',
+  content.events.emit('tell', {side: 'foe', x: -2, level: 'low', limb: 'kick', startup: 0.28})
+  content.events.emit('hit', {side: 'foe', victim: 'player', x: 0, level: 'low', limb: 'kick',
     damage: 12, airHit: false, knockdown: true, health: 40, healthFrac: 0.4})
-  content.events.emit('hit', {side: 'player', victim: 'foe', dx: 1.2, level: 'high', limb: 'kick',
+  content.events.emit('hit', {side: 'player', victim: 'foe', x: 1.2, level: 'high', limb: 'kick',
     damage: 18, airHit: true, knockdown: true, health: 30, healthFrac: 0.3})
-  content.events.emit('blocked', {side: 'foe', victim: 'player', dx: 0.9, level: 'high', limb: 'punch', damage: 1})
-  content.events.emit('whiff', {side: 'player', dx: 0, level: 'high', limb: 'kick'})
-  content.events.emit('jumped-over', {side: 'player', dx: 0, level: 'low', limb: 'kick'})
-  content.events.emit('jump', {side: 'foe', dx: 2})
-  content.events.emit('land', {side: 'foe', dx: 2})
-  content.events.emit('getup', {side: 'player', dx: 0})
-  content.events.emit('special-charge', {side: 'foe', dx: -3, id: 'quake', level: 'low',
+  content.events.emit('blocked', {side: 'foe', victim: 'player', x: 0.9, level: 'high', limb: 'punch', damage: 1})
+  content.events.emit('whiff', {side: 'player', x: 0, level: 'high', limb: 'kick'})
+  content.events.emit('jumped-over', {side: 'player', x: 0, level: 'low', limb: 'kick'})
+  content.events.emit('jump', {side: 'foe', x: 2})
+  content.events.emit('land', {side: 'foe', x: 2})
+  content.events.emit('getup', {side: 'player', x: 0})
+  content.events.emit('special-charge', {side: 'foe', x: -3, id: 'quake', level: 'low',
     charge: 0.52, fighter: 'rook'})
-  content.events.emit('special-fire', {side: 'foe', dx: -3, id: 'quake', level: 'low', fighter: 'rook'})
-  content.events.emit('teleport', {side: 'foe', dx: 1})
-  content.events.emit('dash', {side: 'foe', dx: 1})
-  for (const dx of [4, 3, 2, 1]) content.events.emit('projectile', {dx, dist: dx, incoming: true})
-  content.events.emit('projectile-gone', {dx: 0})
+  content.events.emit('special-fire', {side: 'foe', x: -3, id: 'quake', level: 'low', fighter: 'rook'})
+  content.events.emit('teleport', {side: 'foe', x: 1})
+  content.events.emit('dash', {side: 'foe', x: 1})
+  for (const x of [4, 3, 2, 1]) content.events.emit('projectile', {x, dist: x, incoming: true})
+  content.events.emit('projectile-gone', {x: 0})
   await new Promise((r) => setTimeout(r, 400))
   check('every combat cue plays clean', clean('cues'))
+
+  // ---- the pan, measured off the graph a cue actually builds ---------------
+  // The sim checks constants.panOf() as arithmetic. This checks the thing that
+  // arithmetic is supposed to cause: that a cue at an arena position wires up
+  // two channels which differ, in the right direction, from the point of view
+  // of wherever the LISTENER is. Panning that lives only in a formula is how
+  // the last version sounded centred.
+  //
+  // Per channel the panner builds delay -> lowpass -> gain, left channel first,
+  // so a channel's gain is the first gain node created after its delay.
+  const panOfCue = (listenerX, x) => {
+    const mark = NODES.length
+    content.audio.setListener(listenerX)
+    content.audio.jump(x)
+    const made = NODES.slice(mark)
+    const chan = (n) => {
+      const at = made.indexOf(made.filter((m) => m.type === 'createDelay')[n])
+      return {
+        delay: made[at].params.delayTime.value,
+        gain: made.slice(at + 1).find((m) => m.type === 'createGain').params.gain.value,
+      }
+    }
+    return {count: made.filter((m) => m.type === 'createDelay').length, left: chan(0), right: chan(1)}
+  }
+
+  const right = panOfCue(0, 2)
+  check('a cue builds one delay per channel', right.count === 2, right.count + ' delays')
+  check('a source on your right is louder on the right',
+    right.right.gain > right.left.gain,
+    'L ' + right.left.gain.toFixed(3) + ' / R ' + right.right.gain.toFixed(3))
+  check('and reaches the far ear later',
+    right.left.delay > 0 && right.right.delay === 0,
+    'L ' + (right.left.delay * 1000).toFixed(2) + 'ms / R ' + (right.right.delay * 1000).toFixed(2) + 'ms')
+
+  const left = panOfCue(0, -2)
+  check('a source on your left mirrors it exactly',
+    Math.abs(left.left.gain - right.right.gain) < 1e-9 &&
+    Math.abs(left.right.gain - right.left.gain) < 1e-9 &&
+    left.right.delay === right.left.delay, true)
+
+  // The one that matters: the listener is the PLAYER'S FIGHTER, so the same
+  // arena position is a different sound depending on where the player stands.
+  const onTop = panOfCue(2, 2)
+  check('a source standing where the player stands is centred',
+    Math.abs(onTop.left.gain - onTop.right.gain) < 1e-9 &&
+    onTop.left.delay === 0 && onTop.right.delay === 0,
+    'L ' + onTop.left.gain.toFixed(3) + ' / R ' + onTop.right.gain.toFixed(3))
+  const behind = panOfCue(4, 2)
+  check('and the same position pans left once the player has walked past it',
+    behind.left.gain > behind.right.gain, true)
+  content.audio.setListener(0)
+
+  // Both fighters make footsteps. The opponent's are the pulse train whose rate
+  // is the distance channel; yours only run while you are walking, and they are
+  // the reason the centre of the image has a body in it.
+  const stepsOverASecond = (playerWalking) => {
+    const st = {playerX: 0, foeX: 2, dist: 2, foeY: 0, healthFrac: 1, phase: 'fight',
+      foeStance: 'stand', stance: 'stand', playerWalking}
+    const mark = NODES.length
+    for (let i = 0; i < 60; i++) content.audio.frame(1 / 60, st)
+    return NODES.slice(mark).filter((n) => n.type === 'createChannelMerger').length
+  }
+  const standing = stepsOverASecond(false)
+  const walking = stepsOverASecond(true)
+  check('standing still, only the opponent makes footsteps', standing > 0, standing + ' in a second')
+  check('walking adds your own on top of theirs', walking > standing,
+    walking + ' vs ' + standing)
+
+  // ---- the range gate ------------------------------------------------------
+  // "What reaches from here" is the thing a fighter has to know before pressing
+  // anything, and it has THREE answers, not two: nothing, kicks, or everything.
+  // The two fighters spend the round hovering within a hand's width of one of
+  // those edges, so the gate is as much about not speaking as about speaking.
+  // Both guards are checked, because a gate that chatters is one a player
+  // learns to ignore and a gate that goes quiet is one that lies.
+  const KICK = 1.8, PUNCH = 1.05
+  const gate = (foeX) => {
+    const mark = NODES.length
+    const dist = Math.abs(foeX)
+    content.audio.frame(1 / 60, {playerX: 0, foeX, dist, foeY: 0, healthFrac: 1,
+      phase: 'fight', foeStance: 'stand', stance: 'stand', playerWalking: false,
+      kickReach: KICK, punchReach: PUNCH,
+      inKickRange: dist <= KICK, inPunchRange: dist <= PUNCH})
+    // reachMark is the only thing in the game that builds these oscillators,
+    // and each band has its own pair, so the graph says which band was called.
+    const made = NODES.slice(mark).filter((n) => n.type === 'createOscillator' && n.params.frequency)
+    const hz = made.map((n) => n.params.frequency.value)
+    if (hz.includes(740)) return 'kick'
+    if (hz.includes(1770)) return 'punch'
+    return ''
+  }
+  content.audio.silenceAll()
+  advanceClock(5)
+  check('out of range, the gate says nothing', gate(2.5) === '')
+  check('walking into kick range announces the kick band', gate(1.5) === 'kick')
+  advanceClock(2)
+  check('and it does not repeat itself while you stay there', gate(1.4) === '')
+  check('drifting back across the edge does not lose the band', gate(1.9) === '',
+    'hysteresis holds to 2.10')
+  advanceClock(2)
+  check('closing further announces the punch band', gate(0.9) === 'punch')
+  advanceClock(2)
+  check('and it stays quiet while you stay inside it', gate(1.0) === '')
+  check('falling out of punch range is announced with the punch band falling',
+    gate(1.5) === 'punch', 'the band you lost is the one that names the buttons')
+  check('and it will not immediately change its mind', gate(0.9) === '', 'refractory')
+  advanceClock(2)
+  check('once it may speak again, closing re-announces it', gate(0.9) === 'punch')
+  advanceClock(2)
+  check('leaving the fight entirely reports the kick band falling', gate(3.0) === 'kick')
+  content.audio.silenceAll()
 
   // ---- results cues ---------------------------------------------------------
   errors.length = 0
@@ -468,6 +639,9 @@ function clean(label) {
   click('.a-pause button[data-action="resume"]')
   check('resume returns to the game', app.screenManager.is('game'))
   check('pause round trip ran clean', clean('pause'))
+  // Everything above needed a live match. What follows is about how one ends,
+  // so let it.
+  keepAlive = false
 
   // ---- play it out to the end ----------------------------------------------
   // Play it badly on purpose so the ladder ends: stand there and let the

@@ -64,15 +64,22 @@ content.constants = (() => {
 
     // ---- audio -----------------------------------------------------------
     // The opponent's footstep pulse: how often it repeats, at touching range
-    // and at the far wall. This is the distance channel.
-    PULSE_NEAR: 0.16,
-    PULSE_FAR: 0.62,
+    // and at the edge of the fight. This is the distance channel, and it is the
+    // number you decide to attack on, so its resolution has to live where the
+    // decision does. Spread over the whole arena it moved from 2.7 pulses a
+    // second to 4.6 across ten units — which meant the difference between "my
+    // kick reaches" and "my kick does not reach" was three pulses a second
+    // against three and a bit. It is now spread over SPACING_FAR instead, so
+    // stepping into range roughly doubles the rate.
+    PULSE_NEAR: 0.12,
+    PULSE_FAR: 0.70,
+    SPACING_FAR: 3.0,           // beyond this you are not in a fight, you are apart
     HEAR_RANGE: 2 * ARENA_HALF, // the widest gap the arena allows
-    // The listening stage. Arena units are compressed onto a stage a couple of
-    // metres wide, because syngen's binaural ear derives an interaural delay
-    // from raw distance and ten units of it would smear every cue.
+    // The stereo image. The listener is the PLAYER'S FIGHTER — not the screen,
+    // not the middle of the arena — so a source's pan is worked out from where
+    // it stands relative to where the player is standing right now.
     //
-    // The scale that matters here is FIGHTING distance, not arena width. Almost
+    // The scale that matters is FIGHTING distance, not arena width. Almost
     // every moment of a match happens between about half a unit and two units
     // apart, so normalising the pan against ARENA_HALF put the opponent within
     // 15 degrees of dead centre for the entire fight — technically stereo, and
@@ -80,35 +87,51 @@ content.constants = (() => {
     // at which the image is already hard over; beyond it the pan stops widening
     // and the pulse RATE carries the remaining distance, which is the division
     // of labour the whole audio design is built on.
-    EAR_SPREAD: 1.45,           // metres of stage at full pan
-    EAR_FORWARD: 0.5,           // how far in front of the listener the stage is
     EAR_FULL_PAN: 1.5,          // arena units to reach full pan
     EAR_CURVE: 0.6,             // <1 widens small offsets
+    // The three things that actually place a sound, and how far each is pushed
+    // at full pan. See the panner in content/audio.js.
+    EAR_ITD: 0.00062,           // seconds of extra delay on the far ear
+    EAR_SHADOW_HZ: 2000,        // far-ear lowpass — a head is in the way
+    EAR_FAR_TRIM: 0.92,         // <1 so the far channel never reaches silence
 
     // ---- helpers ---------------------------------------------------------
     clamp: (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v),
     lerp: (a, b, t) => a + (b - a) * t,
 
-    // 1 at touching range, 0 at the far wall. Every distance-driven number in
-    // the game goes through this so they all curve the same way.
+    // 1 at touching range, 0 at the far wall. Every LOUDNESS in the game curves
+    // through this, and only loudness: it is deliberately gentle, because a cue
+    // that fades out with distance is a cue you stop being able to read.
     closeness: function (dist) {
       const t = this.clamp(dist / this.HEAR_RANGE, 0, 1)
       return (1 - t) * (1 - t)
     },
 
-    // An arena offset placed on the listening stage. syngen wants
-    // {x: forward, y: left-positive}, so the sign is flipped exactly once —
-    // here, and nowhere else in the game.
+    // 1 at touching range, 0 once you are simply apart. This is the SPACING
+    // reading — the one the pulse rate carries — and it is linear on purpose:
+    // every tenth of a unit between the bodies is worth the same amount of
+    // change, because they are all worth the same amount to the player.
+    spacing: function (dist) {
+      const lo = this.MIN_SEPARATION
+      const t = this.clamp((dist - lo) / (this.SPACING_FAR - lo), 0, 1)
+      return 1 - t
+    },
+
+    // Where a source sits in the stereo image: -1 hard left, 0 dead centre,
+    // +1 hard right. This is the ONE place arena space becomes ear space, and
+    // it takes both positions explicitly, because a pan is meaningless without
+    // saying who is listening. `listenerX` is the player's own x, so a source
+    // standing where the player stands is centred, and walking past the
+    // opponent swings them across the image rather than moving the arena.
     //
     // The curve is the important part. A linear map spends most of its range on
     // offsets that never happen; raising the normalised offset to EAR_CURVE
     // pushes the resolution down into the first unit and a half, where the
     // fight actually is. Standing almost on top of someone still reads as a
     // side rather than as "in front of me".
-    earLocal: function (dx) {
-      const t = this.clamp(dx / this.EAR_FULL_PAN, -1, 1)
-      const curved = Math.sign(t) * Math.pow(Math.abs(t), this.EAR_CURVE)
-      return {forward: this.EAR_FORWARD, starboard: curved * this.EAR_SPREAD}
+    panOf: function (sourceX, listenerX) {
+      const t = this.clamp((sourceX - (listenerX || 0)) / this.EAR_FULL_PAN, -1, 1)
+      return Math.sign(t) * Math.pow(Math.abs(t), this.EAR_CURVE)
     },
   }
 })()

@@ -131,7 +131,7 @@ app.screen.moves = app.screenManager.invent({
     if (!id) return
     content.audio.startPresence(content.characters.get(id).toneHz)
     content.audio.frame(1 / 60, {
-      foeX: 0, dx: 0, dist: 1.2, foeY: 0,
+      playerX: 0, foeX: 0, dist: 1.2, foeY: 0,
       healthFrac: 1, phase: 'moves', foeStance: 'stand',
     })
   },
