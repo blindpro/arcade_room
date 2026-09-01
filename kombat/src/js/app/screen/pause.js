@@ -4,6 +4,10 @@ app.screen.pause = app.screenManager.invent({
   rootSelector: '.a-pause',
   transitions: {
     resume: function () { this.change('game') },
+    // The move list hangs off pause rather than off the main menu because the
+    // question it answers ("which way round is that motion?") is one you have
+    // mid-match, not one you have before starting.
+    moves: function () { this.change('moves') },
     restart: function () { content.game.reset(); this.change('game') },
     menu: function () { this.change('menu') },
   },

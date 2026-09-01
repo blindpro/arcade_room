@@ -41,7 +41,18 @@ app.controls = (() => {
     uiCache = values
   }
 
+  // Every game in the collection shares these readers, but not every game has
+  // every action. KOMBAT has no forward/back/strafe/turn model at all — it is a
+  // fighter on a single line, and its game screen reads raw key codes — so
+  // mappings.js does not define those actions. Dereferencing a missing one used
+  // to throw inside the loop's frame handler, which killed the requestAnimation
+  // Frame chain outright: the game booted, played its round bell, and then sat
+  // there receiving no frames at all. An undefined action is a legitimate
+  // "this game does not have that control", so it reads as no bindings.
+  const NO_BINDINGS = []
+
   return {
+    bindings: (mappings, name) => (mappings && mappings[name]) || NO_BINDINGS,
     game: () => ({...gameCache}),
     ui: () => ({...uiDelta}),
     reset: function () {

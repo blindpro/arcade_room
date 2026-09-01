@@ -137,7 +137,7 @@ app.controls.mouse = (() => {
         uiRight: 'right',
         uiUp: 'up',
       })) {
-        if (mappings[mapping].reduce(checkMapping, false)) {
+        if (app.controls.bindings(mappings, mapping).reduce(checkMapping, false)) {
           state[name] = true
         }
       }

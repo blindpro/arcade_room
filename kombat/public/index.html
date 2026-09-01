@@ -66,8 +66,21 @@
           <h1 class="c-menu--title" data-i18n="pause.title">Paused</h1>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="resume" data-i18n="pause.resume">Resume</button></li>
+            <li><button class="c-menu--button" data-action="moves" data-i18n="pause.moves">Move list</button></li>
             <li><button class="c-menu--button" data-action="restart" data-i18n="pause.restart">Start again</button></li>
             <li><button class="c-menu--button" data-action="menu" data-i18n="pause.menu">Main menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Move list -->
+      <div class="a-app--screen a-app--moves">
+        <section class="c-screen c-menu a-moves" tabindex="-1" data-i18n-attr="aria-label:moves.aria">
+          <h1 class="c-menu--title" data-i18n="moves.title">Move list</h1>
+          <p class="c-menu--subtitle" data-i18n="moves.subtitle">The four buttons are the same for everyone. Each fighter changes what they weigh and which special they bring.</p>
+          <ul class="c-menu--list a-moves--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="moves.back">Back</button></li>
           </ul>
         </section>
       </div>
@@ -147,6 +160,7 @@
             <li><button class="c-menu--button" data-sound="presenceLeft" data-i18n="learn.presenceLeft">Your opponent, away to your left</button></li>
             <li><button class="c-menu--button" data-sound="presenceRight" data-i18n="learn.presenceRight">Your opponent, away to your right</button></li>
             <li><button class="c-menu--button" data-sound="presenceAir" data-i18n="learn.presenceAir">Your opponent IN THE AIR - bright and an octave up</button></li>
+            <li><button class="c-menu--button" data-sound="footsteps" data-i18n="learn.footsteps">Footsteps walking from your LEFT across to your RIGHT</button></li>
             <li><button class="c-menu--button" data-sound="hitHigh" data-i18n="learn.hitHigh">A high attack landing</button></li>
             <li><button class="c-menu--button" data-sound="hitLow" data-i18n="learn.hitLow">A low attack landing</button></li>
             <li><button class="c-menu--button" data-sound="hitAir" data-i18n="learn.hitAir">Catching someone out of the air</button></li>

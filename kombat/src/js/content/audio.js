@@ -184,8 +184,17 @@ content.audio = (() => {
     }
   }
 
-  // One footstep. Timbre carries stance, so the pulse train answers "where" and
-  // "on the floor?" at the same time even when the presence drone is masked.
+  // One footstep — the cue you actually locate the opponent with. Timbre carries
+  // stance, so the pulse train answers "where" and "on the floor?" at the same
+  // time even when the presence drone is masked.
+  //
+  // It is built in two parts, and the split is about localisation rather than
+  // about how it sounds. The BODY is a wide, low-Q band that gives the step
+  // weight and its stance colour. The TRANSIENT on top is a very short
+  // high-passed click, and that is what the ear actually places: the
+  // interaural time difference is read off a sharp broadband onset, and a
+  // narrow band of noise barely has one. A step without the click is audible
+  // on a side; a step with it is audible AT a place.
   function step(dx, dist, stance) {
     const c = ctx(), t0 = now()
     const ear = earAt(dx)
@@ -193,22 +202,39 @@ content.audio = (() => {
     g.gain.value = 0
     ear.from(g)
 
+    // Body: wide, so it carries broadband content the ear can compare.
     const s = noiseSource()
     const bp = c.createBiquadFilter()
     bp.type = 'bandpass'
-    bp.frequency.value = stance === 'air' ? 2600 : (stance === 'block' ? 900 : 420)
-    bp.Q.value = stance === 'air' ? 3 : 1.4
-    s.connect(bp).connect(g)
+    bp.frequency.value = stance === 'air' ? 2400 : (stance === 'block' ? 900 : 460)
+    bp.Q.value = stance === 'air' ? 1.2 : 0.6
+    const sg = c.createGain()
+    sg.gain.value = 0.75
+    s.connect(bp).connect(sg).connect(g)
 
-    const peak = 0.05 + K().closeness(dist) * 0.09
+    // Transient: the localisation cue. Short enough to read as one instant.
+    const click = noiseSource()
+    const hp = c.createBiquadFilter()
+    hp.type = 'highpass'
+    hp.frequency.value = 1800
+    const cg = c.createGain()
+    cg.gain.value = 0
+    click.connect(hp).connect(cg).connect(g)
+    cg.gain.setValueAtTime(0.9, t0)
+    cg.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.012)
+
+    const peak = 0.08 + K().closeness(dist) * 0.10
     g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(peak, t0 + 0.004)
-    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.07)
+    g.gain.linearRampToValueAtTime(peak, t0 + 0.003)
+    g.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.08)
 
     s.start(t0)
-    s.stop(t0 + 0.1)
+    s.stop(t0 + 0.11)
+    click.start(t0)
+    click.stop(t0 + 0.04)
     s.onended = () => {
-      try { g.disconnect(); bp.disconnect() } catch (e) {}
+      try { g.disconnect(); bp.disconnect(); sg.disconnect() } catch (e) {}
+      try { hp.disconnect(); cg.disconnect() } catch (e) {}
       try { ear.destroy() } catch (e) {}
     }
   }
@@ -840,6 +866,16 @@ content.audio = (() => {
       case 'presenceLeft': demoPresence(3.2, 0, -1); break
       case 'presenceRight': demoPresence(3.2, 0, 1); break
       case 'presenceAir': demoPresence(1.4, 1); break
+      // A calibration cue: the same footstep walked across the whole image, so
+      // the player can hear what "hard left" and "hard right" sound like before
+      // having to read one under pressure.
+      case 'footsteps': {
+        for (let i = 0; i <= 10; i++) {
+          const dx = -K().EAR_FULL_PAN + i * (K().EAR_FULL_PAN / 5)
+          later(() => step(dx, Math.abs(dx), 'stand'), i * 190)
+        }
+        break
+      }
       case 'tellHighPunch': tell(0.9, 'high', 'punch', 0.13); break
       case 'tellHighKick': tell(0.9, 'high', 'kick', 0.25); break
       case 'tellLowPunch': tell(0.9, 'low', 'punch', 0.15); break

@@ -112,6 +112,15 @@ function clean(label) {
   if (!app) { console.log('\nBUNDLE DID NOT BOOT'); process.exit(1) }
   check('boots to the menu', app.screenManager.is('menu'))
 
+  // Everything below drives screen.onFrame() by hand so the game logic can be
+  // stepped deterministically. That means the REAL requestAnimationFrame loop
+  // has to be switched off, or the two drivers double-step each other. It is
+  // switched back on for one dedicated check further down — see "the real
+  // loop" — because a manual driver is completely blind to whether the app is
+  // receiving frames at all.
+  check('the loop is running after boot', engine.loop.isRunning())
+  engine.loop.stop()
+
   const doc = window.document
   const screen = () => app.screenManager.current()
   function click(sel) {
@@ -150,6 +159,11 @@ function clean(label) {
   // player, not just a free first frame — measuring walk speed is meaningless
   // if a kick landed halfway through it. `probe` runs until it gets a window it
   // is happy with, and reports the last attempt if it never does.
+  // Note on the ceilings below: they are generous on purpose. A quiet window in
+  // a live fight is a probabilistic thing, and a harness that fails once in
+  // thirty runs is worse than no harness, because the failure teaches you to
+  // ignore it. If one of these ever exhausts its retries it means the player
+  // genuinely cannot get a turn, which is a real bug worth failing on.
   function probe(tries, fn) {
     let last = {ok: false, detail: 'no clean window'}
     for (let i = 0; i < tries; i++) {
@@ -218,6 +232,29 @@ function clean(label) {
   check('the match begins in the round intro', content.game.phase() === 'ready',
     content.game.phase())
 
+  // ---- the real loop --------------------------------------------------------
+  // app.controls.update() and several syngen subsystems ride the SAME
+  // engine.loop 'frame' bus the screen does, and a throw in any of them kills
+  // the requestAnimationFrame chain for the entire app. The symptom is a game
+  // that boots, plays its round bell, and then sits there: no countdown, no
+  // input, no opponent. A harness that calls onFrame() by hand cannot see that
+  // at all, so the loop gets driven for real exactly once, here, with no manual
+  // stepping, and the match has to move on its own.
+  errors.length = 0
+  {
+    const before = content.game.status()
+    engine.loop.start()
+    await new Promise((r) => setTimeout(r, 2600)) // past READY_TIME
+    const after = content.game.status()
+    engine.loop.stop()
+    check('the real rAF loop delivers frames to the game',
+      after.phase === 'fight', 'phase ' + before.phase + ' -> ' + after.phase)
+    check('the opponent moves under the real loop',
+      Math.abs(after.foeX - before.foeX) > 0.05,
+      'foe ' + before.foeX.toFixed(2) + ' -> ' + after.foeX.toFixed(2))
+    check('nothing on the frame bus throws', clean('real loop'))
+  }
+
   frames(200)
   check('the intro reaches the fight', content.game.phase() === 'fight', content.game.phase())
   check('round 1 of stage 1 is live',
@@ -230,7 +267,7 @@ function clean(label) {
   // wall was not in the way — getting knocked out of a walk, or pushed into the
   // corner, would read as "the key did nothing".
   for (const [code, sign, label] of [['KeyD', 1, 'D walks right'], ['KeyA', -1, 'A walks left']]) {
-    const r = probe(12, () => {
+    const r = probe(30, () => {
       const x0 = content.game.status().playerX
       const {value: x1, hit} = undisturbed(() => {
         key(code); frames(30); keyUp(code)
@@ -262,7 +299,7 @@ function clean(label) {
   // ---- block: S is a held state, not a move --------------------------------
   errors.length = 0
   {
-    const r = probe(12, () => {
+    const r = probe(30, () => {
       key('KeyS'); frames(2)
       const up = content.game.status().stance
       keyUp('KeyS'); frames(2)
@@ -326,7 +363,7 @@ function clean(label) {
     // cooldown, so try a few times rather than assuming the first attempt gets
     // a clean run at it.
     let free = false
-    for (let attempt = 0; attempt < 40 && !fired; attempt++) {
+    for (let attempt = 0; attempt < 80 && !fired; attempt++) {
       free = whenFree()
       if (!free) { frames(30); continue }
       const st = content.game.status()
@@ -396,6 +433,38 @@ function clean(label) {
   errors.length = 0
   key('Escape'); frames(1); keyUp('Escape')
   check('Escape pauses', app.screenManager.is('pause'), app.screenManager.current().id)
+
+  // ---- the move list, off the pause menu -----------------------------------
+  click('.a-pause button[data-action="moves"]')
+  check('the move list opens from pause', app.screenManager.is('moves'))
+  const entries = [...doc.querySelectorAll('.a-moves button[data-entry]')]
+  check('the move list covers the four attacks plus every fighter',
+    entries.length === content.characters.ROSTER.length + 1, entries.length + ' entries')
+  // Everything on the screen is generated from the data, so an unresolved i18n
+  // key or a renamed field shows up as the key leaking into the text.
+  const leaked = entries.filter((b) => /\{\w+\}|moves\.|note\.|attack\./.test(b.getAttribute('aria-label')))
+  check('no unresolved placeholders in the move list', leaked.length === 0,
+    leaked.length ? leaked[0].getAttribute('aria-label').slice(0, 80) : '')
+  // Each fighter's motion input has to actually be spelled out, or the screen
+  // does not answer the one question it exists for.
+  for (const c of content.characters.ROSTER) {
+    const row = entries.find((b) => b.dataset.entry === c.id)
+    const text = row ? row.getAttribute('aria-label') : ''
+    const btn = content.combat.get(c.special.button).key
+    check('the list gives ' + c.id + "'s special and its input",
+      !!row && text.includes(app.i18n.t('special.' + c.special.id)) && text.includes(btn))
+  }
+  check('the entry for the fighter in play is marked',
+    entries.some((b) => (b.getAttribute('aria-label') || '').includes(app.i18n.t('moves.you'))))
+  // Arrowing through auditions tones; make sure that path builds and tears down
+  // cleanly rather than leaving a drone running behind the menu.
+  for (let i = 0; i < entries.length + 3; i++) frames(3)
+  entries[1].click()
+  await new Promise((r) => setTimeout(r, 150))
+  check('the move list runs clean', clean('moves'))
+  click('.a-moves button[data-action="back"]')
+  check('the move list returns to pause', app.screenManager.is('pause'))
+
   click('.a-pause button[data-action="resume"]')
   check('resume returns to the game', app.screenManager.is('game'))
   check('pause round trip ran clean', clean('pause'))

@@ -7,12 +7,12 @@ app.controls.keyboard = {
       return value || (mapping.type == 'keyboard' && keys[mapping.key])
     }
 
-    const moveBackward = mappings.moveBackward.reduce(checkMapping, false),
-      moveForward = mappings.moveForward.reduce(checkMapping, false),
-      strafeLeft = mappings.strafeLeft.reduce(checkMapping, false),
-      strafeRight = mappings.strafeRight.reduce(checkMapping, false),
-      turnLeft = mappings.turnLeft.reduce(checkMapping, false),
-      turnRight = mappings.turnRight.reduce(checkMapping, false)
+    const moveBackward = app.controls.bindings(mappings, 'moveBackward').reduce(checkMapping, false),
+      moveForward = app.controls.bindings(mappings, 'moveForward').reduce(checkMapping, false),
+      strafeLeft = app.controls.bindings(mappings, 'strafeLeft').reduce(checkMapping, false),
+      strafeRight = app.controls.bindings(mappings, 'strafeRight').reduce(checkMapping, false),
+      turnLeft = app.controls.bindings(mappings, 'turnLeft').reduce(checkMapping, false),
+      turnRight = app.controls.bindings(mappings, 'turnRight').reduce(checkMapping, false)
 
     if (moveBackward && !moveForward) {
       state.x = -1
@@ -51,7 +51,7 @@ app.controls.keyboard = {
       uiRight: 'right',
       uiUp: 'up',
     })) {
-      if (mappings[mapping].reduce(checkMapping, false)) {
+      if (app.controls.bindings(mappings, mapping).reduce(checkMapping, false)) {
         state[name] = true
       }
     }

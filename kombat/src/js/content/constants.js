@@ -71,8 +71,19 @@ content.constants = (() => {
     // The listening stage. Arena units are compressed onto a stage a couple of
     // metres wide, because syngen's binaural ear derives an interaural delay
     // from raw distance and ten units of it would smear every cue.
-    EAR_SPREAD: 1.5,            // metres of stage per arena half-width
-    EAR_FORWARD: 1.1,           // how far in front of the listener the stage is
+    //
+    // The scale that matters here is FIGHTING distance, not arena width. Almost
+    // every moment of a match happens between about half a unit and two units
+    // apart, so normalising the pan against ARENA_HALF put the opponent within
+    // 15 degrees of dead centre for the entire fight — technically stereo, and
+    // useless for telling which side they were on. EAR_FULL_PAN is the offset
+    // at which the image is already hard over; beyond it the pan stops widening
+    // and the pulse RATE carries the remaining distance, which is the division
+    // of labour the whole audio design is built on.
+    EAR_SPREAD: 1.45,           // metres of stage at full pan
+    EAR_FORWARD: 0.5,           // how far in front of the listener the stage is
+    EAR_FULL_PAN: 1.5,          // arena units to reach full pan
+    EAR_CURVE: 0.6,             // <1 widens small offsets
 
     // ---- helpers ---------------------------------------------------------
     clamp: (v, lo, hi) => v < lo ? lo : (v > hi ? hi : v),
@@ -88,9 +99,16 @@ content.constants = (() => {
     // An arena offset placed on the listening stage. syngen wants
     // {x: forward, y: left-positive}, so the sign is flipped exactly once —
     // here, and nowhere else in the game.
+    //
+    // The curve is the important part. A linear map spends most of its range on
+    // offsets that never happen; raising the normalised offset to EAR_CURVE
+    // pushes the resolution down into the first unit and a half, where the
+    // fight actually is. Standing almost on top of someone still reads as a
+    // side rather than as "in front of me".
     earLocal: function (dx) {
-      const spread = this.clamp(dx / this.ARENA_HALF, -1.6, 1.6) * this.EAR_SPREAD
-      return {forward: this.EAR_FORWARD, starboard: spread}
+      const t = this.clamp(dx / this.EAR_FULL_PAN, -1, 1)
+      const curved = Math.sign(t) * Math.pow(Math.abs(t), this.EAR_CURVE)
+      return {forward: this.EAR_FORWARD, starboard: curved * this.EAR_SPREAD}
     },
   }
 })()

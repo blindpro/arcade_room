@@ -31,7 +31,7 @@ app.controls.gamepad = {
       strafeAxis: 'y',
       turnAxis: 'rotate',
     })) {
-      const axisValue = mappings[mapping].reduce(getAxis, 0)
+      const axisValue = app.controls.bindings(mappings, mapping).reduce(getAxis, 0)
 
       if (axisValue) {
         state[name] = axisValue
@@ -50,8 +50,8 @@ app.controls.gamepad = {
     }
 
     // Forward/backward analog
-    const moveBackward = mappings.moveBackward.reduce(getAnalog, 0),
-      moveForward = mappings.moveForward.reduce(getAnalog, 0)
+    const moveBackward = app.controls.bindings(mappings, 'moveBackward').reduce(getAnalog, 0),
+      moveForward = app.controls.bindings(mappings, 'moveForward').reduce(getAnalog, 0)
 
     if (moveBackward && !moveForward) {
       state.x = Math.min(state.x || 0, -moveBackward)
@@ -80,22 +80,22 @@ app.controls.gamepad = {
     }
 
     // Up / down / left / right
-    let x = mappings.uiAxisHorizontal.reduce(getAxis, 0),
-      y = mappings.uiAxisVertical.reduce(getAxis, 0)
+    let x = app.controls.bindings(mappings, 'uiAxisHorizontal').reduce(getAxis, 0),
+      y = app.controls.bindings(mappings, 'uiAxisVertical').reduce(getAxis, 0)
 
-    if (mappings.uiUp.reduce(isDigital, false)) {
+    if (app.controls.bindings(mappings, 'uiUp').reduce(isDigital, false)) {
       y = -1
     }
 
-    if (mappings.uiDown.reduce(isDigital, false)) {
+    if (app.controls.bindings(mappings, 'uiDown').reduce(isDigital, false)) {
       y = 1
     }
 
-    if (mappings.uiLeft.reduce(isDigital, false)) {
+    if (app.controls.bindings(mappings, 'uiLeft').reduce(isDigital, false)) {
       x = -1
     }
 
-    if (mappings.uiRight.reduce(isDigital, false)) {
+    if (app.controls.bindings(mappings, 'uiRight').reduce(isDigital, false)) {
       x = 1
     }
 
@@ -123,7 +123,7 @@ app.controls.gamepad = {
       pause: 'pause',
       start: 'start',
     })) {
-      if (mappings[mapping].reduce(isDigital, false)) {
+      if (app.controls.bindings(mappings, mapping).reduce(isDigital, false)) {
         state[name] = true
       }
     }
