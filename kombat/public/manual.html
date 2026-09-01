@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>KOMBAT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <style>
+      *, *::after, *::before {
+        background: transparent;
+        border: 0;
+        box-sizing: border-box;
+        color: inherit;
+        font: inherit;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        background-color: #FFFFFF;
+        font-family: sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+
+      main ::selection {
+        background-color: #FF0069;
+        color: #FFFFFF;
+        text-decoration-color: #FFFFFF;
+      }
+
+      a {
+        color: #FF0069;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      code {
+        font-family: monospace;
+      }
+
+      details > * + * {
+        margin-top: 1.25em;
+      }
+
+      em {
+        font-family: sans-serif;
+        font-style: italic;
+      }
+
+      h2 {
+        font-size: 2em;
+      }
+
+      h3 {
+        font-size: 1.5em;
+        margin-top: 3rem;
+      }
+
+      h4 {
+        font-size: 1.25em;
+        margin-top: 3rem;
+      }
+
+      kbd {
+        border: 1px solid #FF0069;
+        border-radius: 0.25em;
+        display: inline-block;
+        font-family: monospace;
+        padding: 0 0.5em;
+      }
+
+      strong, th {
+        font-family: sans-serif;
+        font-weight: 700;
+      }
+
+      section {
+        margin: 0 auto;
+        max-width: calc(60ch + 4em);
+        padding: 3em 1em;
+      }
+
+      section + section {
+        border-top: 1px dotted #CCCCCC;
+      }
+
+      section > * + *:not(h3):not(h4) {
+        margin-top: 1.25em;
+      }
+
+      section > h2 + *,
+      section > h3 + *,
+      section > h4 + * {
+        margin-top: 0.75em !important;
+      }
+
+      table, td, th {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+      }
+
+      td, th {
+        padding: 0.25em 0.5em;
+      }
+
+      th {
+        text-align: left;
+      }
+
+      ul {
+        list-style-position: inside;
+        padding-left: 1.5em;
+      }
+
+      .hero {
+        align-items: center;
+        background-color: #000000;
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.25;
+        padding: 4em 1em;
+        text-align: center;
+      }
+        .hero--author {
+          font-family: monospace;
+          margin-top: 2em;
+        }
+        .hero--logo {
+          font-family: monospace;
+          font-size: 3em;
+          text-transform: uppercase;
+        }
+
+      .scrollable {
+        max-width: 100%;
+        overflow: auto;
+        white-space: nowrap;
+      }
+
+      @media (min-width: 20rem) {
+        :root {
+          font-size: calc(1rem + ((1vw - 0.2rem) * 0.25));
+        }
+      }
+
+      @media (min-width: 48rem) {
+        section {
+          padding-left: 2em;
+          padding-right: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <h1>
+        <div class="hero--lockup">
+          <div class="hero--logo">Kombat</div>
+          <div class="hero--author">an audio-first one-on-one fighter</div>
+        </div>
+      </h1>
+    </header>
+
+    <main>
+      <section>
+        <h2>Introduction</h2>
+        <p>Kombat is a one-on-one fighting game, playable entirely by ear. You and one opponent stand on a line. You can walk toward each other, walk away, jump, and hold a guard up &mdash; and you have four attack buttons, which form a square under your right hand.</p>
+        <p>There is exactly one thing to understand, and everything else in the game exists to serve it: <strong>the top row of attacks is stopped by blocking, and the bottom row goes straight underneath a block and has to be jumped.</strong> Each answer is the wrong one against the other attack. Stand there doing neither and both of them hit you.</p>
+        <p>So the fight is a guess, made three or four times a second &mdash; except that it is not really a guess, because <em>every attack tells you which one it is before it lands</em>. Each attack broadcasts a whoosh while it winds up, and that whoosh <strong>sweeps upward for a high attack and downward for a low one</strong>. Nothing else in the game sweeps. When the sweep stops, the hit is live.</p>
+        <p>That is the whole design: a kick winds up slowly enough that you can hear the sweep and answer it, and a punch does not. The choice of which to throw is a choice between damage and being unreadable, and it is made by both fighters at once.</p>
+      </section>
+
+      <section>
+        <h2>What the sound is telling you</h2>
+        <p>Three questions, three separate channels, so you can answer any one of them while ignoring the other two.</p>
+        <p><strong>Where are they? &mdash; stereo, plus a footstep pulse.</strong> Your opponent hums continuously, panned to the side they are actually on, and their footsteps repeat faster the closer they get. An approach accelerates audibly long before it is in range. Volume is deliberately <em>not</em> the distance cue here: volume is reserved for how hard something just landed.</p>
+        <p><strong>Are they in the air? &mdash; brightness.</strong> A grounded fighter&rsquo;s hum is dark and bodied. When they jump it lifts an octave and the filter opens, and it settles back as they land. This matters more than it sounds: a low attack thrown at someone in the air is completely wasted, and a high attack thrown at them lands for 35% more and knocks them down.</p>
+        <p><strong>High or low? &mdash; which way the tell sweeps.</strong> Up means block. Down means jump. Learn these four sounds first &mdash; they are at the top of the &ldquo;Learn the sounds&rdquo; screen for exactly that reason.</p>
+        <p>Two more sounds are worth knowing because they are different <em>mistakes</em>. A swing at empty air has no weight behind it and means you were out of range &mdash; get closer. A sweep passing under someone who jumped is a distinct rising swish and means they read you &mdash; change what you are doing.</p>
+      </section>
+
+      <section>
+        <h2>System Requirements</h2>
+        <p>This is best experienced with headphones. Which side your opponent is standing on is carried entirely in the stereo image, and Kroll can move from one side of you to the other in a single move.</p>
+        <p>Real-time synthesis is an <em>extremely</em> CPU-intensive process. It will attempt to run on any machine that meets its minimum requirements; however, you may experience stuttering or drop-outs when running below the recommended requirements.</p>
+      </section>
+
+      <section>
+        <h2>How to Play</h2>
+        <p><strong>The four buttons.</strong> <kbd>U</kbd> is a high punch, <kbd>I</kbd> a high kick, <kbd>J</kbd> a low punch, <kbd>K</kbd> a low kick. The top row is high, the bottom row is low; the left column is punches, the right column is kicks. Punches are short, fast and cheap. Kicks reach much further and hit much harder, and leave you standing there for a long time if they miss &mdash; a whiffed kick is a free hit for the other fighter.</p>
+
+        <p><strong>Defending.</strong> Hold <kbd>S</kbd> to block; it stops high attacks and chips you for about a tenth of the damage. It does nothing at all against a low attack, which goes under the guard. Press <kbd>W</kbd> to jump; a low attack passes underneath you, but you cannot block in the air and a high attack will catch you on the way up for bonus damage and put you on the floor.</p>
+
+        <p><strong>Attacking is a guess too.</strong> Someone who blocks everything gets swept. Someone who jumps everything gets caught out of the air by a high kick. Neither answer works twice in a row, which is what stops the game being a mash. The opponent keeps a running count of how you have been defending and skews its offence against it, so changing your habits actually changes its behaviour inside a single round.</p>
+
+        <p><strong>Spacing is a real weapon.</strong> <kbd>A</kbd> and <kbd>D</kbd> are the only movement there is, and walking out of range beats every attack in the game. There is no free escape though: the floor ends, and backing into the wall has its own sound, because being cornered is the position you lose from.</p>
+
+        <p><strong>Reading the opponent.</strong> The AI does not get to see the future. It registers your tell and answers it after a fixed reaction time, and that reaction time is the difficulty curve &mdash; the first opponent cannot react to a punch at all, and the last one can react to everything. It gets exactly the same deal you do, from the other side.</p>
+
+        <p><strong>Specials.</strong> Each fighter has one, on a direction sequence followed by an attack button, entered inside about four tenths of a second. Press <kbd>F3</kbd> in a match to hear yours and whether it is off cooldown. When the opponent starts one, it is announced out loud &mdash; the charge is long enough that you have time to hear the name and still do something about it.</p>
+
+        <p><strong>Rounds.</strong> First to two rounds takes the stage. Sixty seconds a round; if the clock runs out, the higher health wins, and a dead heat replays the round. Beat all four fighters to clear the ladder.</p>
+      </section>
+
+      <section>
+        <h2>The Roster</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr><th>Fighter</th><th>Shape</th><th>Special</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Rook</strong></td>
+                <td>125 health, slowest hands, longest reach, heaviest hits.</td>
+                <td><strong>Quake</strong> &mdash; back, back, <kbd>K</kbd>. A low shockwave with no range limit at all. It cannot be blocked and you cannot walk out of it; being in the air when it arrives is the only answer in the game, and its long charge is the game telling you to jump.</td>
+              </tr>
+              <tr>
+                <td><strong>Vex</strong></td>
+                <td>86 health, fastest startup and recovery, shortest reach, lightest hits.</td>
+                <td><strong>Rush Cut</strong> &mdash; forward, forward, <kbd>J</kbd>. Closes the gap outright and lands a three-hit flurry on the high line. Blockable on purpose: it is how Vex gets in, not how Vex wins.</td>
+              </tr>
+              <tr>
+                <td><strong>Sable</strong></td>
+                <td>100 health, baseline in every stat.</td>
+                <td><strong>Frost Bolt</strong> &mdash; back, forward, <kbd>U</kbd>. A projectile on the high line: blockable, but jumping it only puts you in the air with a bolt arriving. You hear it come, its tone rising as it closes.</td>
+              </tr>
+              <tr>
+                <td><strong>Kroll</strong></td>
+                <td>94 health, quick and fragile.</td>
+                <td><strong>Shadow Kick</strong> &mdash; back, forward, <kbd>I</kbd>. Vanishes, reappears on the far side of you, and kicks high. The disappearance and the arrival are separate sounds with a gap between them; the gap is your chance to work out where they went.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Controls</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr><th>Action</th><th>Button</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Walk left / right</td><td><kbd>A</kbd> / <kbd>D</kbd></td></tr>
+              <tr><td>Jump (the only answer to a low attack)</td><td><kbd>W</kbd></td></tr>
+              <tr><td>Block (hold &mdash; stops high attacks only)</td><td><kbd>S</kbd></td></tr>
+              <tr><td>High punch &mdash; fast, short, unreactable</td><td><kbd>U</kbd></td></tr>
+              <tr><td>High kick &mdash; slow, long, heavy; catches jumpers</td><td><kbd>I</kbd></td></tr>
+              <tr><td>Low punch &mdash; fast, short, goes under a block</td><td><kbd>J</kbd></td></tr>
+              <tr><td>Low kick &mdash; the sweep; longest reach, knocks down</td><td><kbd>K</kbd></td></tr>
+              <tr><td>Status (health, round, clock, score)</td><td><kbd>F1</kbd></td></tr>
+              <tr><td>Where your opponent is and what they are doing</td><td><kbd>F2</kbd></td></tr>
+              <tr><td>Your special and whether it is ready</td><td><kbd>F3</kbd></td></tr>
+              <tr><td>Pause</td><td><kbd>Escape</kbd></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Scoring</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr><th>Deed</th><th>Points</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Damage dealt</td><td>10 per point of damage</td></tr>
+              <tr><td>Win a round</td><td>500</td></tr>
+              <tr><td>Win a round without being hit once</td><td>400 bonus</td></tr>
+              <tr><td>Win a round on the clock</td><td>300</td></tr>
+              <tr><td>Clear a stage</td><td>1,000 + 25 per second left on the clock</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

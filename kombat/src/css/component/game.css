@@ -1,0 +1,194 @@
+/* KOMBAT HUD + a side-on view of the floor (aria-hidden; the audio and the
+   announcements are the real interface). Kept readable for sighted / low-vision
+   players and laid out on exactly the two axes the audio uses: horizontal
+   position along the floor, and height off it.
+
+   The fighters are coloured by the only thing the hit rules care about — on the
+   floor (solid), in the air (bright, ringed), blocking (dimmed), or down. */
+.a-game {
+  align-items: center;
+  text-align: center;
+}
+
+  /* --- the two health bars ------------------------------------------------ */
+  .a-game--bars {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    gap: 1.2em;
+    width: 44em;
+    max-width: 94vw;
+    margin: 0 auto 1rem;
+  }
+    .a-game--side {
+      flex: 1 1 0;
+      display: flex;
+      flex-direction: column;
+      gap: 0.3em;
+      min-width: 0;
+    }
+      .a-game--name,
+      .a-game--foe-name {
+        font-size: 0.95em;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .a-game--bar {
+        position: relative;
+        height: 0.85em;
+        border-radius: 3px;
+        border: 1px solid rgba(150, 190, 255, 0.3);
+        background: rgba(10, 14, 30, 0.6);
+        overflow: hidden;
+      }
+        .a-game--health-fill,
+        .a-game--foe-health-fill {
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          width: 100%;
+          background: linear-gradient(to right, #ffb347, #ffe27a);
+          transition: width 0.12s linear;
+        }
+        .a-game--foe-health-fill {
+          background: linear-gradient(to right, #ff7a7a, #ffb0b0);
+        }
+      .a-game--pips,
+      .a-game--foe-pips {
+        font-size: 0.9em;
+        color: #ffd479;
+        letter-spacing: 0.2em;
+      }
+
+    /* The foe's bar drains from the same edge the foe stands on, so the two
+       sides of the screen mirror the two sides of the floor. */
+    .a-game--side-foe { text-align: right; }
+      .a-game--side-foe .a-game--bar { transform: scaleX(-1); }
+
+    .a-game--centre {
+      flex: 0 0 auto;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.2em;
+      min-width: 5em;
+    }
+      .a-game--clock-value {
+        font-size: 1.9em;
+        line-height: 1;
+        color: #ffd479;
+      }
+
+  /* --- the numeric strip -------------------------------------------------- */
+  .a-game--hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1.4em;
+    justify-content: center;
+    font-size: 1.02em;
+    margin-bottom: 1.2rem;
+  }
+    .a-game--stat b { color: #ffd479; }
+
+  /* --- the floor ---------------------------------------------------------- */
+  .a-game--plot {
+    position: relative;
+    width: 40em;
+    max-width: 94vw;
+    aspect-ratio: 16 / 7;
+    margin: 0 auto;
+    border-radius: 6px;
+    border: 1px solid rgba(150, 190, 255, 0.26);
+    background:
+      linear-gradient(to top,
+        rgba(120, 90, 40, 0.32) 0%,
+        rgba(120, 90, 40, 0.14) 8%,
+        rgba(20, 24, 48, 0.10) 45%,
+        rgba(150, 190, 255, 0.08) 100%);
+    overflow: hidden;
+  }
+    /* The floor line — the height everything is measured from. */
+    .a-game--plot::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 5%;
+      height: 2px;
+      background: rgba(255, 200, 120, 0.5);
+    }
+    /* Centre mark, so "they crossed over" is visible as well as audible. */
+    .a-game--plot::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.12);
+    }
+
+  .a-game--self,
+  .a-game--foe {
+    position: absolute;
+    width: 1.1em;
+    height: 1.1em;
+    margin-left: -0.55em;
+    border-radius: 50%;
+    transition: left 0.05s linear, bottom 0.05s linear;
+  }
+  .a-game--self {
+    background: #ffd479;
+    box-shadow: 0 0 8px rgba(255, 212, 121, 0.6);
+  }
+  .a-game--foe {
+    background: #ff8a8a;
+    box-shadow: 0 0 8px rgba(255, 138, 138, 0.6);
+  }
+  /* Airborne: ringed and brightened, matching the octave jump in the audio. */
+  .a-game--self[data-stance="air"],
+  .a-game--foe[data-stance="air"] {
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.5), 0 0 14px rgba(255, 255, 255, 0.5);
+  }
+  /* Blocking: dimmed and squared off, because a guard is not a posture you can
+     attack out of. */
+  .a-game--self[data-stance="block"],
+  .a-game--foe[data-stance="block"] {
+    border-radius: 2px;
+    opacity: 0.6;
+  }
+  .a-game--self[data-stance="down"],
+  .a-game--foe[data-stance="down"] {
+    opacity: 0.3;
+    height: 0.4em;
+    border-radius: 2px;
+  }
+
+  /* A projectile in flight. */
+  .a-game--bolt {
+    position: absolute;
+    bottom: 22%;
+    width: 0.6em;
+    height: 0.6em;
+    margin-left: -0.3em;
+    border-radius: 50%;
+    background: #9fd8ff;
+    box-shadow: 0 0 10px rgba(159, 216, 255, 0.9);
+  }
+
+/* --- character select ------------------------------------------------------ */
+.a-select--fighter {
+  display: block;
+  text-align: left;
+}
+  .a-select--blurb {
+    display: block;
+    font-size: 0.82em;
+    opacity: 0.72;
+    margin-top: 0.2em;
+    font-weight: normal;
+  }
