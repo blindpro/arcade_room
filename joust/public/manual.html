@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>JOUST</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <style>
+      *, *::after, *::before {
+        background: transparent;
+        border: 0;
+        box-sizing: border-box;
+        color: inherit;
+        font: inherit;
+        margin: 0;
+        padding: 0;
+      }
+
+      :root {
+        background-color: #FFFFFF;
+        font-family: sans-serif;
+        font-size: 16px;
+        font-weight: 400;
+        line-height: 1.5;
+      }
+
+      main ::selection {
+        background-color: #FF0069;
+        color: #FFFFFF;
+        text-decoration-color: #FFFFFF;
+      }
+
+      a {
+        color: #FF0069;
+        cursor: pointer;
+        text-decoration: underline;
+      }
+
+      code {
+        font-family: monospace;
+      }
+
+      details > * + * {
+        margin-top: 1.25em;
+      }
+
+      em {
+        font-family: sans-serif;
+        font-style: italic;
+      }
+
+      h2 {
+        font-size: 2em;
+      }
+
+      h3 {
+        font-size: 1.5em;
+        margin-top: 3rem;
+      }
+
+      h4 {
+        font-size: 1.25em;
+        margin-top: 3rem;
+      }
+
+      kbd {
+        border: 1px solid #FF0069;
+        border-radius: 0.25em;
+        display: inline-block;
+        font-family: monospace;
+        padding: 0 0.5em;
+      }
+
+      strong, th {
+        font-family: sans-serif;
+        font-weight: 700;
+      }
+
+      section {
+        margin: 0 auto;
+        max-width: calc(60ch + 4em);
+        padding: 3em 1em;
+      }
+
+      section + section {
+        border-top: 1px dotted #CCCCCC;
+      }
+
+      section > * + *:not(h3):not(h4) {
+        margin-top: 1.25em;
+      }
+
+      section > h2 + *,
+      section > h3 + *,
+      section > h4 + * {
+        margin-top: 0.75em !important;
+      }
+
+      table, td, th {
+        border: 1px solid #000000;
+        border-collapse: collapse;
+      }
+
+      td, th {
+        padding: 0.25em 0.5em;
+      }
+
+      th {
+        text-align: left;
+      }
+
+      ul {
+        list-style-position: inside;
+        padding-left: 1.5em;
+      }
+
+      .hero {
+        align-items: center;
+        background-color: #000000;
+        color: #FFFFFF;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        line-height: 1.25;
+        padding: 4em 1em;
+        text-align: center;
+      }
+        .hero--author {
+          font-family: monospace;
+          margin-top: 2em;
+        }
+        .hero--logo {
+          font-family: monospace;
+          font-size: 3em;
+          text-transform: uppercase;
+        }
+
+      .scrollable {
+        max-width: 100%;
+        overflow: auto;
+        white-space: nowrap;
+      }
+
+      @media (min-width: 20rem) {
+        :root {
+          font-size: calc(1rem + ((1vw - 0.2rem) * 0.25));
+        }
+      }
+
+      @media (min-width: 48rem) {
+        section {
+          padding-left: 2em;
+          padding-right: 2em;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <header class="hero">
+      <h1>
+        <div class="hero--lockup">
+          <div class="hero--logo">Joust</div>
+          <div class="hero--author">an audio-first flying duel</div>
+        </div>
+      </h1>
+    </header>
+
+    <main>
+      <section>
+        <h2>Introduction</h2>
+        <p>Joust is an audio-first flying duel, playable entirely by ear. You ride a mount over a wrapping strip of air with a solid deck below and a hard roof above, and enemy riders share it with you. There is exactly one combat rule: <strong>when two riders touch, the higher one wins outright.</strong> No health, no hit points &mdash; just who was above whom at the moment of contact. Everything else in the game exists to make that one comparison something you can hear.</p>
+        <p>The game has two spatial axes, and they use two different perceptual channels so they never compete for your attention.</p>
+        <p><strong>Left and right is stereo.</strong> Every rider, egg and wing beat is placed binaurally where it actually is, and the <em>rate</em> of a rider&rsquo;s wing beats speeds up as it closes on you. That accelerating beat off to one side is your alarm: it means a rider has committed to you.</p>
+        <p><strong>Altitude is pitch, and it is always relative to you.</strong> A quiet reference tone runs the whole time you are alive, and that tone <em>is</em> your own height. Every rider beats its wings at a pitch set by how far above or below you it is. A rider singing above the reference is above you and will kill you. One singing under it is below you and is yours for the taking. And a rider level with you lands within a few hertz of the reference and <em>beats</em> against it &mdash; a wavering, unstable sound, which is exactly right, because that collision is a coin flip that throws you both apart.</p>
+        <p>That last case is the heart of it. You are not reading a number off a screen; you are hearing an interval and deciding, in the second you have left, whether to climb, dive, or brace.</p>
+      </section>
+
+      <section>
+        <h2>System Requirements</h2>
+        <p>This is best experienced with headphones and a gamepad.</p>
+        <p>Real-time synthesis is an <em>extremely</em> CPU-intensive process. It will attempt to run on any machine that meets its minimum requirements; however, you may experience stuttering or drop-outs when running below the recommended requirements.</p>
+
+        <h3>Minimum System Requirements</h3>
+        <table>
+          <tr><th>CPU</th><td>SSE2 capable (64-bit)</td></tr>
+          <tr><th>RAM</th><td>2 GB</td></tr>
+        </table>
+
+        <h3>Recommended System Requirements</h3>
+        <table>
+          <tr><th>CPU</th><td>3.5 GHz Quad-Core (64-bit)</td></tr>
+          <tr><th>RAM</th><td>4 GB</td></tr>
+        </table>
+
+        <h3>Browser Support</h3>
+        <p>The HTML5 build is intended to be played in a recent version of a Chromium-based browser, such as Google Chrome, Microsoft Edge, or Opera. Browser extensions that alter page behavior are not recommended. Other browsers must support modern JavaScript features and the current Web Audio API specification.</p>
+      </section>
+
+      <section>
+        <h2>How to Play</h2>
+        <p>You have three lives, and another every 20,000 points. Waves of riders arrive; clear each one to move on.</p>
+
+        <p><strong>The wing.</strong> You have no altitude control. You have a wing, and you pump it: each press of <kbd>Space</kbd> is one beat, and each beat buys a little height against constant gravity. Holding the key down does nothing at all. About five beats a second is the most the wing will give you, and a climb from the deck to the roof is roughly five seconds of sustained work. That cost is the whole tension of the game: when something is above you the answer is always to climb, and climbing is never free.</p>
+
+        <p><strong>Moving.</strong> <kbd>Left</kbd> and <kbd>Right</kbd> lean you. In the air the control is deliberately poor and momentum carries you, so turning around in mid-flight takes the better part of a second &mdash; time you may not have. On the deck you are far more responsive and just as fast, but you are also at the lowest point in the arena, where anything airborne beats you. The arena wraps, so you can never be cornered, and a rider that runs off your right simply arrives on your left.</p>
+
+        <p><strong>The duel.</strong> Fly into a rider and compare heights. Above it by more than a couple of units and you unhorse it. Below it by the same, and you lose a life. Within that band either way, you both bounce apart &mdash; survivable, and often the best outcome available to you. Listen to the interval: clearly under the reference means go and take it; clearly over means climb or run; wavering against the reference means brace for a bounce.</p>
+
+        <p><strong>Knowing your absolute height.</strong> Because pitch is relative it can never tell you how high you actually are, so the arena&rsquo;s boundaries announce themselves. A low wash rises as you come down toward the deck, and a thin hiss as you climb toward the roof. Do not try to live at the roof: hitting it throws you back down and your wing will not answer for half a second afterward. The high ground is really the band just below the ceiling, and holding it costs continuous flapping.</p>
+
+        <p><strong>Eggs.</strong> An unhorsed rider drops an egg. It falls &mdash; and because pitch is altitude, you can hear its voice descend all the way down, so you can dive to meet it before it lands. Once down it starts ticking, and the tick accelerates as the hatch approaches, giving you about twenty beats of warning. Fly into it to collect it. Consecutive eggs within one wave are worth 250, then 500, 750 and 1,000, so clearing the deck quickly pays. Ignore one and it hatches into a rider one tier meaner than the one you just killed &mdash; and since a wave is not over until both the air and the deck are clear, an egg you never went back for keeps the wave alive until it does.</p>
+
+        <p><strong>The riders.</strong> Three kinds, each on its own waveform, so you can hear <em>what</em> is coming as well as where and how high. A <strong>bounder</strong> is a soft triangle wave, slower than you, and mostly minds its own business. A <strong>hunter</strong> is a harsher sawtooth that comes for you more often. A <strong>shadow lord</strong> is a hard square wave that comes for you almost always, matches your top speed, and can climb as well as you can &mdash; you cannot simply outrun it, and you cannot reliably out-climb it either.</p>
+
+        <p><strong>Pressure.</strong> Riders steer for a point a little above you, which is why being hunted always pushes you upward. And if a wave drags on too long, everything left alive speeds up. You are told when that happens.</p>
+      </section>
+
+      <section>
+        <h2>Controls</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr><th>Action</th><th>Button</th></tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>Flap (press repeatedly &mdash; holding does nothing)</td>
+                <td><kbd>Space</kbd> (or <kbd>Up</kbd>, <kbd>W</kbd>, <kbd>Enter</kbd>, <kbd>Shift</kbd>)</td>
+              </tr>
+              <tr>
+                <td>Lean left / right</td>
+                <td><kbd>Left</kbd> / <kbd>Right</kbd> (or <kbd>A</kbd> / <kbd>D</kbd>)</td>
+              </tr>
+              <tr>
+                <td>Status (score, lives, wave, altitude)</td>
+                <td><kbd>F1</kbd></td>
+              </tr>
+              <tr>
+                <td>Nearest rider, and what happens if you touch it</td>
+                <td><kbd>F2</kbd></td>
+              </tr>
+              <tr>
+                <td>Everything in the air and on the deck</td>
+                <td><kbd>F3</kbd></td>
+              </tr>
+              <tr>
+                <td>Pause</td>
+                <td><kbd>Escape</kbd></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section>
+        <h2>Scoring</h2>
+        <div class="scrollable">
+          <table>
+            <thead>
+              <tr><th>Deed</th><th>Points</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>Unhorse a bounder</td><td>500</td></tr>
+              <tr><td>Unhorse a hunter</td><td>750</td></tr>
+              <tr><td>Unhorse a shadow lord</td><td>1,500</td></tr>
+              <tr><td>Collect an egg (1st, 2nd, 3rd, 4th+ in a wave)</td><td>250 / 500 / 750 / 1,000</td></tr>
+              <tr><td>Clear a wave</td><td>500 &times; the wave number</td></tr>
+              <tr><td>Extra life</td><td>every 20,000</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </body>
+</html>

@@ -1,0 +1,149 @@
+/* JOUST game HUD + a side-on view of the strip (aria-hidden; the audio and the
+   announcements are the real interface). Kept readable for sighted /
+   low-vision players, and deliberately laid out on the SAME two axes the audio
+   uses: horizontal position is left-right, and altitude is height in the box.
+   Riders are coloured by the only thing that matters about them — whether they
+   are above you (red, it kills you), below you (green, you kill it), or level
+   (amber, you bounce). */
+.a-game {
+  align-items: center;
+  text-align: center;
+}
+  .a-game--hud {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.4em 1.4em;
+    justify-content: center;
+    font-size: 1.05em;
+    margin-bottom: 1.4rem;
+  }
+    .a-game--stat b { color: #ffd479; }
+
+  .a-game--plot {
+    position: relative;
+    width: 34em;
+    max-width: 92vw;
+    aspect-ratio: 16 / 9;
+    margin: 0 auto;
+    border-radius: 6px;
+    border: 1px solid rgba(150, 190, 255, 0.26);
+    background:
+      linear-gradient(to top,
+        rgba(120, 90, 40, 0.30) 0%,
+        rgba(120, 90, 40, 0.16) 4%,
+        rgba(20, 24, 48, 0.10) 30%,
+        rgba(150, 190, 255, 0.12) 100%);
+    overflow: hidden;
+  }
+    /* The deck. */
+    .a-game--plot::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 2%;
+      background: rgba(255, 200, 120, 0.45);
+    }
+    /* Your own lane, so "the centre is you" is obvious. */
+    .a-game--plot::after {
+      content: "";
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.16);
+    }
+  /* You: always dead centre horizontally, riding up and down the box. */
+  .a-game--self {
+    position: absolute;
+    left: 50%;
+    width: 0.7em;
+    height: 0.7em;
+    margin: 0 0 -0.35em -0.35em;
+    border-radius: 50%;
+    background: #ffffff;
+    box-shadow: 0 0 14px rgba(255, 255, 255, 0.9);
+    transition: opacity 80ms linear;
+  }
+  .a-game--dot {
+    position: absolute;
+    width: 0.75em;
+    height: 0.75em;
+    margin: 0 0 -0.375em -0.375em; /* centre on its left/bottom anchor */
+    border-radius: 50%;
+    background: #6fd3ff;
+    box-shadow: 0 0 10px rgba(111, 211, 255, 0.7);
+    transition: opacity 60ms linear;
+  }
+    /* Above you — it wins the collision. */
+    .a-game--dot[data-type="above"] {
+      background: #ff6b6b;
+      box-shadow: 0 0 14px rgba(255, 107, 107, 0.9);
+    }
+    /* Below you — you win it. */
+    .a-game--dot[data-type="below"] {
+      background: #5ad17a;
+      box-shadow: 0 0 14px rgba(90, 209, 122, 0.85);
+    }
+    /* Level with you — a bounce, and a coin flip. */
+    .a-game--dot[data-type="level"] {
+      background: #ffc857;
+      box-shadow: 0 0 16px rgba(255, 200, 87, 0.95);
+      outline: 2px solid rgba(255, 255, 255, 0.5);
+      outline-offset: 2px;
+    }
+    .a-game--dot-egg {
+      border-radius: 40% 40% 50% 50%;
+      width: 0.6em;
+      height: 0.75em;
+      background: #e8dcc0;
+      box-shadow: 0 0 10px rgba(232, 220, 192, 0.8);
+    }
+    .a-game--dot[data-type="egg-falling"] { opacity: 0.85; }
+
+/* Help / lists */
+.a-help--text {
+  max-width: 44em;
+  margin-left: auto;
+  margin-right: auto;
+  opacity: 0.9;
+  line-height: 1.5;
+}
+.a-help--list {
+  list-style: none;
+  margin: 0.5rem auto;
+  padding: 0;
+  max-width: 44em;
+  text-align: left;
+}
+  .a-help--list li {
+    margin: 0.4em 0;
+    line-height: 1.45;
+  }
+  .a-help--list kbd {
+    background: rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    padding: 0.05em 0.4em;
+    font-family: inherit;
+  }
+
+/* High scores */
+.a-highscores--list {
+  list-style: none;
+  margin: 0.5rem auto 1rem;
+  padding: 0;
+  max-width: 40em;
+  text-align: left;
+}
+  .a-highscores--entry,
+  .a-highscores--empty {
+    margin: 0.3em 0;
+    padding: 0.2em 0;
+  }
+
+/* Game over online status */
+.a-gameover--online-status[data-state="ok"] { color: #5ad17a; }
+.a-gameover--online-status[data-state="error"] { color: #ff8c8c; }
+.a-gameover--online-link { color: #ffd479; }

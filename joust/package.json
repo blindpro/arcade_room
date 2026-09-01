@@ -1,0 +1,31 @@
+{
+  "name": "joust",
+  "version": "1.0.0",
+  "description": "JOUST \u2014 an audio-first flying duel. Flap to stay up, and win a collision by being the higher rider. Every rider's altitude relative to yours IS its pitch, so a threat above you sings higher than the reference tone and prey below you sings lower. Kill one and it drops an egg that falls, ticks, and hatches into something worse.",
+  "license": "Unlicense",
+  "private": true,
+  "devDependencies": {
+    "gulp": "^5.0.1",
+    "gulp-clean-css": "^4.3.0",
+    "gulp-concat": "^2.6.1",
+    "gulp-footer": "^2.1.0",
+    "gulp-header": "^2.0.9",
+    "gulp-if": "^3.0.0",
+    "gulp-iife": "^0.4.0",
+    "gulp-rename": "^2.1.0",
+    "gulp-serve": "^1.4.0",
+    "gulp-uglify-es": "^3.0.0",
+    "gulp-zip": "^5.1.0",
+    "jsdom": "^30.0.1",
+    "merge-stream": "^2.0.0",
+    "syngen": "^2.0.0-beta.3",
+    "yargs": "^18.0.0"
+  },
+  "scripts": {
+    "build": "gulp build",
+    "test": "node tools/sim.js && gulp build --debug && node tools/boot.js && gulp build",
+    "sim": "node tools/sim.js",
+    "boot": "gulp build --debug && node tools/boot.js",
+    "balance": "node tools/balance.js"
+  }
+}

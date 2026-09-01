@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+    <meta charset="utf-8" />
+    <title data-i18n="doc.title">Joust</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/png" href="./favicon.png" />
+    <link rel="stylesheet" type="text/css" href="./styles.min.css" />
+  </head>
+  <body role="application">
+    <main class="a-app">
+      <canvas class="a-app--overlaySupport"></canvas>
+
+      <!-- Screen-reader announce regions -->
+      <div class="a-app--announce u-screenReader" aria-live="polite" aria-atomic="true"></div>
+      <div class="a-app--announce-assertive u-screenReader" aria-live="assertive" aria-atomic="true"></div>
+
+      <!-- Game -->
+      <div class="a-app--screen a-app--game">
+        <section class="c-screen a-game" tabindex="-1" data-i18n-attr="aria-label:game.aria">
+          <div class="a-game--hud">
+            <span class="a-game--stat"><span data-i18n="hud.score">Score</span>: <b class="a-game--score-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.lives">Lives</span>: <b class="a-game--lives-value">3</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.wave">Wave</span>: <b class="a-game--wave-value">1</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.altitude">Altitude</span>: <b class="a-game--altitude-value">45</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.riders">Riders</span>: <b class="a-game--riders-value">0</b></span>
+            <span class="a-game--stat"><span data-i18n="hud.eggs">Eggs</span>: <b class="a-game--eggs-value">0</b></span>
+          </div>
+          <div class="a-game--plot" aria-hidden="true">
+            <span class="a-game--self"></span>
+          </div>
+        </section>
+      </div>
+
+      <!-- Pause -->
+      <div class="a-app--screen a-app--pause">
+        <section class="c-screen c-menu a-pause" tabindex="-1" data-i18n-attr="aria-label:pause.aria">
+          <h1 class="c-menu--title" data-i18n="pause.title">Paused</h1>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="resume" data-i18n="pause.resume">Resume</button></li>
+            <li><button class="c-menu--button" data-action="restart" data-i18n="pause.restart">Start again</button></li>
+            <li><button class="c-menu--button" data-action="menu" data-i18n="pause.menu">Main menu</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Game over -->
+      <div class="a-app--screen a-app--gameover">
+        <section class="c-screen c-menu a-gameover" tabindex="-1" data-i18n-attr="aria-label:gameover.aria">
+          <h1 class="c-menu--title" data-i18n="gameover.title">Unhorsed</h1>
+          <p class="c-menu--subtitle a-gameover--score">Score: 0</p>
+          <p class="c-menu--subtitle a-gameover--rank-msg" data-i18n="gameover.subtitle" hidden>Enter your name to save your score.</p>
+          <form class="a-gameover--form">
+            <ul class="c-menu--list">
+              <li>
+                <input class="c-menu--button a-gameover--name" type="text" maxlength="24"
+                       autocomplete="off" data-i18n-attr="aria-label:gameover.name;placeholder:gameover.name" />
+              </li>
+              <li><button class="c-menu--button a-gameover--submit" type="submit" data-i18n="gameover.save">Save score</button></li>
+            </ul>
+          </form>
+          <p class="a-gameover--online-status" aria-live="polite" hidden></p>
+          <p><a class="a-gameover--online-link" href="#" target="_blank" rel="noopener" hidden></a></p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="continue" data-i18n="gameover.continue">Continue</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- How to play -->
+      <div class="a-app--screen a-app--help">
+        <section class="c-screen c-menu a-help" tabindex="-1" data-i18n-attr="aria-label:help.aria">
+          <h1 class="c-menu--title" data-i18n="help.title">How to play</h1>
+          <p class="c-menu--subtitle" data-i18n="help.subtitle">Flap to climb. Be the higher rider.</p>
+          <p class="a-help--text" data-i18n="help.intro"></p>
+          <ul class="a-help--list">
+            <li data-i18n-html="help.h.flap"></li>
+            <li data-i18n-html="help.h.move"></li>
+            <li data-i18n-html="help.h.pitch"></li>
+            <li data-i18n-html="help.h.stereo"></li>
+            <li data-i18n-html="help.h.duel"></li>
+            <li data-i18n-html="help.h.tiers"></li>
+            <li data-i18n-html="help.h.eggs"></li>
+            <li data-i18n-html="help.h.bounds"></li>
+            <li data-i18n-html="help.h.lives"></li>
+            <li data-i18n-html="help.h.status"></li>
+            <li data-i18n-html="help.h.pause"></li>
+          </ul>
+          <p class="a-help--text" data-i18n="help.audio"></p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="help.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- High scores -->
+      <div class="a-app--screen a-app--highscores">
+        <section class="c-screen c-menu a-highscores" tabindex="-1" data-i18n-attr="aria-label:highscores.aria">
+          <h1 class="c-menu--title" data-i18n="highscores.title">High scores</h1>
+          <p class="c-menu--subtitle" data-i18n="highscores.subtitle">Your best flights on this device.</p>
+          <ul class="a-highscores--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="highscores.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Learn the sounds -->
+      <div class="a-app--screen a-app--learn">
+        <section class="c-screen c-menu a-learn" tabindex="-1" data-i18n-attr="aria-label:learn.aria">
+          <h1 class="c-menu--title" data-i18n="learn.title">Learn the sounds</h1>
+          <p class="c-menu--subtitle" data-i18n="learn.subtitle">Play each cue on its own.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-sound="reference" data-i18n="learn.reference">The reference tone - this is YOUR altitude</button></li>
+            <li><button class="c-menu--button" data-sound="riderLevel" data-i18n="learn.riderLevel">A rider LEVEL with you - a bounce</button></li>
+            <li><button class="c-menu--button" data-sound="riderAbove" data-i18n="learn.riderAbove">A rider ABOVE you - it kills you</button></li>
+            <li><button class="c-menu--button" data-sound="riderBelow" data-i18n="learn.riderBelow">A rider BELOW you - you kill it</button></li>
+            <li><button class="c-menu--button" data-sound="riderLeft" data-i18n="learn.riderLeft">A rider to your left</button></li>
+            <li><button class="c-menu--button" data-sound="riderRight" data-i18n="learn.riderRight">A rider to your right</button></li>
+            <li><button class="c-menu--button" data-sound="riderFar" data-i18n="learn.riderFar">A rider right across the arena</button></li>
+            <li><button class="c-menu--button" data-sound="riderClosing" data-i18n="learn.riderClosing">A rider closing on you</button></li>
+            <li><button class="c-menu--button" data-sound="bounder" data-i18n="learn.bounder">A bounder</button></li>
+            <li><button class="c-menu--button" data-sound="hunter" data-i18n="learn.hunter">A hunter</button></li>
+            <li><button class="c-menu--button" data-sound="shadowlord" data-i18n="learn.shadowlord">A shadow lord</button></li>
+            <li><button class="c-menu--button" data-sound="sustain" data-i18n="learn.sustain">A rider close enough to fight</button></li>
+            <li><button class="c-menu--button" data-sound="flap" data-i18n="learn.flap">Your own wing beat</button></li>
+            <li><button class="c-menu--button" data-sound="flapGround" data-i18n="learn.flapGround">Taking off from the deck</button></li>
+            <li><button class="c-menu--button" data-sound="land" data-i18n="learn.land">Landing on the deck</button></li>
+            <li><button class="c-menu--button" data-sound="ceiling" data-i18n="learn.ceiling">Hitting the roof</button></li>
+            <li><button class="c-menu--button" data-sound="deck" data-i18n="learn.deck">Coming down onto the deck</button></li>
+            <li><button class="c-menu--button" data-sound="roof" data-i18n="learn.roof">Rising toward the roof</button></li>
+            <li><button class="c-menu--button" data-sound="kill" data-i18n="learn.kill">Unhorsing a rider</button></li>
+            <li><button class="c-menu--button" data-sound="bounce" data-i18n="learn.bounce">A bounce</button></li>
+            <li><button class="c-menu--button" data-sound="death" data-i18n="learn.death">Being unhorsed yourself</button></li>
+            <li><button class="c-menu--button" data-sound="arrive" data-i18n="learn.arrive">A rider arriving</button></li>
+            <li><button class="c-menu--button" data-sound="eggFall" data-i18n="learn.eggFall">An egg falling past you</button></li>
+            <li><button class="c-menu--button" data-sound="eggTick" data-i18n="learn.eggTick">The hatch clock</button></li>
+            <li><button class="c-menu--button" data-sound="eggCollect" data-i18n="learn.eggCollect">Collecting an egg</button></li>
+            <li><button class="c-menu--button" data-sound="hatch" data-i18n="learn.hatch">An egg hatching</button></li>
+            <li><button class="c-menu--button" data-sound="waveStart" data-i18n="learn.waveStart">A wave beginning</button></li>
+            <li><button class="c-menu--button" data-sound="waveClear" data-i18n="learn.waveClear">A wave cleared</button></li>
+            <li><button class="c-menu--button" data-sound="extraLife" data-i18n="learn.extraLife">An extra life</button></li>
+            <li><button class="c-menu--button" data-sound="respawn" data-i18n="learn.respawn">Coming back</button></li>
+            <li><button class="c-menu--button" data-sound="hurry" data-i18n="learn.hurry">The wave has dragged on</button></li>
+            <li><button class="c-menu--button" data-sound="over" data-i18n="learn.over">Game over</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="learn.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Audio test -->
+      <div class="a-app--screen a-app--test">
+        <section class="c-screen c-menu a-test" tabindex="-1" data-i18n-attr="aria-label:test.aria">
+          <h1 class="c-menu--title" data-i18n="test.title">Audio test</h1>
+          <p class="c-menu--subtitle" data-i18n="test.subtitle">Two axes, two channels.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-dir="l" data-i18n="test.left">Play far to the left</button></li>
+            <li><button class="c-menu--button" data-dir="c" data-i18n="test.centre">Play dead centre</button></li>
+            <li><button class="c-menu--button" data-dir="r" data-i18n="test.right">Play far to the right</button></li>
+            <li><button class="c-menu--button" data-dir="up" data-i18n="test.up">Play well above you</button></li>
+            <li><button class="c-menu--button" data-dir="down" data-i18n="test.down">Play well below you</button></li>
+            <li><button class="c-menu--button" data-dir="sweep" data-i18n="test.sweep">Sweep left to right</button></li>
+            <li><button class="c-menu--button" data-dir="ladder" data-i18n="test.ladder">The whole pitch ladder</button></li>
+            <li><button class="c-menu--button" data-action="back" data-i18n="test.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Language -->
+      <div class="a-app--screen a-app--language">
+        <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
+          <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
+          <p class="c-menu--subtitle" data-i18n="language.subtitle">Choose the language used for menus and announcements.</p>
+          <ul class="c-menu--list a-language--list"></ul>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="back" data-i18n="language.back">Back</button></li>
+          </ul>
+        </section>
+      </div>
+
+      <!-- Main menu -->
+      <div class="a-app--screen a-app--menu">
+        <section class="c-screen c-menu a-menu" tabindex="-1" data-i18n-attr="aria-label:menu.aria">
+          <h1 class="c-menu--title" data-i18n="menu.title">Joust</h1>
+          <p class="c-menu--subtitle" data-i18n="menu.subtitle">An audio-first flying duel.</p>
+          <ul class="c-menu--list">
+            <li><button class="c-menu--button" data-action="start" data-i18n="menu.start">Take flight</button></li>
+            <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">How to play</button></li>
+            <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the sounds</button></li>
+            <li><button class="c-menu--button" data-action="highscores" data-i18n="menu.highscores">High scores</button></li>
+            <li><button class="c-menu--button" data-action="language" data-i18n="language.button">Language</button></li>
+            <li><button class="c-menu--button" data-action="quit" data-i18n="menu.quit">Quit</button></li>
+          </ul>
+        </section>
+      </div>
+
+    </main>
+    <script src="./scripts.min.js"></script>
+  </body>
+</html>
