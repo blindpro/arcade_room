@@ -580,10 +580,18 @@ content.game = (() => {
   // ---- the hydrophone sweep ---------------------------------------------------
   // The quick, quiet, coarse counterpart to the ping. It answers immediately —
   // there is no round trip, because nothing is being sent — and it costs no
-  // noise, but every bearing it gives you is smeared, and it reports range in
-  // three bands rather than in metres. It is for orienting yourself, not for
-  // shooting: SWEEP_ERROR_FAR is far wider than any lead angle in the game, so
-  // a sweep can tell you which way to come round and never where to aim.
+  // noise, but every bearing it gives you is smeared. It is for orienting
+  // yourself, not for shooting: SWEEP_ERROR_FAR is far wider than any lead
+  // angle in the game, so a sweep can tell you which way to come round and
+  // never where to aim.
+  //
+  // What it produces is ONE SHORT BEEP PER CONTACT, each placed at roughly
+  // that ship's direction, arriving as a burst that swings clockwise round the
+  // boat from dead ahead — the hydrophone head being trained round. So the
+  // count of beeps is how many ships are out there and where each beep sits in
+  // the field is roughly where that ship is. Nothing else: the coarse range
+  // band survives only in the spoken readout, because trying to carry range in
+  // the same burst is what made the far contacts inaudible.
   function sweepReach() {
     const k = K()
     return k.CONTACT_RANGE * k.lerp(1, k.SWEEP_DEEP_RANGE_MULT, depthFrac())
@@ -609,25 +617,37 @@ content.game = (() => {
       const spread = k.lerp(k.SWEEP_ERROR_NEAR, k.SWEEP_ERROR_FAR,
         k.clamp(range / reach, 0, 1)) * k.lerp(1, k.SWEEP_DEEP_ERROR_MULT, depthFrac())
       const heard = k.wrapDeg(relBearing(c.x, c.y) + k.rand(-spread, spread))
-      const band = k.sweepBand(range, reach)
 
-      // The audio layer is given the WRONG position on purpose — the smeared
-      // bearing, at the middle of the reported band rather than the true range.
-      // If it placed the blip at the real spot the ear would simply read the
-      // truth off it and the whole point of a coarse instrument would be lost.
-      const shown = reach * (band === 0 ? 0.18 : (band === 1 ? 0.45 : 0.85))
+      // The audio layer is given the WRONG position on purpose: the smeared
+      // bearing, at a fixed nominal radius. Placing the blip where the ship
+      // really is would let the ear read the truth straight off it, and the
+      // whole point of a coarse instrument would be lost.
       const h = rad(heard)
       returns.push({
         id: c.id,
         escort: c.escort,
         bearing: heard,
-        band,
-        local: {forward: Math.cos(h) * shown, starboard: Math.sin(h) * shown},
+        // Forward of the beam or abaft it. Front and back are the weakest axis
+        // of any binaural field, so the blip flips pitch across the beam
+        // exactly the way the contact beeps do rather than relying on the ear
+        // alone to place it.
+        ahead: Math.abs(heard) < 90,
+        // Coarse range, for the spoken readout only. It is deliberately absent
+        // from the audio.
+        band: k.sweepBand(range, reach),
+        local: {
+          forward: Math.cos(h) * k.SWEEP_PLOT_RADIUS,
+          starboard: Math.sin(h) * k.SWEEP_PLOT_RADIUS,
+        },
       })
     }
 
-    returns.sort((a, b) => a.band - b.band)
-    E().emit('sweep', {returns, reach})
+    // Clockwise from dead ahead, so the burst sweeps round the boat: starboard
+    // side first, then astern, then up the port side. That ordering is what
+    // makes a burst of four beeps read as four PLACES rather than as a chord.
+    returns.sort((a, b) => (a.bearing < 0 ? a.bearing + 360 : a.bearing) -
+                           (b.bearing < 0 ? b.bearing + 360 : b.bearing))
+    E().emit('sweep', {returns, reach, gap: k.SWEEP_GAP, leadIn: k.SWEEP_LEAD_IN})
     return true
   }
 

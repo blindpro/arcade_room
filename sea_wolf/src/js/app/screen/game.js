@@ -141,14 +141,16 @@ app.screen.game = app.screenManager.invent({
     })
 
     // --- the hydrophone sweep ------------------------------------------------
-    // Unlike the ping, the returns are NOT scheduled — they arrive with the
-    // sweep, because nothing had to travel out and back. They are only spread
-    // by a few tens of milliseconds each so that four contacts read as four
-    // blips round the field rather than as one chord.
+    // One short beep per contact, at roughly that ship's direction. Unlike the
+    // ping's echoes these are NOT scheduled by range — nothing had to travel
+    // out and back — they are simply spaced far enough apart to be countable,
+    // and ordered clockwise from dead ahead so the burst swings round the boat
+    // instead of arriving as a chord.
     content.events.on('sweep', (e) => {
       A().sweepOut()
       e.returns.forEach((r, i) => {
-        A().later(() => A().sweepBlip(r.local, r.band, r.escort), 130 + i * 110)
+        A().later(() => A().sweepBlip(r.local, r.ahead, r.escort),
+          (e.leadIn + i * e.gap) * 1000)
       })
       if (!e.returns.length) {
         app.announce.polite(t('ann.sweepEmpty'))

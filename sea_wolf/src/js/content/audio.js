@@ -374,11 +374,20 @@ content.audio = (() => {
     }
   }
 
-  // One return. Placed binaurally at the SMEARED bearing the sweep reported,
-  // and pitched by range band rather than gained by distance — a coarse
-  // instrument should sound like three buckets, not like a continuum, or the
-  // ear will start reading a range off it that the sweep never measured.
-  function sweepBlip(local, band, escort) {
+  // One contact, one beep, placed binaurally at the SMEARED bearing the sweep
+  // reported and at a fixed radius — so every ship in the burst comes back
+  // equally loud and the only thing to read off it is direction.
+  //
+  // It borrows the contact beeps' vocabulary rather than inventing a second
+  // one: bright forward of the beam, an octave down abaft it, and a harsher
+  // wave for an escort. A player already knows that code, and a sweep saying
+  // "astern" in a different dialect from the passive set would be a third
+  // thing to learn for no gain. What keeps the two apart is shape, not pitch —
+  // these are shorter and softer than a real contact beep, and they arrive as
+  // an ordered burst on the heels of the sweep's own hiss, which is a pattern
+  // no passive beep ever makes.
+  function sweepBlip(local, ahead, escort) {
+    const k = K()
     const t0 = now()
     const c = ctx()
     const ear = earAt(local)
@@ -387,13 +396,13 @@ content.audio = (() => {
     ear.from(g)
 
     const o = c.createOscillator()
-    o.type = escort ? 'sawtooth' : 'triangle'
-    o.frequency.value = [880, 660, 470][band] || 470
+    o.type = escort ? k.BEEP_ESCORT_TYPE : k.BEEP_MERCHANT_TYPE
+    o.frequency.value = ahead ? k.BEEP_AHEAD : k.BEEP_ASTERN
     o.connect(g)
 
-    const dur = 0.13
+    const dur = 0.065
     g.gain.setValueAtTime(0, t0)
-    g.gain.linearRampToValueAtTime(escort ? 0.20 : 0.16, t0 + 0.008)
+    g.gain.linearRampToValueAtTime(escort ? 0.17 : 0.14, t0 + 0.005)
     g.gain.linearRampToValueAtTime(0, t0 + dur)
     o.start(t0)
     o.stop(t0 + dur + 0.02)
@@ -887,13 +896,21 @@ content.audio = (() => {
       // The sweep, for direct comparison with the ping above: same field, but
       // it answers at once and in three coarse buckets instead of in metres.
       case 'sweep': {
+        // Four contacts, ordered clockwise from dead ahead the way a real
+        // sweep reports them: fine on the starboard bow, an escort abeam to
+        // starboard, one astern (hear the pitch drop), and one off the port
+        // bow. All at the same radius, so only the direction varies.
         sweepOut()
-        const shown = [
-          [{forward: 190, starboard: -120}, 0, false],
-          [{forward: -300, starboard: 640}, 1, true],
-          [{forward: 900, starboard: 340}, 2, false],
-        ]
-        shown.forEach((r, i) => later(() => sweepBlip(r[0], r[1], r[2]), 120 + i * 130))
+        const R = k.SWEEP_PLOT_RADIUS
+        const at = (degrees, escort) => {
+          const h = degrees / k.DEG
+          return [{forward: Math.cos(h) * R, starboard: Math.sin(h) * R},
+            Math.abs(degrees) < 90, escort]
+        }
+        const shown = [at(25, false), at(88, true), at(165, false), at(-50, false)]
+        shown.forEach((r, i) => later(
+          () => sweepBlip(r[0], r[1], r[2]),
+          k.SWEEP_LEAD_IN * 1000 + i * k.SWEEP_GAP * 1000))
         break
       }
       case 'sweepEmpty': sweepOut(); break

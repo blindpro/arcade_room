@@ -335,6 +335,20 @@ console.log('\nSEA WOLF simulation\n')
   check('it cannot be spammed every frame', !g.sweep())
   check('it reports bands, never metres',
     last.returns.every((r) => r.band >= 0 && r.band <= 2 && r.range === undefined))
+  // One beep per contact, and every beep equally audible: the burst has to be
+  // countable, and the far contacts are exactly the ones worth warning about.
+  const audible = g.contactList().filter((c) => c.range <= last.reach).length
+  check('one return per contact in reach', last.returns.length === audible,
+    last.returns.length + ' returns for ' + audible + ' contacts in reach')
+  check('all placed at the same radius, so none is faint',
+    last.returns.every((r) => Math.abs(
+      Math.hypot(r.local.forward, r.local.starboard) - k.SWEEP_PLOT_RADIUS) < 0.01))
+  check('the burst sweeps clockwise from dead ahead',
+    last.returns.every((r, i, a) => i === 0 ||
+      (a[i - 1].bearing < 0 ? a[i - 1].bearing + 360 : a[i - 1].bearing) <=
+      (r.bearing < 0 ? r.bearing + 360 : r.bearing)))
+  check('each beep says which side of the beam it is on',
+    last.returns.every((r) => r.ahead === (Math.abs(r.bearing) < 90)))
 
   // Sample the bearing error against the truth, and against the thing it must
   // not be good enough for: the lead angle you actually have to shoot on.

@@ -155,7 +155,21 @@ content.constants = (() => {
   const SWEEP_DEEP_RANGE_MULT = 0.62
   // Range is reported in bands rather than metres. These are the fractions of
   // the sweep's reach where "close" becomes "near" and "near" becomes "far".
+  // The bands are for the SPOKEN readout only — see SWEEP_PLOT_RADIUS.
   const SWEEP_BANDS = [0.28, 0.62]
+  // Every blip is placed at this same nominal distance, whatever the contact's
+  // real range. The sweep answers one question — WHICH WAY — and placing the
+  // blips at their true (or even their banded) distance answered it worse: the
+  // binaural ear attenuates and filters with distance, so the far contacts,
+  // which are exactly the ones you most want warning of, came back as the
+  // faintest blips of the burst. At a constant radius every contact gets one
+  // clearly audible beep and the only thing the ear has to read off it is the
+  // bearing.
+  const SWEEP_PLOT_RADIUS = 240
+  // Seconds between blips. They have to be countable - the number of beeps is
+  // how many ships are out there - so they are spaced rather than chorded.
+  const SWEEP_GAP = 0.135
+  const SWEEP_LEAD_IN = 0.18     // ...and the delay before the first one
 
   // ---- being hunted ---------------------------------------------------------
   // The noise economy. SPEED is now the constant term — a boat at flank is
@@ -382,6 +396,9 @@ content.constants = (() => {
     SWEEP_DEEP_ERROR_MULT,
     SWEEP_DEEP_RANGE_MULT,
     SWEEP_BANDS,
+    SWEEP_PLOT_RADIUS,
+    SWEEP_GAP,
+    SWEEP_LEAD_IN,
     sweepBand,
     SPEED_NOISE,
     SPEED_NOISE_POWER,
