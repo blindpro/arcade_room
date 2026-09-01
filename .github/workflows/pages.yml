@@ -1,0 +1,78 @@
+name: Deploy Arcade Room to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install root dependencies
+        run: npm ci
+
+      - name: Build game assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          for game_dir in */; do
+            game="${game_dir%/}"
+            if [[ -f "$game/package.json" && -f "$game/Gulpfile.js" && "$game" != "racing" ]]; then
+              echo "Building $game"
+              npm --prefix "$game" ci
+              npx --prefix "$game" gulp build
+            fi
+          done
+
+      - name: Assemble Pages artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf _site
+          mkdir -p _site
+          cp index.html .nojekyll _site/
+
+          for game_dir in */; do
+            game="${game_dir%/}"
+            if [[ -f "$game/public/index.html" ]]; then
+              cp -R "$game/public" "_site/$game"
+            fi
+          done
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
