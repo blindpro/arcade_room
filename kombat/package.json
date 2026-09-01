@@ -1,6 +1,6 @@
 {
   "name": "kombat",
-  "version": "1.0.0",
+  "version": "0.5.0",
   "description": "KOMBAT — an audio-first one-on-one fighter. Two fighters on a line, four attack buttons, and a hit only lands if the height you struck at is the height your opponent is standing at.",
   "license": "Unlicense",
   "private": true,
