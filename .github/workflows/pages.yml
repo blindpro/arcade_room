@@ -38,8 +38,9 @@ jobs:
             game="${game_dir%/}"
             if [[ -f "$game/package.json" && -f "$game/Gulpfile.js" && "$game" != "racing" ]]; then
               echo "Building $game"
-              npm --prefix "$game" ci
-              npx --prefix "$game" gulp build
+              npm --prefix "$game" install --no-audit --no-fund
+              npm --prefix "$game" install --no-save --no-audit --no-fund gulp
+              npx --prefix "$game" --no-install gulp build
             fi
           done
 
