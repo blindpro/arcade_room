@@ -115,6 +115,60 @@
         </section>
       </div>
 
+      <div class="a-app--screen a-app--multiplayer">
+        <section class="c-screen c-menu a-multiplayer" tabindex="-1" data-i18n-attr="aria-label:mp.aria">
+          <h1 class="c-menu--title a-multiplayer--title" data-i18n="mp.title">Multiplayer</h1>
+          <p class="c-menu--subtitle a-multiplayer--subtitle" data-i18n="mp.subtitle">
+            2 to 6 players. Peer-to-peer over the internet. Host picks Free For All, Survival, or 2v2 Duel.
+          </p>
+
+          <div class="a-multiplayer--home">
+            <p class="c-menu--prose">
+              <label><span data-i18n="mp.nameLabel">Your name:</span>
+                <input class="a-multiplayer--name" type="text" autocomplete="off" />
+              </label>
+            </p>
+            <ul class="c-menu--list">
+              <li><button class="c-menu--button" data-action="host" data-i18n="mp.host">Host a game</button></li>
+              <li><button class="c-menu--button" data-action="joinForm" data-i18n="mp.joinForm">Join with room code</button></li>
+              <li><button class="c-menu--button" data-action="back" data-i18n="mp.backMenu">Back to main menu</button></li>
+            </ul>
+          </div>
+
+          <div class="a-multiplayer--joinForm" hidden>
+            <p class="c-menu--prose">
+              <label><span data-i18n="mp.codeLabel">Room code:</span>
+                <input class="a-multiplayer--code" type="text" maxlength="8" autocomplete="off" autocapitalize="characters" />
+              </label>
+            </p>
+            <ul class="c-menu--list">
+              <li><button class="c-menu--button" data-action="join" data-i18n="mp.connect">Connect</button></li>
+              <li><button class="c-menu--button" data-action="cancel" data-i18n="mp.cancel">Back</button></li>
+            </ul>
+          </div>
+
+          <div class="a-multiplayer--lobby" hidden>
+            <p class="c-menu--prose">
+              <span class="a-multiplayer--lobbyRoomLabel" data-i18n="mp.lobbyRoomPrefix">Room code: </span><strong class="a-multiplayer--lobbyCode"></strong>.
+              <span data-i18n="mp.lobbyShare">Share this with friends so they can join.</span>
+            </p>
+            <p class="c-menu--prose a-multiplayer--lobbyStatus" role="status" aria-live="polite"></p>
+            <ul class="c-menu--list a-multiplayer--peers"></ul>
+            <fieldset class="a-multiplayer--modeFieldset" hidden>
+              <legend data-i18n="mp.modeLegend">Game mode</legend>
+              <label><input type="radio" name="mp-mode" value="ffa" checked /> <span data-i18n="mp.modeFfa">Free For All</span></label>
+              <label><input type="radio" name="mp-mode" value="survival" /> <span data-i18n="mp.modeSurvival">Survival (co-op)</span></label>
+              <label><input type="radio" name="mp-mode" value="teamDm" /> <span data-i18n="mp.modeTeamDm">2v2 Duel</span></label>
+            </fieldset>
+            <ul class="c-menu--list">
+              <li><button class="c-menu--button a-multiplayer--copyLink" data-action="copyLink" data-i18n="mp.copyLink">Copy link</button></li>
+              <li><button class="c-menu--button a-multiplayer--start" data-action="start" hidden data-i18n="mp.start">Start round</button></li>
+              <li><button class="c-menu--button" data-action="leave" data-i18n="mp.leave">Leave room</button></li>
+            </ul>
+          </div>
+        </section>
+      </div>
+
       <div class="a-app--screen a-app--language">
         <section class="c-screen c-menu a-language" tabindex="-1" data-i18n-attr="aria-label:language.aria">
           <h1 class="c-menu--title" data-i18n="language.title">Language</h1>
@@ -132,6 +186,7 @@
           <p class="c-menu--subtitle" data-i18n="menu.subtitle">An audio-first accessible plane combat arena.</p>
           <ul class="c-menu--list">
             <li><button class="c-menu--button" data-action="play" data-i18n="menu.play">Single player</button></li>
+            <li><button class="c-menu--button" data-action="multi" data-i18n="menu.multi">Multiplayer</button></li>
             <li><button class="c-menu--button" data-action="learn" data-i18n="menu.learn">Learn the sounds</button></li>
             <li><button class="c-menu--button" data-action="help" data-i18n="menu.help">Help</button></li>
             <li><button class="c-menu--button" data-action="language" data-i18n="menu.language">Language</button></li>
@@ -152,6 +207,7 @@
         </section>
       </div>
     </main>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
     <script src="./scripts.min.js"></script>
   </body>
 </html>

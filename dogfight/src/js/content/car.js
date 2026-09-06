@@ -19,6 +19,7 @@ content.car = (() => {
     mass = 1,
     arcade = false,             // attach inventory + shield slot
     friendly = false,           // friendly AI (wingman)
+    human = false,              // real (networked) human pilot
   } = {}) {
     const car = {
       id: id || `car-${nextId++}`,
@@ -35,6 +36,10 @@ content.car = (() => {
       mass,
       input: {throttle: 0, steering: 0},
       eliminated: false,
+      // Real (networked) human pilot. Also true for the local player in
+      // single-player car setup. Used by the host for mp round-end checks
+      // ('no humans alive') and for per-plane score.
+      human,
       // Damage attribution for elimination credit.
       lastHitBy: null,
       lastHitAt: 0,
@@ -46,7 +51,7 @@ content.car = (() => {
       // flag the physics path can read.
       inventory: arcade ? {shields: 0, bullets: 0, mines: 0, boosts: 0, teleports: 0, repulsors: 0, rockets: 0} : null,
       ammo: {
-        missiles: controller === 'player' ? 5 : 4,
+        missiles: controller === 'player' || human ? 5 : 4,
         gunsHeat: 0,
         nextGunAt: 0,
         nextMissileAt: 0,
@@ -55,6 +60,13 @@ content.car = (() => {
       // snapshots so clients drive their listener voice and HUD off
       // the same value.
       boostUntil: 0,
+      // Host-side bookkeeping for multiplayer: boost/cooldown, per-plane
+      // score, and simulated remote gun state (replicated in snapshots).
+      boostCooldownAt: 0,
+      score: 0,
+      gunFiring: false,
+      gunHeat: 0,
+      gunOverheated: false,
       hornOffset: Math.round(Math.random() * 100 - 50),
       sound: content.carEngine.create(profileIndex, {
         isSelf: controller === 'player',

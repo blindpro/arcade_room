@@ -9,6 +9,7 @@ app.screen.game = app.screenManager.invent({
   state: {
     aiOpponents: 0,
     mode: 'ffa',
+    role: null,
     pendingHud: 0,
   },
   onReady: function () {
@@ -18,17 +19,21 @@ app.screen.game = app.screenManager.invent({
     this.elRound  = this.rootElement.querySelector('.a-game--roundValue')
     this.elTeamScore = this.rootElement.querySelector('.a-game--teamScore')
 
+    // Multiplayer rounds skip personal-best writes (the pool is too
+    // noisy); the standings board replaces the single-player score flow.
     content.game.setOnRoundOver((data) => {
+      const mp = !!data.multiplayer
+
       if (data.mode === 'teamDm') {
         if (data.matchOver) {
           const store = app.storage.get('dogfight') || {}
-          const best = Math.max(store.bestScore || 0, data.score || 0)
-          app.storage.set('dogfight', {...store, bestScore: best})
+          const best = mp ? (store.bestScore || 0) : Math.max(store.bestScore || 0, data.score || 0)
+          if (!mp) app.storage.set('dogfight', {...store, bestScore: best})
           app.screenManager.dispatch('over', {
             youWon: data.youWon,
             score: data.score,
             best,
-            multiplayer: false,
+            multiplayer: mp,
             standings: data.standings,
             selfId: data.selfId,
             mode: 'teamDm',
@@ -50,14 +55,14 @@ app.screen.game = app.screenManager.invent({
 
       const store = app.storage.get('dogfight') || {}
       const displayScore = data.mode === 'survival' ? (data.kills || 0) : (data.score || 0)
-      const best = Math.max(store.bestScore || 0, displayScore)
-      app.storage.set('dogfight', {...store, bestScore: best})
+      const best = mp ? (store.bestScore || 0) : Math.max(store.bestScore || 0, displayScore)
+      if (!mp) app.storage.set('dogfight', {...store, bestScore: best})
 
       app.screenManager.dispatch('over', {
         youWon: data.youWon,
         score: displayScore,
         best,
-        multiplayer: false,
+        multiplayer: mp,
         standings: data.standings,
         selfId: data.selfId,
         mode: data.mode || 'dogfight',
@@ -137,6 +142,7 @@ app.screen.game = app.screenManager.invent({
   onEnter: function (e = {}) {
     this.state.aiOpponents = e.aiOpponents || 0
     this.state.mode = e.mode || 'ffa'
+    this.state.role = e.role || null
     const hud = this.rootElement.querySelector('.a-game--hud')
     if (this.state.mode === 'teamDm') {
       content.game.resetMatch()
@@ -144,14 +150,20 @@ app.screen.game = app.screenManager.invent({
     } else {
       hud.classList.remove('a-game--hud-team')
     }
-    content.game.start({aiOpponents: this.state.aiOpponents, mode: this.state.mode})
+    const opts = e.controllers
+      ? {controllers: e.controllers, selfId: e.selfId, role: this.state.role, mode: this.state.mode}
+      : {aiOpponents: this.state.aiOpponents, mode: this.state.mode}
+    content.game.setRole(this.state.role)
+    content.game.start(opts)
     const carsLabel = this.rootElement.querySelector('.a-game--carsLabel')
     if (carsLabel) {
       carsLabel.textContent = app.i18n.t(this.state.mode === 'survival' ? 'game.planesSurvival' : 'game.planes')
     }
+    if (this.state.role) this.attachNetClose()
     this.updateHud()
   },
   onExit: function () {
+    this.detachNetClose()
     content.game.end({silent: true})
   },
   onFrame: function () {
@@ -194,6 +206,28 @@ app.screen.game = app.screenManager.invent({
     if (match.mode === 'teamDm') {
       this.elRound.textContent = String(match.currentRound)
       this.elTeamScore.textContent = match.playerRoundWins + ' - ' + match.enemyRoundWins
+    }
+  },
+
+  // ---- Net-session loss while a round is running ----
+  // A mid-round disconnect is fatal: the host can no longer send
+  // snapshots and the client can no longer vouch for anything. Quit
+  // straight to the menu rather than leaving a stuck game screen.
+  attachNetClose: function () {
+    if (!app.net) return
+    this.detachNetClose()
+    this.onNetClose = () => {
+      if (!content.game.isRunning() || !app.screenManager.is('game')) return
+      content.sounds.uiBack()
+      content.announcer.say(app.i18n.t('mp.disconnected'), 'assertive')
+      app.screenManager.dispatch('quit')
+    }
+    app.net.on('close', this.onNetClose)
+  },
+  detachNetClose: function () {
+    if (app.net && this.onNetClose) {
+      app.net.off('close', this.onNetClose)
+      this.onNetClose = null
     }
   },
 })

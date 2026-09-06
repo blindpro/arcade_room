@@ -4,6 +4,7 @@ app.screen.menu = app.screenManager.invent({
   rootSelector: '.a-menu',
   transitions: {
     play:     function () { this.change('setup') },
+    multi:    function () { this.change('multiplayer') },
     learn:    function () { this.change('learnSounds') },
     help:     function () { this.change('help') },
     language: function () { this.change('language') },
